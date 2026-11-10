@@ -3,7 +3,7 @@ package auth
 import (
 	"testing"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 func TestGorm_LoginAutoCreatesAndReuses(t *testing.T) {

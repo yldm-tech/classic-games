@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/pkg/httpx"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 // DefaultLang 是缺省/兜底语言:未指定或不支持的语言一律回落到它。

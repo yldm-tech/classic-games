@@ -1,10 +1,10 @@
-# forgeplay-mcp
+# classic-games-mcp
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI agents work with ForgePlay. An agent can read and validate the Mod DSL offline, browse published games, and fork, patch and publish mods through the backend API.
+A [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI agents work with Classic Games. An agent can read and validate the Mod DSL offline, browse published games, and fork, patch and publish mods through the backend API.
 
-ForgePlay games are not code. A game is a JSON document, the Mod DSL, interpreted by a fixed runtime (`shooter`, `survivor` or `tower_defense`), and it is changed only with RFC 6902 JSON Patch operations. This server keeps to that rule: no tool accepts or returns executable code, and every patch is applied and validated against the runtime's JSON Schema before it is saved.
+Classic Games games are not code. A game is a JSON document, the Mod DSL, interpreted by a fixed runtime (`shooter`, `survivor` or `tower_defense`), and it is changed only with RFC 6902 JSON Patch operations. This server keeps to that rule: no tool accepts or returns executable code, and every patch is applied and validated against the runtime's JSON Schema before it is saved.
 
-It is built on the official Go SDK, [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk), and shares its DSL logic (`forgeplay/dsl`) and HTTP client (`forgeplay/sdk`) with the backend and the `forgeplay` CLI.
+It is built on the official Go SDK, [`github.com/modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk), and shares its DSL logic (`github.com/yldm-tech/classic-games/packages/dsl`) and HTTP client (`github.com/yldm-tech/classic-games/packages/sdk`) with the backend and the `classic-games` CLI.
 
 ## Build
 
@@ -12,14 +12,14 @@ Go 1.26 or newer is required (an older Go toolchain downloads it automatically).
 
 ```bash
 cd apps/mcp
-go build -o bin/forgeplay-mcp ./cmd/forgeplay-mcp
+go build -o bin/classic-games-mcp ./cmd/classic-games-mcp
 ```
 
-From the repository root, `make mcp-build` runs the same build. The binary is `apps/mcp/bin/forgeplay-mcp`. Built there, it finds the schemas in `packages/schemas` of the repository by itself, whatever directory a client starts it from: the directory of the binary is searched before the working directory, so a project that has a `packages/schemas` directory of its own cannot replace them.
+From the repository root, `make mcp-build` runs the same build. The binary is `apps/mcp/bin/classic-games-mcp`. Built there, it finds the schemas in `packages/schemas` of the repository by itself, whatever directory a client starts it from: the directory of the binary is searched before the working directory, so a project that has a `packages/schemas` directory of its own cannot replace them.
 
 ## Tools
 
-Offline tools need only the schema files. Backend tools call the ForgePlay API at `FORGEPLAY_SERVER_URL`.
+Offline tools need only the schema files. Backend tools call the Classic Games API at `CLASSIC_GAMES_SERVER_URL`.
 
 | Tool | Kind | Needs token | What it does |
 | --- | --- | --- | --- |
@@ -47,7 +47,7 @@ Behaviour worth knowing:
 - Mods are immutable. `update_mod` creates a new draft version whose parent is the mod passed in, so always continue with the newest `mod_id`.
 - Supported patch operations are `add`, `replace`, `remove` and `test`. `move` and `copy` are rejected, as on the backend and in the game client, with a message that says how to express them. A patch holds at most 1000 operations.
 - `validate_dsl` and `apply_dsl_patch` report in `runtime` the schema the document was really checked against. For a legacy `shooter@0.x` ref, which has no schema of its own, the document is upgraded first: `runtime` is then `shooter@1.0.0`, `migrated_from` holds the ref that was asked for, and violation paths refer to the upgraded document.
-- Results are bounded: at most 50 violations are listed and each message is cut after 500 characters; a backend answer that is not a ForgePlay error (a proxy page, another service behind `FORGEPLAY_SERVER_URL`) is quoted with its first 200 characters only.
+- Results are bounded: at most 50 violations are listed and each message is cut after 500 characters; a backend answer that is not a Classic Games error (a proxy page, another service behind `CLASSIC_GAMES_SERVER_URL`) is quoted with its first 200 characters only.
 - An id is passed as a tool returned it. An empty id is refused by the input schema, and an id that contains `/` or is `.` or `..` is refused before any request is sent. A word that is an endpoint of its own on the backend, such as `mine`, is answered like an unknown id.
 - `generate_mod` returns a `provenance` value when the backend signs its AI results. Pass it as `ai_provenance` to `update_mod` or `create_mod` together with the generated patch so the mod is labelled as AI-generated.
 - Invalid input and backend failures come back as tool errors (`isError`) with a message that says what to do next, not as protocol errors.
@@ -58,17 +58,17 @@ Behaviour worth knowing:
 
 | URI | Content |
 | --- | --- |
-| `forgeplay://schemas/<runtime>-<version>` | The JSON Schema of a runtime's DSL, for example `forgeplay://schemas/shooter-1.0.0`. One resource per schema file. |
-| `forgeplay://games/{game_id}/dsl` | Resource template: the effective DSL of a game, read from the backend. |
+| `classic-games://schemas/<runtime>-<version>` | The JSON Schema of a runtime's DSL, for example `classic-games://schemas/shooter-1.0.0`. One resource per schema file. |
+| `classic-games://games/{game_id}/dsl` | Resource template: the effective DSL of a game, read from the backend. |
 
 ## Configuration
 
 | Environment variable | Default | Meaning |
 | --- | --- | --- |
-| `FORGEPLAY_SERVER_URL` | `http://localhost:8080` | Root URL of the ForgePlay backend, without `/api/v1`. Credentials in the URL (`http://user:password@host`, for a proxy with basic auth) are used for the requests but left out of logs and tool results. |
-| `FORGEPLAY_TOKEN` | none | Bearer token of the user the server acts as. Without it the server is anonymous: reading, the offline tools and `generate_mod` work, and the tools marked above fail with `authentication required: set FORGEPLAY_TOKEN (obtain with: forgeplay auth login, then forgeplay auth token)`. |
-| `FORGEPLAY_SCHEMA_DIR` | auto-detected | Directory holding the `<runtime>-<version>.schema.json` files. When unset, the server looks for `packages/schemas` at or above the directory of the binary, then at or above the working directory; a `packages/schemas` directory without any such file is skipped. If neither finds one, the server exits with a message naming this variable. The working directory is only reached by `go run` and by a binary installed outside the repository; in that case the server trusts the schemas of the project it is started in, so set this variable when that project is not the ForgePlay repository. The schemas are read and compiled once at startup: a schema that does not compile stops the server with a message, and later changes to the files take effect at the next start. They cannot be embedded in the binary because they live in another module. |
-| `FORGEPLAY_LANG` | backend default (Chinese) | Language of backend messages and localized game titles: `zh`, `en` or `ja`. |
+| `CLASSIC_GAMES_SERVER_URL` | `http://localhost:8080` | Root URL of the Classic Games backend, without `/api/v1`. Credentials in the URL (`http://user:password@host`, for a proxy with basic auth) are used for the requests but left out of logs and tool results. |
+| `CLASSIC_GAMES_TOKEN` | none | Bearer token of the user the server acts as. Without it the server is anonymous: reading, the offline tools and `generate_mod` work, and the tools marked above fail with `authentication required: set CLASSIC_GAMES_TOKEN (obtain with: classic-games auth login, then classic-games auth token)`. |
+| `CLASSIC_GAMES_SCHEMA_DIR` | auto-detected | Directory holding the `<runtime>-<version>.schema.json` files. When unset, the server looks for `packages/schemas` at or above the directory of the binary, then at or above the working directory; a `packages/schemas` directory without any such file is skipped. If neither finds one, the server exits with a message naming this variable. The working directory is only reached by `go run` and by a binary installed outside the repository; in that case the server trusts the schemas of the project it is started in, so set this variable when that project is not the Classic Games repository. The schemas are read and compiled once at startup: a schema that does not compile stops the server with a message, and later changes to the files take effect at the next start. They cannot be embedded in the binary because they live in another module. |
+| `CLASSIC_GAMES_LANG` | backend default (Chinese) | Language of backend messages and localized game titles: `zh`, `en` or `ja`. |
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
@@ -80,34 +80,34 @@ Behaviour worth knowing:
 
 ### Getting a token
 
-Log in with the `forgeplay` CLI (see [`../cli/README.md`](../cli/README.md)) and print the stored token:
+Log in with the `classic-games` CLI (see [`../cli/README.md`](../cli/README.md)) and print the stored token:
 
 ```bash
-forgeplay auth login          # a guest session by default; stores the token for the configured server
-forgeplay auth token          # prints that token and nothing else
+classic-games auth login          # a guest session by default; stores the token for the configured server
+classic-games auth token          # prints that token and nothing else
 ```
 
-`forgeplay auth token` is the value for `FORGEPLAY_TOKEN`; both programs must point at the same backend (`FORGEPLAY_SERVER_URL`). Without the CLI, a guest session can also be created directly, and the `token` field of the answer is the value:
+`classic-games auth token` is the value for `CLASSIC_GAMES_TOKEN`; both programs must point at the same backend (`CLASSIC_GAMES_SERVER_URL`). Without the CLI, a guest session can also be created directly, and the `token` field of the answer is the value:
 
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/auth/guest
 ```
 
-Tokens are valid for 30 days. `forgeplay auth refresh` and `forgeplay auth logout` revoke the token the server was started with, so restart the server with the new one afterwards. A guest account cannot be recovered once its token is lost.
+Tokens are valid for 30 days. `classic-games auth refresh` and `classic-games auth logout` revoke the token the server was started with, so restart the server with the new one afterwards. A guest account cannot be recovered once its token is lost.
 
 ## Client configuration
 
-Replace `/absolute/path/to/forgeplay` with the path of your checkout. Leave `FORGEPLAY_TOKEN` out to run anonymously.
+Replace `/absolute/path/to/classic-games` with the path of your checkout. Leave `CLASSIC_GAMES_TOKEN` out to run anonymously.
 
 ### Claude Code
 
 Add the server from the command line:
 
 ```bash
-claude mcp add forgeplay \
-  --env FORGEPLAY_SERVER_URL=http://localhost:8080 \
-  --env FORGEPLAY_TOKEN=your-token \
-  -- /absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp
+claude mcp add classic-games \
+  --env CLASSIC_GAMES_SERVER_URL=http://localhost:8080 \
+  --env CLASSIC_GAMES_TOKEN=your-token \
+  -- /absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp
 ```
 
 Or put this in `.mcp.json` at the root of a project:
@@ -115,12 +115,12 @@ Or put this in `.mcp.json` at the root of a project:
 ```json
 {
   "mcpServers": {
-    "forgeplay": {
-      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+    "classic-games": {
+      "command": "/absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp",
       "args": [],
       "env": {
-        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
-        "FORGEPLAY_TOKEN": "your-token"
+        "CLASSIC_GAMES_SERVER_URL": "http://localhost:8080",
+        "CLASSIC_GAMES_TOKEN": "your-token"
       }
     }
   }
@@ -134,12 +134,12 @@ Add the server to `claude_desktop_config.json` (Settings, Developer, Edit Config
 ```json
 {
   "mcpServers": {
-    "forgeplay": {
-      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+    "classic-games": {
+      "command": "/absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp",
       "args": [],
       "env": {
-        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
-        "FORGEPLAY_TOKEN": "your-token"
+        "CLASSIC_GAMES_SERVER_URL": "http://localhost:8080",
+        "CLASSIC_GAMES_TOKEN": "your-token"
       }
     }
   }
@@ -153,12 +153,12 @@ Put this in `.cursor/mcp.json` of a project, or in `~/.cursor/mcp.json` for ever
 ```json
 {
   "mcpServers": {
-    "forgeplay": {
-      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+    "classic-games": {
+      "command": "/absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp",
       "args": [],
       "env": {
-        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
-        "FORGEPLAY_TOKEN": "your-token"
+        "CLASSIC_GAMES_SERVER_URL": "http://localhost:8080",
+        "CLASSIC_GAMES_TOKEN": "your-token"
       }
     }
   }
@@ -172,11 +172,11 @@ To let an agent explore games and check patches without being able to change any
 ```json
 {
   "mcpServers": {
-    "forgeplay": {
-      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+    "classic-games": {
+      "command": "/absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp",
       "args": ["--read-only"],
       "env": {
-        "FORGEPLAY_SERVER_URL": "http://localhost:8080"
+        "CLASSIC_GAMES_SERVER_URL": "http://localhost:8080"
       }
     }
   }
@@ -186,15 +186,15 @@ To let an agent explore games and check patches without being able to change any
 ### Streamable HTTP
 
 ```bash
-FORGEPLAY_TOKEN=your-token apps/mcp/bin/forgeplay-mcp --transport http --addr 127.0.0.1:8765
+CLASSIC_GAMES_TOKEN=your-token apps/mcp/bin/classic-games-mcp --transport http --addr 127.0.0.1:8765
 ```
 
-Clients connect to `http://127.0.0.1:8765/mcp`, for example with `claude mcp add --transport http forgeplay http://127.0.0.1:8765/mcp`.
+Clients connect to `http://127.0.0.1:8765/mcp`, for example with `claude mcp add --transport http classic-games http://127.0.0.1:8765/mcp`.
 
 ## Security
 
-- **The token is the user.** Every write tool acts on the backend as the account behind `FORGEPLAY_TOKEN`: it creates drafts and publishes games under that name. Give the server a token only for an account the agent is allowed to act as, and prefer a separate guest account for experiments.
-- **Keep the token out of version control.** A project-level `.mcp.json` or `.cursor/mcp.json` is usually committed. Put the token in a user-level configuration file, or reference an environment variable if your client supports that. The server never logs the token and never includes it in tool results; its startup log only records whether one is set. The same holds for credentials inside `FORGEPLAY_SERVER_URL`: the log and tool errors show the URL without its `user:password@` part.
+- **The token is the user.** Every write tool acts on the backend as the account behind `CLASSIC_GAMES_TOKEN`: it creates drafts and publishes games under that name. Give the server a token only for an account the agent is allowed to act as, and prefer a separate guest account for experiments.
+- **Keep the token out of version control.** A project-level `.mcp.json` or `.cursor/mcp.json` is usually committed. Put the token in a user-level configuration file, or reference an environment variable if your client supports that. The server never logs the token and never includes it in tool results; its startup log only records whether one is set. The same holds for credentials inside `CLASSIC_GAMES_SERVER_URL`: the log and tool errors show the URL without its `user:password@` part.
 - **Use `--read-only` when writing is not needed.** In that mode the write tools are not registered at all, so a client cannot call them even if a token is present. `generate_mod` is left out as well because it spends AI quota.
 - **Publishing is irreversible from here.** `publish_mod` submits content for moderation under the user's account and there is no tool to withdraw it. The tool is marked destructive so that clients ask for confirmation.
 - **HTTP mode has no authentication of its own.** Anyone who can reach the listener can use every registered tool with the configured token. The default address is loopback only, and requests from another browser origin are always rejected. A foreign `Host` header, which is how a web page reaches a local server through DNS rebinding, is rejected as follows: on a loopback connection the host has to be `localhost` or a loopback address; on any other connection it has to be the IP address the connection arrived on or a name given with `--allowed-host`. A warning is logged when `--addr` is not a loopback address. None of this is authentication: every machine that can reach a non-loopback listener can use it, so do not expose it to a network without an authenticating proxy in front.
@@ -210,7 +210,7 @@ On the stdio transport, stdout carries only JSON-RPC messages. Logs, usage text 
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"manual","version":"1"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_runtimes","arguments":{}}}'; sleep 1) \
-  | apps/mcp/bin/forgeplay-mcp
+  | apps/mcp/bin/classic-games-mcp
 ```
 
 ## Development
@@ -223,13 +223,13 @@ GOWORK=off go test ./... -count=1
 
 `GOWORK=off` checks that the module builds on its own through its `replace` directives; without it the commands run inside the repository's Go workspace (`go.work`). From the repository root, `make mcp-test` is the workspace equivalent.
 
-The tests connect a real MCP client session to the server over the SDK's in-memory transport, with the repository's schemas and baseline DSL files and an in-process stand-in for the backend API. `cmd/forgeplay-mcp` also runs the program as a child process over stdio and serves the HTTP transport on a loopback port.
+The tests connect a real MCP client session to the server over the SDK's in-memory transport, with the repository's schemas and baseline DSL files and an in-process stand-in for the backend API. `cmd/classic-games-mcp` also runs the program as a child process over stdio and serves the HTTP transport on a loopback port.
 
 Layout:
 
 ```
 apps/mcp/
-├── cmd/forgeplay-mcp/   flags, transports, process lifecycle
+├── cmd/classic-games-mcp/   flags, transports, process lifecycle
 └── internal/
     ├── config/          environment variables and schema directory lookup
     ├── schemas/         schema catalog and validation with per-field violations

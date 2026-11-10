@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 const (

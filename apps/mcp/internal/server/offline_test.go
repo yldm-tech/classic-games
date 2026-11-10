@@ -33,7 +33,7 @@ func TestListRuntimes(t *testing.T) {
 		if runtime.Runtime != runtime.Name+"@"+runtime.Version {
 			t.Errorf("runtime %q is not name@version of %q and %q", runtime.Runtime, runtime.Name, runtime.Version)
 		}
-		if runtime.SchemaURI != "forgeplay://schemas/"+runtime.Name+"-"+runtime.Version {
+		if runtime.SchemaURI != "classic-games://schemas/"+runtime.Name+"-"+runtime.Version {
 			t.Errorf("%s: schema_uri = %q", runtime.Runtime, runtime.SchemaURI)
 		}
 		if runtime.Title == "" || !slices.Contains(runtime.Sections, "meta") || !slices.Contains(runtime.RequiredSections, "meta") {
@@ -197,7 +197,7 @@ func TestApplyDSLPatchReportsSchemaViolations(t *testing.T) {
 	}
 }
 
-// Tool errors are read by a model: they are English throughout and name the full pointer, although forgeplay/dsl words its errors in Chinese and with the tail of the pointer only.
+// Tool errors are read by a model: they are English throughout and name the full pointer, although github.com/yldm-tech/classic-games/packages/dsl words its errors in Chinese and with the tail of the pointer only.
 func TestToolErrorsAreEnglishAndNameTheFullPath(t *testing.T) {
 	cs := connect(t, session{})
 	base := baseline(t, "shooter")

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 )
 
 // CtxBilled 是上下文标记:置位表示本请求已发生真实下游成本(如已调用 LLM provider)。

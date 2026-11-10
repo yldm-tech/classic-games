@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"forgeplay/cli/internal/config"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/cli/internal/config"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -52,17 +52,17 @@ func (a *app) authLoginCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "login",
 		Short: "Create a session and store its token for the server",
-		Long: `Create a session on the backend and store its token in the config directory (mode 0600). This command does not print the token; "forgeplay auth token" prints it on request.
+		Long: `Create a session on the backend and store its token in the config directory (mode 0600). This command does not print the token; "classic-games auth token" prints it on request.
 
 Methods:
   guest     (default) a new guest account; needs no credentials. A guest can create, fork and publish mods, but the account cannot be recovered once its token is lost.
-  sms       --phone <number>; the backend texts a code that is then read from standard input. Pass --code to verify a code you already have without requesting a new one. Needs an SMS gateway on the server ("forgeplay server info").
-  password  --phone <number> --password-stdin; for accounts that set a password with "forgeplay auth set-password".
+  sms       --phone <number>; the backend texts a code that is then read from standard input. Pass --code to verify a code you already have without requesting a new one. Needs an SMS gateway on the server ("classic-games server info").
+  password  --phone <number> --password-stdin; for accounts that set a password with "classic-games auth set-password".
 
-Tokens are valid for 30 days; "forgeplay auth refresh" renews one.`,
-		Example: `  forgeplay auth login
-  forgeplay auth login --method sms --phone 13800000000
-  printf '%s\n' "$FORGEPLAY_PASSWORD" | forgeplay auth login --method password --phone 13800000000 --password-stdin`,
+Tokens are valid for 30 days; "classic-games auth refresh" renews one.`,
+		Example: `  classic-games auth login
+  classic-games auth login --method sms --phone 13800000000
+  printf '%s\n' "$CLASSIC_GAMES_PASSWORD" | classic-games auth login --method password --phone 13800000000 --password-stdin`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if !slices.Contains(loginMethods, method) {
@@ -90,7 +90,7 @@ Tokens are valid for 30 days; "forgeplay auth refresh" renews one.`,
 			}
 			server := current.client.BaseURL()
 			if current.loggedIn && !force {
-				return fmt.Errorf("already logged in to %s as %s: run 'forgeplay auth logout' first, or pass --force to replace and revoke the stored session (a replaced guest account cannot be recovered)", server, describeUser(current.credential))
+				return fmt.Errorf("already logged in to %s as %s: run 'classic-games auth logout' first, or pass --force to replace and revoke the stored session (a replaced guest account cannot be recovered)", server, describeUser(current.credential))
 			}
 			// Login requests are sent without the old token.
 			current.client.SetToken("")
@@ -113,7 +113,7 @@ Tokens are valid for 30 days; "forgeplay auth refresh" renews one.`,
 						return metaErr
 					}
 					if !meta.SMS {
-						return fmt.Errorf("%s has no SMS gateway configured, so a login code cannot be delivered: use a guest login ('forgeplay auth login') or --method password", server)
+						return fmt.Errorf("%s has no SMS gateway configured, so a login code cannot be delivered: use a guest login ('classic-games auth login') or --method password", server)
 					}
 					if err := current.client.SendSMSCode(ctx, phone); err != nil {
 						return err
@@ -225,14 +225,14 @@ func (a *app) authStatusCommand() *cobra.Command {
 				if err := a.emitAuthStatus(cmd, authReport{Server: server}, time.Time{}); err != nil {
 					return err
 				}
-				return fmt.Errorf("not logged in to %s: run 'forgeplay auth login'", server)
+				return fmt.Errorf("not logged in to %s: run 'classic-games auth login'", server)
 			}
 			user, err := current.client.CurrentUser(cmd.Context())
 			if sdk.IsUnauthorized(err) {
 				if emitErr := a.emitAuthStatus(cmd, authReport{Server: server, Method: current.credential.Method}, current.credential.SavedAt); emitErr != nil {
 					return emitErr
 				}
-				return fmt.Errorf("the session stored for %s is expired or revoked: run 'forgeplay auth login --force'", server)
+				return fmt.Errorf("the session stored for %s is expired or revoked: run 'classic-games auth login --force'", server)
 			}
 			if err != nil {
 				return err
@@ -292,7 +292,7 @@ func (a *app) authSetPasswordCommand() *cobra.Command {
 		Use:     "set-password",
 		Short:   "Set the account password used by 'auth login --method password'",
 		Long:    "Set or replace the password of the signed-in account (at least 8 characters). The password is read from standard input.",
-		Example: `  printf '%s\n' "$FORGEPLAY_PASSWORD" | forgeplay auth set-password --password-stdin`,
+		Example: `  printf '%s\n' "$CLASSIC_GAMES_PASSWORD" | classic-games auth set-password --password-stdin`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if !passwordStdin {
@@ -331,10 +331,10 @@ func (a *app) authTokenCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "token",
 		Short: "Print the token stored for the server",
-		Long: `Print the token stored for the server to standard output and nothing else. This is the only command that outputs the token; it exists to hand the session to another program, such as forgeplay-mcp through FORGEPLAY_TOKEN.
+		Long: `Print the token stored for the server to standard output and nothing else. This is the only command that outputs the token; it exists to hand the session to another program, such as classic-games-mcp through CLASSIC_GAMES_TOKEN.
 
-The token is not checked against the backend ("forgeplay auth status" does that). Anyone who holds it can act as the account until it expires or "forgeplay auth logout", "forgeplay auth refresh" or "forgeplay auth login --force" revokes it, so keep it out of logs and shared shell history.`,
-		Example: `  export FORGEPLAY_TOKEN="$(forgeplay auth token)"`,
+The token is not checked against the backend ("classic-games auth status" does that). Anyone who holds it can act as the account until it expires or "classic-games auth logout", "classic-games auth refresh" or "classic-games auth login --force" revokes it, so keep it out of logs and shared shell history.`,
+		Example: `  export CLASSIC_GAMES_TOKEN="$(classic-games auth token)"`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			current, err := a.connectSignedIn()

@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
@@ -165,7 +165,7 @@ func RefOf(document map[string]any) (ref string, ok bool) {
 	return name + "@" + version, true
 }
 
-// Validate checks document against the schema of the runtime ref. used is the ref of the schema the document was really checked against. It equals ref except for a legacy shooter@0.x document: forgeplay/dsl migrates those to shooter@1.0.0 first, so used is shooter@1.0.0 and the violations describe the migrated document. A nil slice and a nil error mean the document is valid. Schema violations are returned as the slice, sorted by path; an error means validation could not run, for example because the catalog has no schema for ref.
+// Validate checks document against the schema of the runtime ref. used is the ref of the schema the document was really checked against. It equals ref except for a legacy shooter@0.x document: github.com/yldm-tech/classic-games/packages/dsl migrates those to shooter@1.0.0 first, so used is shooter@1.0.0 and the violations describe the migrated document. A nil slice and a nil error mean the document is valid. Schema violations are returned as the slice, sorted by path; an error means validation could not run, for example because the catalog has no schema for ref.
 func (c *Catalog) Validate(ref string, document map[string]any) (used string, violations []Violation, err error) {
 	used, err = c.validator.ValidateResolved(ref, document)
 	if err == nil {

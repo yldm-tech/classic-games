@@ -61,7 +61,7 @@
 - [x] AI 自动平衡:三 Runtime 多参数联动调节、前后压力指标、Schema 复验与编辑器撤销/发布链已落地。
 - [x] AI 自动生成关卡 / 敌人波次:提示词种子生成稳定 map 节点，支持连续扩展不覆盖，三 Runtime 与双端集成已验证。
 - 创作者生态:作品管理、收益/数据中心、商城
-- [x] 桌面端体验深化:Godot NativeMenu（支持平台）、编辑器 fallback、真实 Runtime 多窗口预览及 `.forgeplay.json` 导入/导出已接通。
+- [x] 桌面端体验深化:Godot NativeMenu（支持平台）、编辑器 fallback、真实 Runtime 多窗口预览及 `.classic-games.json` 导入/导出已接通。
 
 ## 里程碑速查
 

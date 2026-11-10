@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -34,8 +34,8 @@ func (a *app) gamesListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List published games",
 		Long:  "List published games, newest first unless --sort says otherwise. One page is printed; pass the reported cursor to --cursor for the next one, or --all to fetch every page.",
-		Example: `  forgeplay games list --runtime shooter --sort hot
-  forgeplay games list --query cat --all --output json`,
+		Example: `  classic-games games list --runtime shooter --sort hot
+  classic-games games list --query cat --all --output json`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if cmd.Flags().Changed("ai") {
@@ -250,7 +250,7 @@ func (a *app) gamesForkCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "fork <game-id>",
 		Short: "Fork a game into a draft mod you own",
-		Long:  "Create a draft mod whose effective DSL starts equal to the game's. Edit it with 'forgeplay mods save' and release it with 'forgeplay mods publish'. Requires a login.",
+		Long:  "Create a draft mod whose effective DSL starts equal to the game's. Edit it with 'classic-games mods save' and release it with 'classic-games mods publish'. Requires a login.",
 		Args:  idArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			current, err := a.connectSignedIn()

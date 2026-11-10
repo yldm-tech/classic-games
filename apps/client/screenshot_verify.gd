@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Visual screenshot harness for the polished shell.
 ## Run (X11 + compatibility renderer, not part of `make ci`):
-##   FORGEPLAY_SHOT_DIR=/tmp/fp-shots GODOT=... scripts/run-screenshot-verify.sh
+##   CLASSIC_GAMES_SHOT_DIR=/tmp/fp-shots GODOT=... scripts/run-screenshot-verify.sh
 ## Captures phone chrome plus one desktop frame with seeded catalog data.
 
 const AppStateScript := preload("res://shell/state/app_state.gd")
@@ -199,7 +199,7 @@ class FakeOperationsGateway:
 		})
 
 func _initialize() -> void:
-	_out_dir = OS.get_environment("FORGEPLAY_SHOT_DIR")
+	_out_dir = OS.get_environment("CLASSIC_GAMES_SHOT_DIR")
 	if _out_dir == "":
 		_out_dir = OS.get_user_data_dir().path_join("screenshots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
@@ -221,7 +221,7 @@ func _finish(exit_code: int) -> void:
 
 func _run() -> void:
 	var state: Node = AppStateScript.new()
-	state.save_path = "user://forgeplay_screenshot.cfg"
+	state.save_path = "user://classic_games_screenshot.cfg"
 	state.theme = TokensT.THEME_DARK
 	state.locale = "zh"
 	root.add_child(state)

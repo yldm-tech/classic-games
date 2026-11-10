@@ -2,9 +2,9 @@ package feedback
 
 import (
 	"errors"
-	"forgeplay/server/internal/social"
-	"forgeplay/server/pkg/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 	"net/http"
 )
 

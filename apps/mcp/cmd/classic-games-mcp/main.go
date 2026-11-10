@@ -1,4 +1,4 @@
-// Command forgeplay-mcp is a Model Context Protocol server that lets AI agents work with ForgePlay: read and validate the Mod DSL offline, browse games, and fork, patch and publish mods through the backend API.
+// Command classic-games-mcp is a Model Context Protocol server that lets AI agents work with Classic Games: read and validate the Mod DSL offline, browse games, and fork, patch and publish mods through the backend API.
 //
 // The stdio transport owns stdout for protocol messages, so everything else (logs, usage, errors) goes to stderr.
 package main
@@ -20,10 +20,10 @@ import (
 	"syscall"
 	"time"
 
-	"forgeplay/mcp/internal/config"
-	"forgeplay/mcp/internal/schemas"
-	"forgeplay/mcp/internal/server"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/config"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/schemas"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/server"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -48,7 +48,7 @@ func main() {
 	err := run(ctx, os.Args[1:], os.Getenv, os.Stdout, os.Stderr)
 	stop()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "forgeplay-mcp:", err)
+		fmt.Fprintln(os.Stderr, "classic-games-mcp:", err)
 		os.Exit(1)
 	}
 }
@@ -66,7 +66,7 @@ func run(ctx context.Context, args []string, getenv func(string) string, stdout,
 	flags.Usage = func() {
 		fmt.Fprintf(stderr, "Usage: %s [--transport stdio|http] [--addr host:port] [--allowed-host name]... [--read-only]\n\nFlags:\n", server.Name)
 		flags.PrintDefaults()
-		fmt.Fprintf(stderr, "\nEnvironment:\n  %s  backend root URL (default %s)\n  %s       bearer token for the write tools (obtain with: forgeplay auth login, then forgeplay auth token)\n  %s  directory with the DSL JSON Schemas (default: packages/schemas found above the binary, then above the working directory)\n  %s        language of backend messages and titles: zh, en or ja (default: backend default)\n", config.EnvServerURL, config.DefaultServerURL, config.EnvToken, config.EnvSchemaDir, config.EnvLanguage)
+		fmt.Fprintf(stderr, "\nEnvironment:\n  %s  backend root URL (default %s)\n  %s       bearer token for the write tools (obtain with: classic-games auth login, then classic-games auth token)\n  %s  directory with the DSL JSON Schemas (default: packages/schemas found above the binary, then above the working directory)\n  %s        language of backend messages and titles: zh, en or ja (default: backend default)\n", config.EnvServerURL, config.DefaultServerURL, config.EnvToken, config.EnvSchemaDir, config.EnvLanguage)
 	}
 	if err := flags.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {

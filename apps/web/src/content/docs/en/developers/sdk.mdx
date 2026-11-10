@@ -1,13 +1,13 @@
 ---
 title: Go SDK
-description: forgeplay/sdk is a typed Go client for the backend HTTP API. The CLI and the MCP server are both built on it.
+description: github.com/yldm-tech/classic-games/packages/sdk is a typed Go client for the backend HTTP API. The CLI and the MCP server are both built on it.
 sidebar:
   order: 4
 ---
 
 import { repoDir, repoFile } from '../../../../config/site.ts';
 
-`forgeplay/sdk` is a typed Go client for the ForgePlay backend HTTP API. Its source is in <a href={repoDir('packages/sdk')}>packages/sdk</a>. It depends on the standard library only, and both the `forgeplay` CLI and the `forgeplay-mcp` server use it to reach the backend.
+`github.com/yldm-tech/classic-games/packages/sdk` is a typed Go client for the Classic Games backend HTTP API. Its source is in <a href={repoDir('packages/sdk')}>packages/sdk</a>. It depends on the standard library only, and both the `classic-games` CLI and the `classic-games-mcp` server use it to reach the backend.
 
 :::note
 For the full method list and type reference, see <a href={repoFile('packages/sdk/README.md')}>packages/sdk/README.md</a> and the doc comments in the source.
@@ -15,12 +15,12 @@ For the full method list and type reference, see <a href={repoFile('packages/sdk
 
 ## Importing it
 
-`forgeplay/sdk` is a module name local to the repository; it is not published to a module proxy. Other modules in the repository point at it with a `replace` directive:
+`github.com/yldm-tech/classic-games/packages/sdk` is a module name local to the repository; it is not published to a module proxy. Other modules in the repository point at it with a `replace` directive:
 
 ```
-require forgeplay/sdk v0.0.0
+require github.com/yldm-tech/classic-games/packages/sdk v0.0.0
 
-replace forgeplay/sdk => ../../packages/sdk
+replace github.com/yldm-tech/classic-games/packages/sdk => ../../packages/sdk
 ```
 
 Adjust the relative path to where your module lives.
@@ -37,7 +37,7 @@ import (
 	"fmt"
 	"log"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 func main() {
@@ -91,9 +91,9 @@ func main() {
 - Listings use cursor pagination and return `Page[T]`. `sdk.Paginate` chains every page into one iterator.
 - Every non-2xx response comes back as `*sdk.APIError`, carrying the HTTP status and the backend's error code. Reach it with `errors.As`, or test with `sdk.IsCode`, `sdk.IsStatus` and `sdk.IsNotFound`.
 - Two kinds of error are raised by the client itself and matched with `errors.Is`: `sdk.ErrInvalidArgument` for an id that is empty, contains `/` or is `.` or `..`, in which case no request is sent, and `sdk.ErrBadResponse` for a 2xx answer that is not the expected JSON or is larger than 32 MiB. A word that is a backend route of its own, such as `mine`, passed as an id to `GetGame` and the other single-resource getters comes back as `404 NOT_FOUND`, never as an empty object.
-- The `NewDSL` returned by `GenerateMod` has already been validated against the schema by the backend. Nothing is stored; to keep the result, call `CreateMod` as above, or `SaveDraft` on an existing draft. Pass the returned `Provenance` back so the mod is marked as AI-generated; the backend only issues one when `FORGEPLAY_SECRET` is set.
+- The `NewDSL` returned by `GenerateMod` has already been validated against the schema by the backend. Nothing is stored; to keep the result, call `CreateMod` as above, or `SaveDraft` on an existing draft. Pass the returned `Provenance` back so the mod is marked as AI-generated; the backend only issues one when `CLASSIC_GAMES_SECRET` is set.
 - A game published with `PublishDraft` starts in status `reviewing` and becomes public once a moderator approves it.
 - The showcase games a development backend is seeded with have no mod behind them, so `GetGameDSL` and `ForkGame` answer 404 (code `GAME_HAS_NO_MOD`) for them; that is why the example starts from the runtime baseline.
-- To apply a patch or validate against a schema offline, use `forgeplay/dsl` (`packages/dsl`). The SDK's `PatchOp` has the same fields as `dsl.Op` and converts element by element.
+- To apply a patch or validate against a schema offline, use `github.com/yldm-tech/classic-games/packages/dsl` (`packages/dsl`). The SDK's `PatchOp` has the same fields as `dsl.Op` and converts element by element.
 
 The contract of the endpoints themselves is in [API design](/en/docs/09-api-design/) (Chinese).

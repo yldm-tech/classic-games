@@ -1,10 +1,10 @@
-# ForgePlay
+# Classic Games
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 
 English | [简体中文](./README.zh-CN.md)
 
-ForgePlay is a platform for creating and sharing small games with AI. A player does not write code: they take an existing game, describe a change in plain language, and publish the result for others to play and fork. Every game is a JSON document, the **Mod DSL**, interpreted by a fixed game runtime. The AI only ever produces RFC 6902 patches against that document, never executable code. The backend applies each generated patch and validates the result against the runtime's JSON Schema before returning it, and a mod can only be published when its effective DSL validates.
+Classic Games is a platform for creating and sharing small games with AI. A player does not write code: they take an existing game, describe a change in plain language, and publish the result for others to play and fork. Every game is a JSON document, the **Mod DSL**, interpreted by a fixed game runtime. The AI only ever produces RFC 6902 patches against that document, never executable code. The backend applies each generated patch and validates the result against the runtime's JSON Schema before returning it, and a mod can only be published when its effective DSL validates.
 
 The project is pre-release. There are no published binaries, packages or app store builds; everything below starts from source.
 
@@ -14,24 +14,24 @@ The project is pre-release. There are no published binaries, packages or app sto
 2. **Edit with AI.** The client sends the current effective DSL and the player's request to the backend. The backend asks the model for a JSON Patch, applies it, validates the result against the schema, and feeds validation errors back to the model for a bounded number of retries. The model's output space is the schema; there is no path from model output to code execution.
 3. **Publish.** The draft is submitted as a game, goes through moderation, and becomes forkable by everyone else.
 
-The same three steps are available from the Godot client, from the `forgeplay` command line and, for AI agents, from the `forgeplay-mcp` server.
+The same three steps are available from the Godot client, from the `classic-games` command line and, for AI agents, from the `classic-games-mcp` server.
 
 ## Repository layout
 
 | Path | What it is |
 |---|---|
 | [`apps/client`](./apps/client) | The game client and the game runtimes: one Godot 4.6 project exported to iOS, Android, macOS, Windows and Web. See [client architecture](./docs/16-client-architecture.md). |
-| [`apps/server`](./apps/server) | Go backend (gin, GORM), module `forgeplay/server`: HTTP API, domain services, AI orchestration. See its [README](./apps/server/README.md). |
-| [`apps/cli`](./apps/cli) | `forgeplay`, a Go command-line client (cobra), module `forgeplay/cli`: catalog, mods, AI generation, and offline DSL validation, patching and migration. See its [README](./apps/cli/README.md). |
-| [`apps/mcp`](./apps/mcp) | `forgeplay-mcp`, a Model Context Protocol server built on the official Go SDK, module `forgeplay/mcp`: the same capabilities as tools for AI agents. See its [README](./apps/mcp/README.md). |
+| [`apps/server`](./apps/server) | Go backend (gin, GORM), module `github.com/yldm-tech/classic-games/apps/server`: HTTP API, domain services, AI orchestration. See its [README](./apps/server/README.md). |
+| [`apps/cli`](./apps/cli) | `classic-games`, a Go command-line client (cobra), module `github.com/yldm-tech/classic-games/apps/cli`: catalog, mods, AI generation, and offline DSL validation, patching and migration. See its [README](./apps/cli/README.md). |
+| [`apps/mcp`](./apps/mcp) | `classic-games-mcp`, a Model Context Protocol server built on the official Go SDK, module `github.com/yldm-tech/classic-games/apps/mcp`: the same capabilities as tools for AI agents. See its [README](./apps/mcp/README.md). |
 | [`apps/web`](./apps/web) | The website: landing page and documentation site (Astro and Starlight, pnpm). See its [README](./apps/web/README.md). |
 | [`packages/schemas`](./packages/schemas) | The Mod DSL JSON Schemas, one file per runtime and version. |
-| [`packages/dsl`](./packages/dsl) | Go module `forgeplay/dsl`: RFC 6902 patch, DSL migration and schema validation, shared by the backend, the CLI and the MCP server. See its [README](./packages/dsl/README.md). |
-| [`packages/sdk`](./packages/sdk) | Go module `forgeplay/sdk`: typed HTTP client for the backend API, shared by the CLI and the MCP server. See its [README](./packages/sdk/README.md). |
+| [`packages/dsl`](./packages/dsl) | Go module `github.com/yldm-tech/classic-games/packages/dsl`: RFC 6902 patch, DSL migration and schema validation, shared by the backend, the CLI and the MCP server. See its [README](./packages/dsl/README.md). |
+| [`packages/sdk`](./packages/sdk) | Go module `github.com/yldm-tech/classic-games/packages/sdk`: typed HTTP client for the backend API, shared by the CLI and the MCP server. See its [README](./packages/sdk/README.md). |
 | [`docs`](./docs) | Technical documentation, in Chinese. Start at [docs/README.md](./docs/README.md). |
 | [`scripts`](./scripts) | Repository gates and helper scripts: architecture checks, the Godot test runner, the client-server integration run. |
 
-Dependencies point one way, from `apps` to `packages`. The Go modules are tied together by [`go.work`](./go.work) and also reference each other with `require forgeplay/<name> v0.0.0` plus a relative `replace`, so each module builds on its own with `GOWORK=off`. The module paths are local to this repository and are not published to a module proxy. The reasons for this layout are recorded in [ADR-015](./docs/decisions.md).
+Dependencies point one way, from `apps` to `packages`. The Go modules are tied together by [`go.work`](./go.work) and also reference each other with `require classic-games/<name> v0.0.0` plus a relative `replace`, so each module builds on its own with `GOWORK=off`. The module paths are local to this repository and are not published to a module proxy. The reasons for this layout are recorded in [ADR-015](./docs/decisions.md).
 
 ## Quick start
 
@@ -56,7 +56,7 @@ With no environment variables set, the backend runs in development mode on a SQL
 
 ```bash
 make import GODOT=/path/to/godot      # import resources once
-FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
+CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
 ```
 
 Or open `apps/client` in the Godot 4.6.3 editor.
@@ -64,22 +64,22 @@ Or open `apps/client` in the Godot 4.6.3 editor.
 ### CLI
 
 ```bash
-make cli-build                        # writes apps/cli/bin/forgeplay
+make cli-build                        # writes apps/cli/bin/classic-games
 export PATH="$PWD/apps/cli/bin:$PATH"
 
-forgeplay dsl validate apps/client/runtime/shooter/baseline.dsl.json   # offline
-forgeplay server health
-forgeplay auth login                  # guest session
-forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-forgeplay mods list
+classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json   # offline
+classic-games server health
+classic-games auth login                  # guest session
+classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+classic-games mods list
 ```
 
 ### MCP server
 
 ```bash
-make mcp-build                        # writes apps/mcp/bin/forgeplay-mcp
-export FORGEPLAY_TOKEN="$(forgeplay auth token)"    # optional; without it the server is anonymous
-claude mcp add forgeplay --env FORGEPLAY_SERVER_URL=http://localhost:8080 --env FORGEPLAY_TOKEN="$FORGEPLAY_TOKEN" -- "$PWD/apps/mcp/bin/forgeplay-mcp"
+make mcp-build                        # writes apps/mcp/bin/classic-games-mcp
+export CLASSIC_GAMES_TOKEN="$(classic-games auth token)"    # optional; without it the server is anonymous
+claude mcp add classic-games --env CLASSIC_GAMES_SERVER_URL=http://localhost:8080 --env CLASSIC_GAMES_TOKEN="$CLASSIC_GAMES_TOKEN" -- "$PWD/apps/mcp/bin/classic-games-mcp"
 ```
 
 Configuration for other MCP clients, the tool list and the security notes are in [`apps/mcp/README.md`](./apps/mcp/README.md).
@@ -137,4 +137,4 @@ Report suspected vulnerabilities privately, as described in [SECURITY.md](./SECU
 
 ## Licence
 
-ForgePlay is licensed under the [Apache License, Version 2.0](./LICENSE). Third-party attributions are in [NOTICE](./NOTICE) and [docs/legal/licenses.md](./docs/legal/licenses.md).
+Classic Games is licensed under the [Apache License, Version 2.0](./LICENSE). Third-party attributions are in [NOTICE](./NOTICE) and [docs/legal/licenses.md](./docs/legal/licenses.md).

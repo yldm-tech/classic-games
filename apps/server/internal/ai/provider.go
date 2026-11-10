@@ -10,7 +10,7 @@ package ai
 import (
 	"context"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // TokenUsage 记录一次模型调用的 token 消耗,用于成本核算。
@@ -43,7 +43,7 @@ type LLMProvider interface {
 }
 
 // Validator 校验 apply 后的生效 DSL 是否符合 runtime 的契约(权威校验,见 docs/12-ai-prompt.md)。
-// 权威实现是 forgeplay/dsl 的 SchemaValidator(packages/dsl/schema_validator.go),用 JSON Schema 校验
+// 权威实现是 github.com/yldm-tech/classic-games/packages/dsl 的 SchemaValidator(packages/dsl/schema_validator.go),用 JSON Schema 校验
 // packages/schemas/<name>-<version>.schema.json;MinimalValidator 是零配置兜底(测试/未配置 schema 目录时)。
 type Validator interface {
 	Validate(runtime string, effectiveDSL map[string]any) error

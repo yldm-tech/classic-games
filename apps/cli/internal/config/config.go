@@ -1,4 +1,4 @@
-// Package config persists the forgeplay CLI state on disk: user settings in config.json and per-server login tokens in credentials.json, both inside one directory. The directory is created with mode 0700 and the files are written with mode 0600. A directory that already exists keeps its mode, because FORGEPLAY_CONFIG_DIR may point at a directory the user also uses for other things; PermissionWarnings reports one that other users can write to.
+// Package config persists the classic-games CLI state on disk: user settings in config.json and per-server login tokens in credentials.json, both inside one directory. The directory is created with mode 0700 and the files are written with mode 0600. A directory that already exists keeps its mode, because CLASSIC_GAMES_CONFIG_DIR may point at a directory the user also uses for other things; PermissionWarnings reports one that other users can write to.
 package config
 
 import (
@@ -13,17 +13,17 @@ import (
 )
 
 // EnvConfigDir overrides the directory that holds config.json and credentials.json. It exists for tests, CI jobs and sandboxes that must not touch the user's real configuration.
-const EnvConfigDir = "FORGEPLAY_CONFIG_DIR"
+const EnvConfigDir = "CLASSIC_GAMES_CONFIG_DIR"
 
 const (
-	appDirName      = "forgeplay"
+	appDirName      = "classic-games"
 	settingsFile    = "config.json"
 	credentialsFile = "credentials.json"
 	dirMode         = 0o700
 	fileMode        = 0o600
 )
 
-// Settings are the values a user stores with "forgeplay config set". Every field is optional; an empty field means "not set".
+// Settings are the values a user stores with "classic-games config set". Every field is optional; an empty field means "not set".
 type Settings struct {
 	// ServerURL is the backend root, such as "http://localhost:8080".
 	ServerURL string `json:"server_url,omitempty"`
@@ -47,7 +47,7 @@ type credentialsDocument struct {
 	Servers map[string]Credential `json:"servers"`
 }
 
-// Dir returns the configuration directory: $FORGEPLAY_CONFIG_DIR when set, otherwise os.UserConfigDir()/forgeplay.
+// Dir returns the configuration directory: $CLASSIC_GAMES_CONFIG_DIR when set, otherwise os.UserConfigDir()/classic-games.
 func Dir(getenv func(string) string) (string, error) {
 	if override := getenv(EnvConfigDir); override != "" {
 		absolute, err := filepath.Abs(override)

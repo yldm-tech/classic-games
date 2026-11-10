@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Run the ForgePlay backend, the Godot client and this site from source, and reproduce the CI gates locally.
+description: Run the Classic Games backend, the Godot client and this site from source, and reproduce the CI gates locally.
 sidebar:
   order: 1
 ---
@@ -8,7 +8,7 @@ sidebar:
 import { Code } from '@astrojs/starlight/components';
 import { REPO_URL, repoFile } from '../../../../config/site.ts';
 
-ForgePlay is pre-release: there are no public builds and no app store releases. Everything below starts from source, and every `make` target used here is defined in the <a href={repoFile('Makefile')}>Makefile</a> at the repository root.
+Classic Games is pre-release: there are no public builds and no app store releases. Everything below starts from source, and every `make` target used here is defined in the <a href={repoFile('Makefile')}>Makefile</a> at the repository root.
 
 ## Prerequisites
 
@@ -49,10 +49,10 @@ Let Godot import the project's resources first:
 make import GODOT=/path/to/godot
 ```
 
-Then start the project. The client reads the backend address from the `FORGEPLAY_API` environment variable:
+Then start the project. The client reads the backend address from the `CLASSIC_GAMES_API` environment variable:
 
 ```bash
-FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
+CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
 ```
 
 You can also open `apps/client` in the Godot 4.6.3 editor.
@@ -60,18 +60,18 @@ You can also open `apps/client` in the Godot 4.6.3 editor.
 ## Build the CLI and the MCP server
 
 ```bash
-make cli-build    # apps/cli/bin/forgeplay
-make mcp-build    # apps/mcp/bin/forgeplay-mcp
+make cli-build    # apps/cli/bin/classic-games
+make mcp-build    # apps/mcp/bin/classic-games-mcp
 ```
 
 With the backend running, a first session looks like this:
 
 ```bash
 export PATH="$PWD/apps/cli/bin:$PATH"
-forgeplay server health
-forgeplay auth login
-forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-forgeplay mods list
+classic-games server health
+classic-games auth login
+classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+classic-games mods list
 ```
 
 The [CLI](/en/developers/cli/) and [MCP server](/en/developers/mcp/) pages go on from here.
@@ -112,6 +112,6 @@ pnpm web:build    # static output in apps/web/dist
 ## Next steps
 
 - Work from a terminal: [CLI](/en/developers/cli/)
-- Connect ForgePlay to an AI assistant: [MCP server](/en/developers/mcp/)
+- Connect Classic Games to an AI assistant: [MCP server](/en/developers/mcp/)
 - Call the backend from Go: [Go SDK](/en/developers/sdk/)
 - Understand the design: [Architecture](/en/docs/04-architecture/) and [Mod DSL design](/en/docs/05-dsl-design/), both in Chinese

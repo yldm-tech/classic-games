@@ -14,9 +14,9 @@ cleanup() {
 trap cleanup EXIT
 
 # 起后端(StubProvider + 真 SchemaValidator)
-# FORGEPLAY_DEV_ADMIN=1:让登录用户可做审核裁决(仅集成测试;生产严禁)。
-( cd "$ROOT/apps/server" && PORT="$PORT" FORGEPLAY_SCHEMA_DIR="$ROOT/packages/schemas" \
-  FORGEPLAY_DEV_ADMIN=1 go run ./cmd/server ) &
+# CLASSIC_GAMES_DEV_ADMIN=1:让登录用户可做审核裁决(仅集成测试;生产严禁)。
+( cd "$ROOT/apps/server" && PORT="$PORT" CLASSIC_GAMES_SCHEMA_DIR="$ROOT/packages/schemas" \
+  CLASSIC_GAMES_DEV_ADMIN=1 go run ./cmd/server ) &
 SRV=$!
 
 # 等 healthz(curl 自带重试,避免显式 sleep)
@@ -26,7 +26,7 @@ if ! curl -s --retry-connrefused --retry 40 --retry-delay 1 -o /dev/null "http:/
 fi
 
 LOG="$(mktemp)"
-FORGEPLAY_API="http://127.0.0.1:$PORT" "$GODOT" --headless --path "$ROOT/apps/client" \
+CLASSIC_GAMES_API="http://127.0.0.1:$PORT" "$GODOT" --headless --path "$ROOT/apps/client" \
   --script res://net_integration_test.gd 2>&1 | tee "$LOG"
 status=${PIPESTATUS[0]}
 if [ "$status" -ne 0 ] || ! grep -Eq '^=== 集成结果: [0-9]+ passed, 0 failed ===$' "$LOG"; then

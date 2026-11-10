@@ -1,12 +1,12 @@
-module forgeplay/cli
+module github.com/yldm-tech/classic-games/apps/cli
 
 go 1.26
 
 require (
-	forgeplay/dsl v0.0.0
-	forgeplay/sdk v0.0.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/spf13/cobra v1.10.2
+	github.com/yldm-tech/classic-games/packages/dsl v0.0.0
+	github.com/yldm-tech/classic-games/packages/sdk v0.0.0
 	golang.org/x/text v0.36.0
 )
 
@@ -15,6 +15,6 @@ require (
 	github.com/spf13/pflag v1.0.9 // indirect
 )
 
-replace forgeplay/dsl => ../../packages/dsl
+replace github.com/yldm-tech/classic-games/packages/dsl => ../../packages/dsl
 
-replace forgeplay/sdk => ../../packages/sdk
+replace github.com/yldm-tech/classic-games/packages/sdk => ../../packages/sdk

@@ -8,9 +8,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"forgeplay/dsl"
-	"forgeplay/mcp/internal/schemas"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/schemas"
+	"github.com/yldm-tech/classic-games/packages/dsl"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 // maxViolations caps the violations listed in one result; a broken document can produce hundreds and the first ones are enough to act on.
@@ -237,7 +237,7 @@ func checkOp(index int, op PatchOp) error {
 	return nil
 }
 
-// applyFailure says in English why forgeplay/dsl could not apply op. The messages of forgeplay/dsl are Chinese, shared with the backend and the game client, and name only the tail of the pointer, so the reason is rebuilt here from the error class and the full path. An error without a known class is passed on as it is.
+// applyFailure says in English why github.com/yldm-tech/classic-games/packages/dsl could not apply op. The messages of github.com/yldm-tech/classic-games/packages/dsl are Chinese, shared with the backend and the game client, and name only the tail of the pointer, so the reason is rebuilt here from the error class and the full path. An error without a known class is passed on as it is.
 func applyFailure(op PatchOp, err error) string {
 	switch {
 	case errors.Is(err, dsl.ErrTestFailed):

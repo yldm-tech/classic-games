@@ -140,8 +140,8 @@ export const CLONE_COMMAND_PLACEHOLDER = CLONE_PLACEHOLDER;
 
 const zh: LandingStrings = {
 	meta: {
-		title: 'ForgePlay — Fork 一个游戏，用一句话改出你的版本',
-		description: 'ForgePlay 是 AI 驱动的小游戏创作与社区平台。用自然语言描述修改，AI 只生成受 JSON Schema 约束的 Mod DSL 补丁，绝不生成可执行代码。',
+		title: 'Classic Games — Fork 一个游戏，用一句话改出你的版本',
+		description: 'Classic Games 是 AI 驱动的小游戏创作与社区平台。用自然语言描述修改，AI 只生成受 JSON Schema 约束的 Mod DSL 补丁，绝不生成可执行代码。',
 	},
 	nav: {
 		skip: '跳到正文',
@@ -153,12 +153,12 @@ const zh: LandingStrings = {
 		switchLanguage: 'Switch to English',
 		otherLanguageName: 'English',
 		otherLanguageShort: 'EN',
-		home: 'ForgePlay 首页',
+		home: 'Classic Games 首页',
 	},
 	hero: {
 		status: '预发布 · 目前只能从源码构建',
 		title: 'Fork 一个游戏，|说一句话，|改出你的版本',
-		lead: 'ForgePlay 是 AI 驱动的小游戏创作与社区平台。你用自然语言描述想要的修改，AI 只回一段 Mod DSL 补丁：一份受 JSON Schema 约束的 JSON，不是可执行代码。',
+		lead: 'Classic Games 是 AI 驱动的小游戏创作与社区平台。你用自然语言描述想要的修改，AI 只回一段 Mod DSL 补丁：一份受 JSON Schema 约束的 JSON，不是可执行代码。',
 		primaryCta: '从源码开始',
 		secondaryCta: '阅读文档',
 		note: '还没有公开构建，也没有上架任何应用商店。',
@@ -259,9 +259,9 @@ const zh: LandingStrings = {
 		eyebrow: '05 · 开发者',
 		title: '命令行、|MCP 服务|和 Go SDK',
 		lead: '三个入口共用同一套 DSL 代码和同一个后端客户端。',
-		cli: { title: 'forgeplay', body: '在终端里查看游戏和 Mod、让 AI 生成补丁，也可以离线校验 DSL、应用补丁。', link: 'CLI 文档' },
-		mcp: { title: 'forgeplay-mcp', body: '把同样的能力作为 MCP 工具交给 AI 助手：离线的 Schema、校验、补丁工具，加上访问后端的游戏与 Mod 工具。默认走 stdio，可以改用 HTTP，也可以只读运行。', link: 'MCP 文档' },
-		sdk: { title: 'forgeplay/sdk', body: '后端 HTTP API 的类型化 Go 客户端。CLI 和 MCP 服务都构建在它之上。', link: 'Go SDK 文档' },
+		cli: { title: 'classic-games', body: '在终端里查看游戏和 Mod、让 AI 生成补丁，也可以离线校验 DSL、应用补丁。', link: 'CLI 文档' },
+		mcp: { title: 'classic-games-mcp', body: '把同样的能力作为 MCP 工具交给 AI 助手：离线的 Schema、校验、补丁工具，加上访问后端的游戏与 Mod 工具。默认走 stdio，可以改用 HTTP，也可以只读运行。', link: 'MCP 文档' },
+		sdk: { title: 'github.com/yldm-tech/classic-games/packages/sdk', body: '后端 HTTP API 的类型化 Go 客户端。CLI 和 MCP 服务都构建在它之上。', link: 'Go SDK 文档' },
 	},
 	start: {
 		eyebrow: '06 · 从源码开始',
@@ -304,15 +304,15 @@ const zh: LandingStrings = {
 		terms: '用户协议',
 		privacy: '隐私政策',
 		licenses: '开源许可说明',
-		license: 'ForgePlay 以 Apache-2.0 许可开源。',
+		license: 'Classic Games 以 Apache-2.0 许可开源。',
 		privacyNote: '本站不使用分析或追踪脚本，也不加载第三方字体。',
 	},
 };
 
 const en: LandingStrings = {
 	meta: {
-		title: 'ForgePlay — fork a game and change it in plain language',
-		description: 'ForgePlay is an AI-driven platform for creating and sharing small games. Describe a change in plain language; the AI only produces a Mod DSL patch constrained by a JSON Schema, never executable code.',
+		title: 'Classic Games — fork a game and change it in plain language',
+		description: 'Classic Games is an AI-driven platform for creating and sharing small games. Describe a change in plain language; the AI only produces a Mod DSL patch constrained by a JSON Schema, never executable code.',
 	},
 	nav: {
 		skip: 'Skip to content',
@@ -324,12 +324,12 @@ const en: LandingStrings = {
 		switchLanguage: '切换到简体中文',
 		otherLanguageName: '简体中文',
 		otherLanguageShort: '中文',
-		home: 'ForgePlay home',
+		home: 'Classic Games home',
 	},
 	hero: {
 		status: 'Pre-release · source builds only',
 		title: 'Fork a game. |Describe the change. |Publish your version.',
-		lead: 'ForgePlay is an AI-driven platform for creating and sharing small games. You describe the change you want in plain language, and the AI answers with a Mod DSL patch: JSON constrained by a JSON Schema, not executable code.',
+		lead: 'Classic Games is an AI-driven platform for creating and sharing small games. You describe the change you want in plain language, and the AI answers with a Mod DSL patch: JSON constrained by a JSON Schema, not executable code.',
 		primaryCta: 'Start from source',
 		secondaryCta: 'Read the docs',
 		note: 'There are no public builds and no app store releases yet.',
@@ -431,9 +431,9 @@ const en: LandingStrings = {
 		eyebrow: '05 · Developers',
 		title: 'A CLI, an MCP server |and a Go SDK',
 		lead: 'Three entry points that share the same DSL code and the same backend client.',
-		cli: { title: 'forgeplay', body: 'Browse games and mods, ask the AI for a patch, and validate or patch DSL offline, all from a terminal.', link: 'CLI docs' },
-		mcp: { title: 'forgeplay-mcp', body: 'Gives AI assistants the same capabilities as MCP tools: offline schema, validate and patch tools, plus backend tools for games and mods. It runs over stdio by default, can serve HTTP, and has a read-only mode.', link: 'MCP docs' },
-		sdk: { title: 'forgeplay/sdk', body: 'A typed Go client for the backend HTTP API. The CLI and the MCP server are both built on it.', link: 'Go SDK docs' },
+		cli: { title: 'classic-games', body: 'Browse games and mods, ask the AI for a patch, and validate or patch DSL offline, all from a terminal.', link: 'CLI docs' },
+		mcp: { title: 'classic-games-mcp', body: 'Gives AI assistants the same capabilities as MCP tools: offline schema, validate and patch tools, plus backend tools for games and mods. It runs over stdio by default, can serve HTTP, and has a read-only mode.', link: 'MCP docs' },
+		sdk: { title: 'github.com/yldm-tech/classic-games/packages/sdk', body: 'A typed Go client for the backend HTTP API. The CLI and the MCP server are both built on it.', link: 'Go SDK docs' },
 	},
 	start: {
 		eyebrow: '06 · From source',
@@ -476,7 +476,7 @@ const en: LandingStrings = {
 		terms: 'Terms of service (Chinese)',
 		privacy: 'Privacy policy (Chinese)',
 		licenses: 'Third-party licenses (Chinese)',
-		license: 'ForgePlay is open source under the Apache-2.0 license.',
+		license: 'Classic Games is open source under the Apache-2.0 license.',
 		privacyNote: 'This site uses no analytics or trackers and loads no third-party fonts.',
 	},
 };

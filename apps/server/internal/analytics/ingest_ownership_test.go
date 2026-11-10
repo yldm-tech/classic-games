@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 // Ingestion is unauthenticated, so the row's identity and clock have to be server-owned. Binding the persisted Event

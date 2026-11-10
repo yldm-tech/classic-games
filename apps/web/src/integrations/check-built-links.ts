@@ -137,7 +137,7 @@ export function findBuiltLinkProblems(outDir: string, base = '/'): BuiltLinksRep
 export function checkBuiltLinks(): AstroIntegration {
 	let base = '/';
 	return {
-		name: 'forgeplay-check-built-links',
+		name: 'classic-games-check-built-links',
 		hooks: {
 			'astro:config:done': ({ config }) => {
 				base = config.base.endsWith('/') ? config.base : `${config.base}/`;

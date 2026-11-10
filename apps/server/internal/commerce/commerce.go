@@ -107,7 +107,7 @@ type RechargeTier struct {
 	Price  Localized `json:"price"`
 }
 
-// Membership 会员 ForgePlay+:权益清单 + 月卡/年卡。
+// Membership 会员 Classic Games+:权益清单 + 月卡/年卡。
 type Membership struct {
 	Badge   string           `json:"badge"`
 	Tagline Localized        `json:"tagline"`

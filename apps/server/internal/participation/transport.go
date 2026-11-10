@@ -1,8 +1,8 @@
 package participation
 
 import (
-	"forgeplay/server/pkg/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 	"net/http"
 )
 

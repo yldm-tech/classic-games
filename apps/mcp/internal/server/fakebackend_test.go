@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/dsl"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/dsl"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 	testProvenance = "prov-signed-by-backend"
 )
 
-// fakeBackend is an in-memory stand-in for the ForgePlay HTTP API, limited to the routes forgeplay-mcp calls. It keeps the backend's observable rules: writes need a bearer token, drafts are private to their author, a mod's effective DSL is its runtime baseline with the patch chain applied, and errors use the {"error": {"code", "message"}} envelope.
+// fakeBackend is an in-memory stand-in for the Classic Games HTTP API, limited to the routes classic-games-mcp calls. It keeps the backend's observable rules: writes need a bearer token, drafts are private to their author, a mod's effective DSL is its runtime baseline with the patch chain applied, and errors use the {"error": {"code", "message"}} envelope.
 type fakeBackend struct {
 	t      *testing.T
 	server *httptest.Server

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"forgeplay/server/internal/ai"
-	"forgeplay/server/internal/auth"
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/ai"
+	"github.com/yldm-tech/classic-games/apps/server/internal/auth"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

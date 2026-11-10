@@ -628,7 +628,7 @@ func _render_chrome() -> void:
 			back.pressed.connect(router.back)
 			bar.add_child(back)
 		if in_tabs and router.tab == 0:
-			# 双色品牌 logo:Forge(主文字色)+ Play(熔炉橙红)
+			# 双色品牌 logo:Classic(主文字色)+ Games(熔炉橙红)
 			var logo := Widgets.brand_logo(state.theme, Tokens.FONT_H3)
 			logo.name = "AppBarTitle"
 			bar.add_child(logo)
@@ -694,7 +694,7 @@ func _render_chrome() -> void:
 		_render_sidebar(labels)
 	# 桌面用系统原生窗口栏,把当前页名写到原生标题上
 	if is_inside_tree() and OS.has_feature("pc"):
-		get_window().title = "ForgePlay — %s" % _window_title()
+		get_window().title = "Classic Games — %s" % _window_title()
 
 ## iPad 左侧 rail:竖排 5 tab(glyph 大字 + 标签),消息带未读红点。
 func _render_rail(labels: Array) -> void:

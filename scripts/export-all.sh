@@ -18,7 +18,7 @@ export_one() {
 }
 
 export_one "Web" "$ROOT/apps/client/build/web/index.html"
-export_one "Windows Desktop" "$ROOT/apps/client/build/windows/ForgePlay.exe"
-export_one "macOS" "$ROOT/apps/client/build/macos/ForgePlay.app"
-export_one "Android" "$ROOT/apps/client/build/android/ForgePlay.apk"
-export_one "iOS" "$ROOT/apps/client/build/ios/ForgePlay.ipa"
+export_one "Windows Desktop" "$ROOT/apps/client/build/windows/ClassicGames.exe"
+export_one "macOS" "$ROOT/apps/client/build/macos/ClassicGames.app"
+export_one "Android" "$ROOT/apps/client/build/android/ClassicGames.apk"
+export_one "iOS" "$ROOT/apps/client/build/ios/ClassicGames.ipa"

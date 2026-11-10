@@ -25,7 +25,7 @@ func TestLoadConfigUsesDevelopmentDefaults(t *testing.T) {
 	if cfg.HTTP.ShutdownTimeout != 10*time.Second {
 		t.Fatalf("shutdown timeout = %s, want 10s", cfg.HTTP.ShutdownTimeout)
 	}
-	if cfg.Database.DSN != "forgeplay.db" {
+	if cfg.Database.DSN != "classic-games.db" {
 		t.Fatalf("database DSN = %q", cfg.Database.DSN)
 	}
 	if cfg.Content.SchemaDir != "../../packages/schemas" || cfg.Content.RuntimeDir != "../client/runtime" {
@@ -41,9 +41,9 @@ func TestLoadConfigUsesDevelopmentDefaults(t *testing.T) {
 
 func TestLoadConfigNormalizesListsAndDurations(t *testing.T) {
 	cfg, err := LoadConfig(mapLookup(map[string]string{
-		"FORGEPLAY_TRUSTED_PROXIES":  " 10.0.0.0/8, ,192.168.0.0/16 ",
-		"FORGEPLAY_ADMIN_IDS":        " admin-a,admin-b, admin-a ",
-		"FORGEPLAY_SHUTDOWN_TIMEOUT": "750ms",
+		"CLASSIC_GAMES_TRUSTED_PROXIES":  " 10.0.0.0/8, ,192.168.0.0/16 ",
+		"CLASSIC_GAMES_ADMIN_IDS":        " admin-a,admin-b, admin-a ",
+		"CLASSIC_GAMES_SHUTDOWN_TIMEOUT": "750ms",
 	}))
 	if err != nil {
 		t.Fatalf("LoadConfig: %v", err)
@@ -59,47 +59,47 @@ func TestLoadConfigNormalizesListsAndDurations(t *testing.T) {
 func TestLoadConfigRejectsUnsafeOrInvalidValues(t *testing.T) {
 	tests := map[string]map[string]string{
 		"production development admin": {
-			"FORGEPLAY_ENV":       "production",
-			"FORGEPLAY_DEV_ADMIN": "1",
-			"FORGEPLAY_SECRET":    "production-secret-must-be-32chars!",
-			"FORGEPLAY_DB":        "forgeplay-prod.db",
+			"CLASSIC_GAMES_ENV":       "production",
+			"CLASSIC_GAMES_DEV_ADMIN": "1",
+			"CLASSIC_GAMES_SECRET":    "production-secret-must-be-32chars!",
+			"CLASSIC_GAMES_DB":        "classic-games-prod.db",
 		},
 		"production missing secret": {
-			"FORGEPLAY_ENV": "production",
-			"FORGEPLAY_DB":  "forgeplay-prod.db",
+			"CLASSIC_GAMES_ENV": "production",
+			"CLASSIC_GAMES_DB":  "classic-games-prod.db",
 		},
 		"production short secret": {
-			"FORGEPLAY_ENV":    "production",
-			"FORGEPLAY_SECRET": "too-short",
-			"FORGEPLAY_DB":     "forgeplay-prod.db",
+			"CLASSIC_GAMES_ENV":    "production",
+			"CLASSIC_GAMES_SECRET": "too-short",
+			"CLASSIC_GAMES_DB":     "classic-games-prod.db",
 		},
 		"production missing database": {
-			"FORGEPLAY_ENV":    "production",
-			"FORGEPLAY_SECRET": "production-secret-must-be-32chars!",
+			"CLASSIC_GAMES_ENV":    "production",
+			"CLASSIC_GAMES_SECRET": "production-secret-must-be-32chars!",
 		},
 		"production http oauth": {
-			"FORGEPLAY_ENV":           "production",
-			"FORGEPLAY_SECRET":        "production-secret-must-be-32chars!",
-			"FORGEPLAY_DB":            "forgeplay-prod.db",
+			"CLASSIC_GAMES_ENV":       "production",
+			"CLASSIC_GAMES_SECRET":    "production-secret-must-be-32chars!",
+			"CLASSIC_GAMES_DB":        "classic-games-prod.db",
 			"OAUTH_GOOGLE_VERIFY_URL": "http://identity.example/verify",
 		},
 		"production http sms gateway": {
-			"FORGEPLAY_ENV":    "production",
-			"FORGEPLAY_SECRET": "production-secret-must-be-32chars!",
-			"FORGEPLAY_DB":     "forgeplay-prod.db",
-			"SMS_GATEWAY_URL":  "http://sms.example/send",
+			"CLASSIC_GAMES_ENV":    "production",
+			"CLASSIC_GAMES_SECRET": "production-secret-must-be-32chars!",
+			"CLASSIC_GAMES_DB":     "classic-games-prod.db",
+			"SMS_GATEWAY_URL":      "http://sms.example/send",
 		},
 		"invalid environment": {
-			"FORGEPLAY_ENV": "staging-ish",
+			"CLASSIC_GAMES_ENV": "staging-ish",
 		},
 		"invalid timeout": {
-			"FORGEPLAY_SHUTDOWN_TIMEOUT": "eventually",
+			"CLASSIC_GAMES_SHUTDOWN_TIMEOUT": "eventually",
 		},
 		"non-positive timeout": {
-			"FORGEPLAY_SHUTDOWN_TIMEOUT": "0s",
+			"CLASSIC_GAMES_SHUTDOWN_TIMEOUT": "0s",
 		},
 		"invalid body limit": {
-			"FORGEPLAY_MAX_BODY_BYTES": "huge",
+			"CLASSIC_GAMES_MAX_BODY_BYTES": "huge",
 		},
 	}
 
@@ -114,9 +114,9 @@ func TestLoadConfigRejectsUnsafeOrInvalidValues(t *testing.T) {
 
 func TestLoadConfigAcceptsProductionWithSecret(t *testing.T) {
 	cfg, err := LoadConfig(mapLookup(map[string]string{
-		"FORGEPLAY_ENV":           "production",
-		"FORGEPLAY_SECRET":        "production-secret-must-be-32chars!",
-		"FORGEPLAY_DB":            "postgres://forgeplay/prod",
+		"CLASSIC_GAMES_ENV":       "production",
+		"CLASSIC_GAMES_SECRET":    "production-secret-must-be-32chars!",
+		"CLASSIC_GAMES_DB":        "postgres://classic-games/prod",
 		"OAUTH_GOOGLE_VERIFY_URL": "https://identity.example/verify",
 		"SMS_GATEWAY_URL":         "https://sms.example/send",
 	}))
@@ -129,7 +129,7 @@ func TestLoadConfigAcceptsProductionWithSecret(t *testing.T) {
 	if cfg.Security.Secret != "production-secret-must-be-32chars!" {
 		t.Fatalf("secret not retained")
 	}
-	if cfg.Database.DSN != "postgres://forgeplay/prod" {
+	if cfg.Database.DSN != "postgres://classic-games/prod" {
 		t.Fatalf("database DSN = %q", cfg.Database.DSN)
 	}
 	if !cfg.HTTP.HSTS {
@@ -138,10 +138,10 @@ func TestLoadConfigAcceptsProductionWithSecret(t *testing.T) {
 }
 
 func TestConfigStringRedactsSecrets(t *testing.T) {
-	secrets := []string{"anthropic-secret", "forgeplay-secret", "sms-secret", "moderation-secret", "payment-secret", "oauth-secret"}
+	secrets := []string{"anthropic-secret", "classic-games-secret", "sms-secret", "moderation-secret", "payment-secret", "oauth-secret"}
 	cfg, err := LoadConfig(mapLookup(map[string]string{
 		"ANTHROPIC_API_KEY":         secrets[0],
-		"FORGEPLAY_SECRET":          secrets[1],
+		"CLASSIC_GAMES_SECRET":      secrets[1],
 		"SMS_GATEWAY_TOKEN":         secrets[2],
 		"CONTENT_MODERATION_TOKEN":  secrets[3],
 		"PAYMENT_WEBHOOK_SECRET":    secrets[4],
@@ -163,13 +163,13 @@ func TestConfigStringRedactsSecrets(t *testing.T) {
 	}
 }
 
-// FORGEPLAY_DB is a SQLite file path, but the configuration is logged before the database is opened, so a connection string put there by mistake must not reach the log with its password.
+// CLASSIC_GAMES_DB is a SQLite file path, but the configuration is logged before the database is opened, so a connection string put there by mistake must not reach the log with its password.
 func TestConfigStringRedactsDatabaseCredentials(t *testing.T) {
 	for _, dsn := range []string{
-		"postgres://forgeplay:db-password@db.internal:5432/forgeplay?sslmode=require",
-		"host=db.internal user=forgeplay password=db-password dbname=forgeplay",
-		"forgeplay:db-password@tcp(db.internal:3306)/forgeplay",
-		"file:forgeplay.db?_pragma=key('db-password')",
+		"postgres://classic-games:db-password@db.internal:5432/classic-games?sslmode=require",
+		"host=db.internal user=classic-games password=db-password dbname=classic-games",
+		"classic-games:db-password@tcp(db.internal:3306)/classic-games",
+		"file:classic-games.db?_pragma=key('db-password')",
 	} {
 		printed := Config{Database: DatabaseConfig{DSN: dsn}}.String()
 		if strings.Contains(printed, "db-password") {
@@ -177,11 +177,11 @@ func TestConfigStringRedactsDatabaseCredentials(t *testing.T) {
 		}
 	}
 	for dsn, want := range map[string]string{
-		"forgeplay.db":                    "database=forgeplay.db ",
-		"/var/lib/forgeplay/data.db":      "database=/var/lib/forgeplay/data.db ",
-		"file:/var/lib/forgeplay/data.db": "database=file:/var/lib/forgeplay/data.db ",
-		"file:forgeplay.db?mode=ro":       "database=file:forgeplay.db ",
-		":memory:":                        "database=:memory: ",
+		"classic-games.db":                    "database=classic-games.db ",
+		"/var/lib/classic-games/data.db":      "database=/var/lib/classic-games/data.db ",
+		"file:/var/lib/classic-games/data.db": "database=file:/var/lib/classic-games/data.db ",
+		"file:classic-games.db?mode=ro":       "database=file:classic-games.db ",
+		":memory:":                            "database=:memory: ",
 	} {
 		if printed := (Config{Database: DatabaseConfig{DSN: dsn}}).String(); !strings.Contains(printed, want) {
 			t.Errorf("Config.String for %q = %s, want it to contain %q", dsn, printed, want)
@@ -197,7 +197,7 @@ func TestPublicCapabilitiesOmitsSecretsAndReportsWiring(t *testing.T) {
 		"OAUTH_APPLE_VERIFY_URL":   "https://apple.example.test/verify",
 		"OAUTH_APPLE_VERIFY_TOKEN": "apple-token-secret",
 		"PAYMENT_WEBHOOK_SECRET":   "pay-secret",
-		"FORGEPLAY_ADMIN_IDS":      "admin-a",
+		"CLASSIC_GAMES_ADMIN_IDS":  "admin-a",
 		"CONTENT_MODERATION_URL":   "https://mod.example.test",
 		"CONTENT_MODERATION_TOKEN": "mod-token-secret",
 	}))

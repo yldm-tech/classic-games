@@ -18,13 +18,13 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/mcp/internal/config"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/config"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// runMainEnv makes the test binary behave as forgeplay-mcp, so the stdio transport can be tested against a real process.
-const runMainEnv = "FORGEPLAY_MCP_TEST_RUN_MAIN"
+// runMainEnv makes the test binary behave as classic-games-mcp, so the stdio transport can be tested against a real process.
+const runMainEnv = "CLASSIC_GAMES_MCP_TEST_RUN_MAIN"
 
 func TestMain(m *testing.M) {
 	if os.Getenv(runMainEnv) == "1" {
@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// repoSchemaDir is packages/schemas of the repository, four levels above this package (apps/mcp/cmd/forgeplay-mcp).
+// repoSchemaDir is packages/schemas of the repository, four levels above this package (apps/mcp/cmd/classic-games-mcp).
 func repoSchemaDir(t *testing.T) string {
 	t.Helper()
 	_, file, _, ok := runtime.Caller(0)
@@ -56,13 +56,13 @@ func TestRunFlagsAndConfigErrors(t *testing.T) {
 		wantOut   string
 		wantUsage bool
 	}{
-		"version":            {args: []string{"--version"}, wantOut: "forgeplay-mcp " + version + "\n"},
+		"version":            {args: []string{"--version"}, wantOut: "classic-games-mcp " + version + "\n"},
 		"help":               {args: []string{"--help"}, wantUsage: true},
 		"unknown transport":  {args: []string{"--transport", "sse"}, wantErr: `unknown --transport "sse": use stdio or http`},
 		"unexpected arg":     {args: []string{"serve"}, wantErr: `unexpected argument "serve"`},
 		"unknown flag":       {args: []string{"--write"}, wantErr: "flag provided but not defined", wantUsage: true},
 		"empty schema dir":   {env: map[string]string{config.EnvSchemaDir: t.TempDir()}, wantErr: "does not contain any <runtime>-<version>.schema.json"},
-		"invalid server url": {env: map[string]string{config.EnvSchemaDir: repoSchemaDir(t), config.EnvServerURL: "localhost:8080"}, wantErr: "FORGEPLAY_SERVER_URL"},
+		"invalid server url": {env: map[string]string{config.EnvSchemaDir: repoSchemaDir(t), config.EnvServerURL: "localhost:8080"}, wantErr: "CLASSIC_GAMES_SERVER_URL"},
 		"invalid address":    {args: []string{"--transport", "http", "--addr", "256.0.0.1:1"}, env: map[string]string{config.EnvSchemaDir: repoSchemaDir(t)}, wantErr: "listen on 256.0.0.1:1"},
 		"allowed host stdio": {args: []string{"--allowed-host", "mcp.example.com"}, wantErr: "--allowed-host only applies to --transport http"},
 		"allowed host url":   {args: []string{"--transport", "http", "--allowed-host", "http://mcp.example.com/mcp"}, wantErr: "want a host name", wantUsage: true},
@@ -80,7 +80,7 @@ func TestRunFlagsAndConfigErrors(t *testing.T) {
 			if stdout.String() != tc.wantOut {
 				t.Errorf("stdout = %q, want %q", stdout.String(), tc.wantOut)
 			}
-			if usage := strings.Contains(stderr.String(), "Usage: forgeplay-mcp"); usage != tc.wantUsage {
+			if usage := strings.Contains(stderr.String(), "Usage: classic-games-mcp"); usage != tc.wantUsage {
 				t.Errorf("usage on stderr = %v, want %v: %q", usage, tc.wantUsage, stderr.String())
 			}
 			if tc.wantUsage {
@@ -172,7 +172,7 @@ func TestSchemasComeFromTheBinaryNotFromTheWorkingDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	binary := filepath.Join(repo, "apps", "mcp", "bin", "forgeplay-mcp")
+	binary := filepath.Join(repo, "apps", "mcp", "bin", "classic-games-mcp")
 	copyFile(t, os.Args[0], binary, 0o755)
 	for _, name := range []string{"shooter", "survivor", "tower_defense"} {
 		file := name + "-1.0.0.schema.json"
@@ -246,12 +246,12 @@ func TestStdioEndsOnALineThatIsNotJSON(t *testing.T) {
 	if stdout.Len() != 0 {
 		t.Errorf("stdout = %q, want no reply to a line that is not JSON", stdout.String())
 	}
-	if !strings.Contains(stderr.String(), "forgeplay-mcp: ") {
+	if !strings.Contains(stderr.String(), "classic-games-mcp: ") {
 		t.Errorf("stderr does not explain the exit: %q", stderr.String())
 	}
 }
 
-// Credentials inside FORGEPLAY_SERVER_URL do not reach the startup log.
+// Credentials inside CLASSIC_GAMES_SERVER_URL do not reach the startup log.
 func TestBackendURLCredentialsStayOutOfTheLog(t *testing.T) {
 	var logs bytes.Buffer
 	if _, err := build(config.Config{ServerURL: "http://admin:s3cretpw@127.0.0.1:9", SchemaDir: repoSchemaDir(t)}, false, slog.New(slog.NewTextHandler(&logs, nil))); err != nil {
@@ -477,7 +477,7 @@ func TestServeHTTP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect over streamable HTTP: %v", err)
 	}
-	if name := cs.InitializeResult().ServerInfo.Name; name != "forgeplay-mcp" {
+	if name := cs.InitializeResult().ServerInfo.Name; name != "classic-games-mcp" {
 		t.Errorf("server name = %q", name)
 	}
 	tools, err := cs.ListTools(requestCtx, nil)

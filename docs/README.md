@@ -1,4 +1,4 @@
-# ForgePlay 项目文档
+# Classic Games 项目文档
 
 AI 驱动的小游戏创作与社区平台。
 用户无需编程,通过自然语言对现有游戏进行修改、扩展、重新创作,并发布到社区供他人体验和 Fork。
@@ -57,12 +57,12 @@ AI 驱动的小游戏创作与社区平台。
 |---|---|---|
 | `apps/client` | Godot 4.6 客户端与游戏 Runtime | [16-client-architecture](./16-client-architecture.md) |
 | `apps/server` | Go 后端 | [apps/server/README](../apps/server/README.md) |
-| `apps/cli` | 命令行工具 `forgeplay` | [apps/cli/README](../apps/cli/README.md) |
-| `apps/mcp` | MCP 服务 `forgeplay-mcp` | [apps/mcp/README](../apps/mcp/README.md) |
+| `apps/cli` | 命令行工具 `classic-games` | [apps/cli/README](../apps/cli/README.md) |
+| `apps/mcp` | MCP 服务 `classic-games-mcp` | [apps/mcp/README](../apps/mcp/README.md) |
 | `apps/web` | 官网与文档站,构建时同步本目录的文档 | [apps/web/README](../apps/web/README.md) |
 | `packages/schemas` | Mod DSL 的 JSON Schema | [05-dsl-design](./05-dsl-design.md) |
-| `packages/dsl` | Go 模块 `forgeplay/dsl`:补丁、迁移、schema 校验 | [packages/dsl/README](../packages/dsl/README.md) |
-| `packages/sdk` | Go 模块 `forgeplay/sdk`:后端 HTTP API 客户端 | [packages/sdk/README](../packages/sdk/README.md) |
+| `packages/dsl` | Go 模块 `github.com/yldm-tech/classic-games/packages/dsl`:补丁、迁移、schema 校验 | [packages/dsl/README](../packages/dsl/README.md) |
+| `packages/sdk` | Go 模块 `github.com/yldm-tech/classic-games/packages/sdk`:后端 HTTP API 客户端 | [packages/sdk/README](../packages/sdk/README.md) |
 
 根目录的 [README](../README.md)(英文)与 [README.zh-CN](../README.zh-CN.md)(中文)是仓库首页,[CONTRIBUTING](../CONTRIBUTING.md) 说明贡献流程与门禁。
 

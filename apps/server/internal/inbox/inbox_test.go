@@ -3,7 +3,7 @@ package inbox
 import (
 	"bytes"
 	"encoding/json"
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 	"net/http"
 	"net/http/httptest"
 	"strings"

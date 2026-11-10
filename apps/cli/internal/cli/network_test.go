@@ -17,12 +17,12 @@ import (
 	"time"
 	"unicode"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 func TestVersion(t *testing.T) {
 	h := newHarness(t)
-	mustContain(t, h.ok("version"), "forgeplay 1.2.3 (commit abc1234, built 2026-01-02T03:04:05Z, "+runtime.Version())
+	mustContain(t, h.ok("version"), "classic-games 1.2.3 (commit abc1234, built 2026-01-02T03:04:05Z, "+runtime.Version())
 
 	report := decode[versionReport](t, h.ok("version", "--output", "json"))
 	if report.Version != "1.2.3" || report.Commit != "abc1234" || report.Date != "2026-01-02T03:04:05Z" || report.SDKVersion != sdk.Version {
@@ -40,7 +40,7 @@ func TestOutputFlagIsValidated(t *testing.T) {
 
 func TestUnknownSubcommandIsAnError(t *testing.T) {
 	got := newHarness(t).fails("games", "nope")
-	mustContain(t, got.stderr, `unknown command "nope" for "forgeplay games"`)
+	mustContain(t, got.stderr, `unknown command "nope" for "classic-games games"`)
 }
 
 func TestConfigSetGetUnset(t *testing.T) {
@@ -101,12 +101,12 @@ func TestServerURLPrecedence(t *testing.T) {
 	h.env[EnvServerURL] = fromEnv.url()
 	h.ok("server", "health")
 	if fromEnv.count("GET", "/healthz") != 1 || fromConfig.count("GET", "/healthz") != 1 {
-		t.Fatal("FORGEPLAY_SERVER_URL did not override the config file")
+		t.Fatal("CLASSIC_GAMES_SERVER_URL did not override the config file")
 	}
 
 	h.ok("server", "health", "--server", fromFlag.url())
 	if fromFlag.count("GET", "/healthz") != 1 || fromEnv.count("GET", "/healthz") != 1 {
-		t.Fatal("--server did not override FORGEPLAY_SERVER_URL")
+		t.Fatal("--server did not override CLASSIC_GAMES_SERVER_URL")
 	}
 
 	listing := decode[itemList[setting]](t, h.ok("config", "get", "server", "--output", "json"))
@@ -562,7 +562,7 @@ func TestCommandsThatNeedALoginFailBeforeCallingTheBackend(t *testing.T) {
 		{"mods", "publish", seedModID, "--title", "x"},
 		{"ai", "generate", "cats", "--runtime", "shooter@1.0.0", "--save"},
 	} {
-		mustContain(t, h.fails(args...).stderr, "not logged in to "+b.url(), "forgeplay auth login")
+		mustContain(t, h.fails(args...).stderr, "not logged in to "+b.url(), "classic-games auth login")
 	}
 	if len(b.requests) != 0 {
 		t.Fatalf("commands without a login still reached the backend: %+v", b.requests)
@@ -576,7 +576,7 @@ func TestAnExpiredSessionPointsToLogin(t *testing.T) {
 	b.mu.Lock()
 	clear(b.tokens)
 	b.mu.Unlock()
-	mustContain(t, h.fails("games", "mine").stderr, "Error: AUTH_REQUIRED: 请先登录", "run 'forgeplay auth login --force'")
+	mustContain(t, h.fails("games", "mine").stderr, "Error: AUTH_REQUIRED: 请先登录", "run 'classic-games auth login --force'")
 
 	// The hint has to work as printed: the rejected session is still stored, so a login without --force is refused.
 	mustContain(t, h.fails("auth", "login").stderr, "already logged in")
@@ -608,7 +608,7 @@ func TestIDsThatAreOtherRoutesAreNotShownAsEmptyGames(t *testing.T) {
 	} {
 		got := h.fails(args...)
 		if got.stdout != "" {
-			t.Fatalf("forgeplay %s printed %q, want nothing", strings.Join(args, " "), got.stdout)
+			t.Fatalf("classic-games %s printed %q, want nothing", strings.Join(args, " "), got.stdout)
 		}
 		mustContain(t, got.stderr, "invalid path parameter")
 	}
@@ -634,7 +634,7 @@ func TestServerProvidedTextCannotControlTheTerminal(t *testing.T) {
 		mustContain(t, out, "A\ufffd[31mRED")
 		for _, r := range out {
 			if r != '\n' && unicode.IsControl(r) {
-				t.Fatalf("forgeplay %s printed the control character %U:\n%q", strings.Join(args, " "), r, out)
+				t.Fatalf("classic-games %s printed the control character %U:\n%q", strings.Join(args, " "), r, out)
 			}
 		}
 	}
@@ -664,12 +664,12 @@ func TestGameJSONAlwaysCarriesATagsArray(t *testing.T) {
 	for _, args := range [][]string{{"games", "list", "--all"}, {"games", "mine"}, {"games", "ranking"}} {
 		items := decode[listing](t, h.ok(append(args, "--output", "json")...)).Items
 		if len(items) == 0 {
-			t.Fatalf("forgeplay %s lists nothing", strings.Join(args, " "))
+			t.Fatalf("classic-games %s lists nothing", strings.Join(args, " "))
 		}
 		for _, item := range items {
 			var tags []string
 			if err := json.Unmarshal(item["tags"], &tags); err != nil || tags == nil {
-				t.Fatalf("forgeplay %s: item %s has tags %s, want an array", strings.Join(args, " "), item["id"], item["tags"])
+				t.Fatalf("classic-games %s: item %s has tags %s, want an array", strings.Join(args, " "), item["id"], item["tags"])
 			}
 		}
 	}
@@ -1006,7 +1006,7 @@ func TestAIGenerateSaveStoresADraftWithProvenance(t *testing.T) {
 	}
 }
 
-// A backend without FORGEPLAY_SECRET signs nothing, so the saved draft has no AI mark. The output has to say so instead of implying that --save always marks the draft.
+// A backend without CLASSIC_GAMES_SECRET signs nothing, so the saved draft has no AI mark. The output has to say so instead of implying that --save always marks the draft.
 func TestAIGenerateSaveSaysWhenTheDraftIsNotMarked(t *testing.T) {
 	h, b := newHarness(t), newBackend(t)
 	h.env[EnvServerURL] = b.url()
@@ -1113,7 +1113,7 @@ func TestDescribeError(t *testing.T) {
 		{"no envelope", &sdk.APIError{StatusCode: 502, Message: "Bad Gateway"}, "HTTP 502: Bad Gateway"},
 		{"no message", &sdk.APIError{StatusCode: 500, Code: "INTERNAL", Method: "GET", Path: "/api/v1/games"}, "INTERNAL: GET /api/v1/games failed"},
 		{"wrapped", fmt.Errorf("could not save the draft: %w", &sdk.APIError{StatusCode: 409, Code: "INVALID_STATE", Message: "not a draft", Method: "PUT", Path: "/api/v1/drafts/m1"}), "could not save the draft: INVALID_STATE: not a draft"},
-		{"missing session", &sdk.APIError{StatusCode: 401, Code: "AUTH_REQUIRED", Message: "login first"}, "AUTH_REQUIRED: login first\nThe stored login is missing, expired or revoked: run 'forgeplay auth login --force'."},
+		{"missing session", &sdk.APIError{StatusCode: 401, Code: "AUTH_REQUIRED", Message: "login first"}, "AUTH_REQUIRED: login first\nThe stored login is missing, expired or revoked: run 'classic-games auth login --force'."},
 		{"wrong credentials", &sdk.APIError{StatusCode: 401, Code: "AUTH_INVALID", Message: "wrong password"}, "AUTH_INVALID: wrong password"},
 		{"plain", errors.New("read patch.json: no such file"), "read patch.json: no such file"},
 	}

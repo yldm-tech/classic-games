@@ -19,7 +19,7 @@ Go 1.26 modular monolith
                 GORM + SQLite(dev)/PostgreSQL(prod)
 ```
 
-ForgePlay 保留一个 Godot 客户端和一个 Go 模块化单体。当前不拆微服务：跨域事务、部署规模和团队规模都不支持由网络边界带来的额外复杂度。业务边界通过目录、接口、装配和自动检查落实。
+Classic Games 保留一个 Godot 客户端和一个 Go 模块化单体。当前不拆微服务：跨域事务、部署规模和团队规模都不支持由网络边界带来的额外复杂度。业务边界通过目录、接口、装配和自动检查落实。
 
 ### 1.1 仓库布局
 
@@ -28,14 +28,14 @@ ForgePlay 保留一个 Godot 客户端和一个 Go 模块化单体。当前不�
 ```text
 apps/
   client   Godot 4.6.3 客户端与游戏 Runtime
-  server   Go 后端，模块 forgeplay/server
-  cli      命令行工具 forgeplay，模块 forgeplay/cli
-  mcp      MCP 服务 forgeplay-mcp，模块 forgeplay/mcp
+  server   Go 后端，模块 github.com/yldm-tech/classic-games/apps/server
+  cli      命令行工具 classic-games，模块 github.com/yldm-tech/classic-games/apps/cli
+  mcp      MCP 服务 classic-games-mcp，模块 github.com/yldm-tech/classic-games/apps/mcp
   web      官网与文档站（Astro + Starlight）
 packages/
   schemas  Mod DSL 的 JSON Schema，三方契约
-  dsl      Go 模块 forgeplay/dsl：RFC 6902 补丁、DSL 迁移、schema 校验
-  sdk      Go 模块 forgeplay/sdk：后端 HTTP API 的类型化客户端
+  dsl      Go 模块 github.com/yldm-tech/classic-games/packages/dsl：RFC 6902 补丁、DSL 迁移、schema 校验
+  sdk      Go 模块 github.com/yldm-tech/classic-games/packages/sdk：后端 HTTP API 的类型化客户端
 ```
 
 依赖只有一个方向：`apps → packages`。
@@ -50,7 +50,7 @@ apps/client ──HTTP──→ apps/server        （GDScript 侧另有一份�
 apps/web ──构建期读取──→ docs/、packages/schemas、apps/client/runtime 的 baseline
 ```
 
-- 后端是应用，不是库：CLI 与 MCP 服务只经 `forgeplay/sdk` 走公开的 HTTP 契约访问它，不 import `forgeplay/server`。
+- 后端是应用，不是库：CLI 与 MCP 服务只经 `github.com/yldm-tech/classic-games/packages/sdk` 走公开的 HTTP 契约访问它，不 import `github.com/yldm-tech/classic-games/apps/server`。
 - 补丁、迁移与校验在 Go 侧只有 `packages/dsl` 一份实现，后端、CLI、MCP 共用；它与客户端的 `runtime/json_patch.gd`、`runtime/dsl_migrations.gd` 由同一份 baseline + golden 钉成同语义。
 - 五个 Go 模块由根目录 `go.work` 组成 workspace，同时各自带相对路径 `replace`，在 `GOWORK=off` 下也能独立构建。
 

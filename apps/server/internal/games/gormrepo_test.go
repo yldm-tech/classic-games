@@ -3,7 +3,7 @@ package games
 import (
 	"testing"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 func newGormSvc(t *testing.T) *Service {

@@ -3,8 +3,8 @@ package analytics
 import (
 	"net/http"
 
-	"forgeplay/server/pkg/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 func RegisterRoutes(r gin.IRouter, svc *Service, optionalAuth, admin gin.HandlerFunc) {

@@ -156,40 +156,40 @@ done < <(find "$SERVER_INTERNAL" -type f -name '*.go' ! -name '*_test.go' -print
 
 # ---- monorepo module boundaries ----
 #
-# Dependencies point one way: apps -> packages. The backend is an application, not a library: the CLI and the MCP server reach it over HTTP through forgeplay/sdk and share DSL logic through forgeplay/dsl, never by importing forgeplay/server. Both the Go sources and the go.mod files are checked, so a `require` cannot slip in ahead of its first import.
+# Dependencies point one way: apps -> packages. The backend is an application, not a library: the CLI and the MCP server reach it over HTTP through github.com/yldm-tech/classic-games/packages/sdk and share DSL logic through github.com/yldm-tech/classic-games/packages/dsl, never by importing github.com/yldm-tech/classic-games/apps/server. Both the Go sources and the go.mod files are checked, so a `require` cannot slip in ahead of its first import.
 SCAN_GO=(--include='*.go')
 SCAN_GOMOD=(--include='go.mod')
 
 report_matches \
-    "the CLI and the MCP server must not depend on the backend module (use forgeplay/sdk and forgeplay/dsl):" \
-    scan_lines '"forgeplay/server["/]' "$CLI" "$MCP" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
+    "the CLI and the MCP server must not depend on the backend module (use github.com/yldm-tech/classic-games/packages/sdk and github.com/yldm-tech/classic-games/packages/dsl):" \
+    scan_lines '"github.com/yldm-tech/classic-games/apps/server["/]' "$CLI" "$MCP" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
 report_matches \
     "the CLI and the MCP server must not require the backend module in go.mod:" \
-    scan_lines '\bforgeplay/server\b' "$CLI" "$MCP" "${SCAN_GOMOD[@]}" "${SCAN_PRUNE[@]}"
+    scan_lines '\bgithub\.com/yldm-tech/classic-games/apps/server\b' "$CLI" "$MCP" "${SCAN_GOMOD[@]}" "${SCAN_PRUNE[@]}"
 
 report_matches \
     "shared packages must not import an application module:" \
-    scan_lines '"forgeplay/(server|cli|mcp)["/]' "$DSL" "$SDK" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
+    scan_lines '"github\.com/yldm-tech/classic-games/apps/(server|cli|mcp)["/]' "$DSL" "$SDK" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
 report_matches \
     "shared packages must not require an application module in go.mod:" \
-    scan_lines '\bforgeplay/(server|cli|mcp)\b' "$DSL" "$SDK" "${SCAN_GOMOD[@]}" "${SCAN_PRUNE[@]}"
+    scan_lines '\bgithub\.com/yldm-tech/classic-games/apps/(server|cli|mcp)\b' "$DSL" "$SDK" "${SCAN_GOMOD[@]}" "${SCAN_PRUNE[@]}"
 
 # RFC 6902 patching, DSL migration and schema validation have exactly one Go implementation, packages/dsl, pinned to the GDScript one by shared golden files. The backend must consume it instead of growing a private copy again.
 for private_copy in "$SERVER_INTERNAL/ai/dsl" "$SERVER_INTERNAL/ai/schema_validator.go"; do
     if [[ -e "$private_copy" ]]; then
-        echo "the backend must use forgeplay/dsl, not a private copy of the DSL code: $private_copy" >&2
+        echo "the backend must use github.com/yldm-tech/classic-games/packages/dsl, not a private copy of the DSL code: $private_copy" >&2
         FAILED=1
     fi
 done
 report_matches \
-    "the backend must import forgeplay/dsl, not the removed internal/ai/dsl package:" \
-    scan_lines '"forgeplay/server/internal/ai/dsl["/]' "$SERVER" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
+    "the backend must import github.com/yldm-tech/classic-games/packages/dsl, not the removed internal/ai/dsl package:" \
+    scan_lines '"github.com/yldm-tech/classic-games/apps/server/internal/ai/dsl["/]' "$SERVER" "${SCAN_GO[@]}" "${SCAN_PRUNE[@]}"
 if [[ ! -f "$SERVER/go.mod" ]]; then
     echo "architecture check: missing $SERVER/go.mod" >&2
     exit 1
 fi
-if ! scan_hit '^[[:space:]]*(require[[:space:]]+)?forgeplay/dsl[[:space:]]+v' "$SERVER/go.mod"; then
-    echo "the backend must require the shared forgeplay/dsl module: $SERVER/go.mod" >&2
+if ! scan_hit '^[[:space:]]*(require[[:space:]]+)?github.com/yldm-tech/classic-games/packages/dsl[[:space:]]+v' "$SERVER/go.mod"; then
+    echo "the backend must require the shared github.com/yldm-tech/classic-games/packages/dsl module: $SERVER/go.mod" >&2
     FAILED=1
 fi
 

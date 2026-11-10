@@ -6,13 +6,13 @@ import (
 	"log"
 	"os"
 
-	"forgeplay/dsl"
-	"forgeplay/server/internal/ai"
-	"forgeplay/server/internal/games"
-	"forgeplay/server/internal/mods"
-	"forgeplay/server/internal/quota"
-	"forgeplay/server/internal/runtimes"
-	"forgeplay/server/pkg/provenance"
+	"github.com/yldm-tech/classic-games/apps/server/internal/ai"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/mods"
+	"github.com/yldm-tech/classic-games/apps/server/internal/quota"
+	"github.com/yldm-tech/classic-games/apps/server/internal/runtimes"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/provenance"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 type creationModule struct{}
@@ -37,7 +37,7 @@ func (creationModule) Install(ctx *moduleContext) error {
 	aiService := ai.NewService(ctx.provider, dsl.NewSchemaValidator(ctx.cfg.Content.SchemaDir), recorder, 2)
 	signer := provenance.NewSigner(ctx.cfg.Security.Secret)
 	if !signer.Enabled() {
-		log.Print("provenance: 未设 FORGEPLAY_SECRET,AI 溯源令牌禁用(AI 标识回退为客户端自报)")
+		log.Print("provenance: 未设 CLASSIC_GAMES_SECRET,AI 溯源令牌禁用(AI 标识回退为客户端自报)")
 	}
 	aiService.SetProvenanceSigner(signer)
 

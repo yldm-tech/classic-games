@@ -16,7 +16,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 )
 
 var (

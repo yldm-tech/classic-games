@@ -436,14 +436,14 @@ func TestHelpIsAvailableForEveryGroup(t *testing.T) {
 	for name, subcommands := range groups {
 		mustContain(t, root, "\n  "+name+" ")
 		help := h.ok(name, "--help")
-		mustContain(t, help, "Usage:", "forgeplay "+name+" [command]", "--output string", "--server string")
+		mustContain(t, help, "Usage:", "classic-games "+name+" [command]", "--output string", "--server string")
 		for _, subcommand := range subcommands {
 			mustContain(t, help, "\n  "+subcommand+" ")
-			mustContain(t, h.ok(name, subcommand, "--help"), "Usage:\n  forgeplay "+name+" "+subcommand)
+			mustContain(t, h.ok(name, subcommand, "--help"), "Usage:\n  classic-games "+name+" "+subcommand)
 		}
 		// A bare group prints the same help and succeeds.
 		if bare := h.ok(name); bare != help {
-			t.Fatalf("'forgeplay %s' and 'forgeplay %s --help' differ", name, name)
+			t.Fatalf("'classic-games %s' and 'classic-games %s --help' differ", name, name)
 		}
 	}
 	mustContain(t, root, "\n  version ")

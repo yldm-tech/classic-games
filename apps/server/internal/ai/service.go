@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // provenanceTTL 是 AI 溯源令牌有效期(从 /ai/mod 生成到 POST /mods 建 mod 的窗口)。

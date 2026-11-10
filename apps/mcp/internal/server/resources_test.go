@@ -28,13 +28,13 @@ func TestSchemaResources(t *testing.T) {
 		}
 	}
 	slices.Sort(uris)
-	want := []string{"forgeplay://schemas/shooter-1.0.0", "forgeplay://schemas/survivor-1.0.0", "forgeplay://schemas/tower_defense-1.0.0"}
+	want := []string{"classic-games://schemas/shooter-1.0.0", "classic-games://schemas/survivor-1.0.0", "classic-games://schemas/tower_defense-1.0.0"}
 	if !slices.Equal(uris, want) {
 		t.Fatalf("resources = %v, want %v", uris, want)
 	}
 
 	for _, name := range runtimeNames {
-		uri := "forgeplay://schemas/" + name + "-1.0.0"
+		uri := "classic-games://schemas/" + name + "-1.0.0"
 		result, err := cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: uri})
 		if err != nil {
 			t.Fatalf("read %s: %v", uri, err)
@@ -48,7 +48,7 @@ func TestSchemaResources(t *testing.T) {
 		}
 	}
 
-	_, err := cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "forgeplay://schemas/racing-1.0.0"})
+	_, err := cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "classic-games://schemas/racing-1.0.0"})
 	requireNotFound(t, err)
 }
 
@@ -67,11 +67,11 @@ func TestGameDSLResourceTemplate(t *testing.T) {
 			t.Errorf("template is not fully described: %+v", template)
 		}
 	}
-	if want := []string{"forgeplay://games/{game_id}/dsl"}; !slices.Equal(templates, want) {
+	if want := []string{"classic-games://games/{game_id}/dsl"}; !slices.Equal(templates, want) {
 		t.Fatalf("resource templates = %v, want %v", templates, want)
 	}
 
-	result, err := cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "forgeplay://games/g_3/dsl"})
+	result, err := cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "classic-games://games/g_3/dsl"})
 	if err != nil {
 		t.Fatalf("read game DSL: %v", err)
 	}
@@ -83,9 +83,9 @@ func TestGameDSLResourceTemplate(t *testing.T) {
 		t.Errorf("game DSL resource = %v", document)
 	}
 
-	_, err = cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "forgeplay://games/g_404/dsl"})
+	_, err = cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "classic-games://games/g_404/dsl"})
 	requireNotFound(t, err)
-	_, err = cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "forgeplay://games/g_3/lineage"})
+	_, err = cs.ReadResource(ctx, &mcp.ReadResourceParams{URI: "classic-games://games/g_3/lineage"})
 	requireNotFound(t, err)
 }
 

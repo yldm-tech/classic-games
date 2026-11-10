@@ -3,7 +3,7 @@ package replays
 import (
 	"testing"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 // Migrations run on every process start, so anything registered in the migration set must be safe to repeat. This

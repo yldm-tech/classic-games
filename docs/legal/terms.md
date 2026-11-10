@@ -1,11 +1,11 @@
-# ForgePlay 用户协议
+# Classic Games 用户协议
 
 生效日期：2026-08-24  
 运营主体以实际对外公示为准。English inquiries can be submitted through in-app Help & Feedback.
 
 ## 1. 服务内容
 
-ForgePlay 提供基于 Mod DSL 的小游戏游玩、二创与发布服务。用户通过自然语言或编辑器修改结构化 DSL，平台不执行用户提交的任意代码。
+Classic Games 提供基于 Mod DSL 的小游戏游玩、二创与发布服务。用户通过自然语言或编辑器修改结构化 DSL，平台不执行用户提交的任意代码。
 
 ## 2. 账号
 

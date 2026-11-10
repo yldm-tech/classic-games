@@ -1,12 +1,12 @@
 # 开源许可说明
 
-本页归集 ForgePlay 自身的许可证，以及仓库和构建产物中包含的第三方组件的许可证。本页只作索引，不改变各组件原许可条款；条款以各组件随附的许可文本为准。
+本页归集 Classic Games 自身的许可证，以及仓库和构建产物中包含的第三方组件的许可证。本页只作索引，不改变各组件原许可条款；条款以各组件随附的许可文本为准。
 
 最近一次逐项核对：2026-11-10，依据当时的 `go.mod` 与 Go 模块缓存中各模块随附的许可文件。依赖升级后以对应模块的许可文件为准。
 
-## ForgePlay 自身
+## Classic Games 自身
 
-ForgePlay 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与第三方归属见仓库根目录的 [NOTICE](../../NOTICE)。向本项目提交的贡献按同一许可证授权，见 [CONTRIBUTING](../../CONTRIBUTING.md)。
+Classic Games 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与第三方归属见仓库根目录的 [NOTICE](../../NOTICE)。向本项目提交的贡献按同一许可证授权，见 [CONTRIBUTING](../../CONTRIBUTING.md)。
 
 ## 随仓库分发的第三方内容
 
@@ -26,7 +26,7 @@ ForgePlay 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与第三
 
 ### Go 模块
 
-各 Go 模块的依赖以各自的 `go.mod` 为准：`apps/server`、`apps/cli`、`apps/mcp`、`packages/dsl`、`packages/sdk`。仓库内模块之间（`forgeplay/dsl`、`forgeplay/sdk`）通过相对路径 `replace` 引用，同属本项目、同为 Apache-2.0。
+各 Go 模块的依赖以各自的 `go.mod` 为准：`apps/server`、`apps/cli`、`apps/mcp`、`packages/dsl`、`packages/sdk`。仓库内模块之间（`github.com/yldm-tech/classic-games/packages/dsl`、`github.com/yldm-tech/classic-games/packages/sdk`）通过相对路径 `replace` 引用，同属本项目、同为 Apache-2.0。
 
 直接依赖：
 

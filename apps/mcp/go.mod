@@ -1,13 +1,13 @@
-module forgeplay/mcp
+module github.com/yldm-tech/classic-games/apps/mcp
 
 go 1.26
 
 require (
-	forgeplay/dsl v0.0.0
-	forgeplay/sdk v0.0.0
 	github.com/google/jsonschema-go v0.4.3
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+	github.com/yldm-tech/classic-games/packages/dsl v0.0.0
+	github.com/yldm-tech/classic-games/packages/sdk v0.0.0
 )
 
 require (
@@ -21,6 +21,6 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 )
 
-replace forgeplay/dsl => ../../packages/dsl
+replace github.com/yldm-tech/classic-games/packages/dsl => ../../packages/dsl
 
-replace forgeplay/sdk => ../../packages/sdk
+replace github.com/yldm-tech/classic-games/packages/sdk => ../../packages/sdk

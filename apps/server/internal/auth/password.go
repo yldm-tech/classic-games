@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const dummyPassword = "forgeplay-dummy-password-never-valid"
+const dummyPassword = "classic-games-dummy-password-never-valid"
 
 var dummyPasswordHash = func() []byte {
 	hash, err := bcrypt.GenerateFromPassword([]byte(dummyPassword), bcrypt.DefaultCost)

@@ -2,7 +2,7 @@ package users
 
 import (
 	"errors"
-	"forgeplay/server/pkg/httpx"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

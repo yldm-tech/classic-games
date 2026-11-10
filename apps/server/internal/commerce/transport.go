@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 
 	// swag resolves the httpx.Envelope named in the annotations of this file through its imports; the handlers themselves write errors through i18n.
-	_ "forgeplay/server/pkg/httpx"
+	_ "github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 // RegisterRoutes 挂载 commerce 只读端点(消费/福利内容)。全部为公开读接口,无鉴权,
@@ -67,7 +67,7 @@ func getShop(svc *Service) gin.HandlerFunc {
 }
 
 // getMembership godoc
-// @Summary  会员 ForgePlay+(权益 + 套餐)
+// @Summary  会员 Classic Games+(权益 + 套餐)
 // @Tags     commerce
 // @Produce  json
 // @Param    lang  query     string  false  "zh/en/ja,默认 zh"
