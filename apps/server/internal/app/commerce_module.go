@@ -3,9 +3,9 @@ package app
 import (
 	"fmt"
 
-	"forgeplay/server/internal/commerce"
-	"forgeplay/server/internal/participation"
-	"forgeplay/server/internal/payments"
+	"github.com/yldm-tech/classic-games/apps/server/internal/commerce"
+	"github.com/yldm-tech/classic-games/apps/server/internal/participation"
+	"github.com/yldm-tech/classic-games/apps/server/internal/payments"
 )
 
 type commerceModule struct{}

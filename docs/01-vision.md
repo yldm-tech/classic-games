@@ -12,7 +12,7 @@
 用户 → 创建游戏
 ```
 
-ForgePlay 范式:
+Classic Games 范式:
 
 ```
 用户 → Fork 游戏 → AI 修改 → 发布作品

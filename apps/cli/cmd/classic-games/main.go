@@ -1,4 +1,4 @@
-// Command forgeplay is the command-line client for the ForgePlay backend and the Mod DSL.
+// Command classic-games is the command-line client for the Classic Games backend and the Mod DSL.
 package main
 
 import (
@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"forgeplay/cli/internal/cli"
+	"github.com/yldm-tech/classic-games/apps/cli/internal/cli"
 )
 
 // version, commit and date are set at link time:
 //
-//	go build -ldflags "-X main.version=1.2.3 -X main.commit=$(git rev-parse --short HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" ./cmd/forgeplay
+//	go build -ldflags "-X main.version=1.2.3 -X main.commit=$(git rev-parse --short HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" ./cmd/classic-games
 var (
 	version = "dev"
 	commit  = "none"

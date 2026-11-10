@@ -58,7 +58,7 @@ func addTool[In, Out any](server *mcp.Server, tool *mcp.Tool, adjustInput func(i
 // Annotation presets. Every hint is set explicitly because some clients treat an absent hint as its pessimistic default.
 func boolPtr(value bool) *bool { return &value }
 
-// readOnly describes a tool that changes nothing. openWorld is true for tools that reach the ForgePlay backend, whose content is written by other users.
+// readOnly describes a tool that changes nothing. openWorld is true for tools that reach the Classic Games backend, whose content is written by other users.
 func readOnly(title string, openWorld bool) *mcp.ToolAnnotations {
 	return &mcp.ToolAnnotations{Title: title, ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: boolPtr(false), OpenWorldHint: boolPtr(openWorld)}
 }

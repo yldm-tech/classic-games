@@ -34,7 +34,7 @@ type GenerateModResponse struct {
 	Tokens      TokenUsage `json:"tokens"`
 	// Retries is how many extra model calls were needed before a valid result (0 to 2).
 	Retries int `json:"retries"`
-	// Provenance is a signed, short-lived token proving the patch came from the AI endpoint. Pass it as CreateModRequest.AIProvenance so the stored mod is marked AI-generated. It is empty when the backend has no FORGEPLAY_SECRET.
+	// Provenance is a signed, short-lived token proving the patch came from the AI endpoint. Pass it as CreateModRequest.AIProvenance so the stored mod is marked AI-generated. It is empty when the backend has no CLASSIC_GAMES_SECRET.
 	Provenance string `json:"provenance,omitempty"`
 }
 
@@ -114,7 +114,7 @@ func (c *Client) AutoBalance(ctx context.Context, request AutoBalanceRequest) (*
 	return &out, nil
 }
 
-// ValidateDSL calls POST /api/v1/ai/validate and returns nil when dsl is valid for the runtime ref (such as "shooter@1.0.0"). An invalid document fails with 422 DSL_INVALID; the response does not say which field is wrong, so use forgeplay/dsl with the schema from GetRuntimeSchema for field-level messages. No authentication, no quota.
+// ValidateDSL calls POST /api/v1/ai/validate and returns nil when dsl is valid for the runtime ref (such as "shooter@1.0.0"). An invalid document fails with 422 DSL_INVALID; the response does not say which field is wrong, so use github.com/yldm-tech/classic-games/packages/dsl with the schema from GetRuntimeSchema for field-level messages. No authentication, no quota.
 func (c *Client) ValidateDSL(ctx context.Context, runtime string, dsl map[string]any) error {
 	body := struct {
 		Runtime string         `json:"runtime"`

@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="forgeplay"
+config/name="classic-games"
 config/version="0.1.0"
 run/main_scene="res://main.tscn"
 ; Godot feature tags use major.minor; the exact patch is pinned in .godot-version and enforced by the test runner/CI.

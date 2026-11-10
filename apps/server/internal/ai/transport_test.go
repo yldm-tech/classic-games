@@ -11,8 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/internal/quota"
-	"forgeplay/server/pkg/httpx"
+	"github.com/yldm-tech/classic-games/apps/server/internal/quota"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 func init() { gin.SetMode(gin.TestMode) }

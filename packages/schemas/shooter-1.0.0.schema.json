@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://forgeplay/schemas/shooter-1.0.0.schema.json",
-  "title": "ForgePlay Shooter Runtime DSL",
+  "$id": "https://classic-games/schemas/shooter-1.0.0.schema.json",
+  "title": "Classic Games Shooter Runtime DSL",
   "description": "shooter@1.0.0 的生效 DSL 契约。AI structured output 约束、后端校验、RuntimeLoader 解析三方共用此 schema。枚举值须与 11-runtime-content.md 内容清单逐一对齐。",
   "type": "object",
   "additionalProperties": false,

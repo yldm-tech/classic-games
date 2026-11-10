@@ -1,13 +1,13 @@
 ---
 title: Go SDK
-description: forgeplay/sdk 是后端 HTTP API 的类型化 Go 客户端，CLI 和 MCP 服务都构建在它之上。
+description: github.com/yldm-tech/classic-games/packages/sdk 是后端 HTTP API 的类型化 Go 客户端，CLI 和 MCP 服务都构建在它之上。
 sidebar:
   order: 4
 ---
 
 import { repoDir, repoFile } from '../../../config/site.ts';
 
-`forgeplay/sdk` 是 ForgePlay 后端 HTTP API 的类型化 Go 客户端，源码在 <a href={repoDir('packages/sdk')}>packages/sdk</a>。它只依赖标准库，`forgeplay` CLI 和 `forgeplay-mcp` 服务都用它访问后端。
+`github.com/yldm-tech/classic-games/packages/sdk` 是 Classic Games 后端 HTTP API 的类型化 Go 客户端，源码在 <a href={repoDir('packages/sdk')}>packages/sdk</a>。它只依赖标准库，`classic-games` CLI 和 `classic-games-mcp` 服务都用它访问后端。
 
 :::note
 完整的方法列表和类型说明以 <a href={repoFile('packages/sdk/README.md')}>packages/sdk/README.md</a> 和源码里的文档注释为准。
@@ -15,12 +15,12 @@ import { repoDir, repoFile } from '../../../config/site.ts';
 
 ## 引入
 
-`forgeplay/sdk` 是仓库内的模块名，没有发布到模块代理。仓库里的其他模块通过 `replace` 指向它：
+`github.com/yldm-tech/classic-games/packages/sdk` 是仓库内的模块名，没有发布到模块代理。仓库里的其他模块通过 `replace` 指向它：
 
 ```
-require forgeplay/sdk v0.0.0
+require github.com/yldm-tech/classic-games/packages/sdk v0.0.0
 
-replace forgeplay/sdk => ../../packages/sdk
+replace github.com/yldm-tech/classic-games/packages/sdk => ../../packages/sdk
 ```
 
 相对路径按你的模块所在位置调整。
@@ -37,7 +37,7 @@ import (
 	"fmt"
 	"log"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 func main() {
@@ -91,9 +91,9 @@ func main() {
 - 列表接口用游标分页，返回 `Page[T]`。`sdk.Paginate` 可以把所有页串成一个迭代器。
 - 非 2xx 的响应一律返回 `*sdk.APIError`，里面有 HTTP 状态码和后端的错误码。可以用 `errors.As` 取出，也可以用 `sdk.IsCode`、`sdk.IsStatus`、`sdk.IsNotFound` 判断。
 - 有两类错误由客户端自己给出，用 `errors.Is` 判断：`sdk.ErrInvalidArgument` 表示 id 为空、含 `/`、或是 `.` / `..`，这时不会发出请求；`sdk.ErrBadResponse` 表示 2xx 响应不是预期的 JSON 或超过 32 MiB。把 `mine` 这类本身是后端路由的词当作 id 传给 `GetGame` 等单资源读取方法，得到的是 `404 NOT_FOUND`，不会返回一个空对象。
-- `GenerateMod` 返回的 `NewDSL` 已经由后端按 Schema 校验过。它不会保存任何东西，要保存结果需要像上面那样调用 `CreateMod`，或用 `SaveDraft` 存到已有草稿上；把返回的 `Provenance` 一并传回去，Mod 才会被标记为 AI 生成；后端只有设置了 `FORGEPLAY_SECRET` 才会签发它。
+- `GenerateMod` 返回的 `NewDSL` 已经由后端按 Schema 校验过。它不会保存任何东西，要保存结果需要像上面那样调用 `CreateMod`，或用 `SaveDraft` 存到已有草稿上；把返回的 `Provenance` 一并传回去，Mod 才会被标记为 AI 生成；后端只有设置了 `CLASSIC_GAMES_SECRET` 才会签发它。
 - 发布（`PublishDraft`）后的游戏状态是 `reviewing`，审核通过后才公开。
 - 开发环境后端预置的展示游戏背后没有 mod，对它们调用 `GetGameDSL` 或 `ForkGame` 会得到 404（错误码 `GAME_HAS_NO_MOD`）；示例因此从 Runtime 基线开始。
-- 需要离线应用补丁或按 Schema 校验时，用 `forgeplay/dsl`（`packages/dsl`）。SDK 的 `PatchOp` 与 `dsl.Op` 字段相同，可以逐元素转换。
+- 需要离线应用补丁或按 Schema 校验时，用 `github.com/yldm-tech/classic-games/packages/dsl`（`packages/dsl`）。SDK 的 `PatchOp` 与 `dsl.Op` 字段相同，可以逐元素转换。
 
 接口本身的契约见 [API 设计](/docs/09-api-design/)。

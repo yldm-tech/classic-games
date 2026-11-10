@@ -83,7 +83,7 @@ export function findBuiltPageProblems(outDir: string): string[] {
 
 export function checkBuiltPages(): AstroIntegration {
 	return {
-		name: 'forgeplay-check-built-pages',
+		name: 'classic-games-check-built-pages',
 		hooks: {
 			'astro:build:done': ({ dir, logger }) => {
 				const problems = findBuiltPageProblems(fileURLToPath(dir));

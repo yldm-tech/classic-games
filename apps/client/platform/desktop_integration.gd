@@ -8,7 +8,7 @@ signal export_requested
 signal preview_requested
 
 const RuntimeLoaderScript := preload("res://runtime/runtime_loader.gd")
-const FILE_FILTER := "*.forgeplay.json ; ForgePlay DSL"
+const FILE_FILTER := "*.classic-games.json ; Classic Games DSL"
 
 var _native_menu := RID()
 
@@ -34,7 +34,7 @@ func install_native_menu() -> bool:
 	NativeMenu.add_item(_native_menu, "Export DSL…", _on_menu_action, Callable(), "export_dsl", KEY_MASK_CMD_OR_CTRL | KEY_S)
 	NativeMenu.add_separator(_native_menu)
 	NativeMenu.add_item(_native_menu, "Open Preview Window", _on_menu_action, Callable(), "preview_window", KEY_MASK_CMD_OR_CTRL | KEY_P)
-	NativeMenu.add_submenu_item(main, "ForgePlay", _native_menu)
+	NativeMenu.add_submenu_item(main, "Classic Games", _native_menu)
 	return true
 
 func _on_menu_action(tag: Variant) -> void:
@@ -92,7 +92,7 @@ func show_export_dialog(value: Dictionary) -> void:
 	dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.filters = PackedStringArray([FILE_FILTER])
-	dialog.current_file = "forgeplay-mod.forgeplay.json"
+	dialog.current_file = "classic-games-mod.classic-games.json"
 	dialog.file_selected.connect(func(path: String) -> void:
 		save_dsl(path, value)
 		dialog.queue_free())
@@ -106,7 +106,7 @@ func open_preview_window(runtime_ref: String, dsl: Dictionary) -> Window:
 	if runtime == null:
 		return null
 	var window := Window.new()
-	window.title = "ForgePlay Preview — %s" % runtime_ref
+	window.title = "Classic Games Preview — %s" % runtime_ref
 	window.size = Vector2i(960, 540)
 	window.min_size = Vector2i(640, 360)
 	window.close_requested.connect(window.queue_free)

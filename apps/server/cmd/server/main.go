@@ -1,4 +1,4 @@
-// Command server starts the ForgePlay HTTP application.
+// Command server starts the Classic Games HTTP application.
 package main
 
 import (
@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"forgeplay/server/internal/app"
+	"github.com/yldm-tech/classic-games/apps/server/internal/app"
 )
 
-// @title        ForgePlay API
+// @title        Classic Games API
 // @version      0.1
 // @description  AI 驱动的小游戏创作社区后端(详见 docs/09-api-design.md)。
 // @BasePath     /api/v1

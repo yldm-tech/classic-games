@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 var (
@@ -157,7 +157,7 @@ func (s *Service) AutoBalance(req BalanceRequest) (BalanceResponse, error) {
 	return BalanceResponse{
 		DSLPatch: ops, NewDSL: newDSL,
 		Metrics: BalanceMetrics{Before: difficultyPressure(name, req.CurrentDSL), After: difficultyPressure(name, newDSL)},
-		Model:   "forgeplay-balance-v1", Hint: fmt.Sprintf("已自动调至难度 %d/5，并通过 Runtime Schema 校验", d),
+		Model:   "classic-games-balance-v1", Hint: fmt.Sprintf("已自动调至难度 %d/5，并通过 Runtime Schema 校验", d),
 	}, nil
 }
 
@@ -206,7 +206,7 @@ func (s *Service) GenerateStructure(ctx context.Context, req StructureRequest) (
 	if s.provider != nil {
 		hint, attemptedReal := "", false
 		for attempt := 0; attempt <= s.maxRetries; attempt++ {
-			prompt := fmt.Sprintf("[FORGEPLAY_STRUCTURE]\n用户意图:%s\n在 /%s 中新增恰好 %d 个稳定 ID 节点，目标难度 %d/5；不要只改参数或外观。", strings.TrimSpace(req.Prompt), containerName, req.Count, req.Difficulty)
+			prompt := fmt.Sprintf("[CLASSIC_GAMES_STRUCTURE]\n用户意图:%s\n在 /%s 中新增恰好 %d 个稳定 ID 节点，目标难度 %d/5；不要只改参数或外观。", strings.TrimSpace(req.Prompt), containerName, req.Count, req.Difficulty)
 			suggestion, err := s.provider.GenerateModPatch(ctx, req.Runtime, req.CurrentDSL, prompt, hint)
 			if err != nil {
 				return StructureResponse{}, err
@@ -278,8 +278,8 @@ func (s *Service) GenerateStructure(ctx context.Context, req StructureRequest) (
 	if err = s.validator.Validate(req.Runtime, newDSL); err != nil {
 		return StructureResponse{}, fmt.Errorf("%w: %v", ErrDSLInvalid, err)
 	}
-	s.record(ctx, req.Runtime, PatchSuggestion{Ops: ops, Model: "forgeplay-structure-v1"}, 0, true, "")
-	return StructureResponse{DSLPatch: ops, NewDSL: newDSL, GeneratedKeys: keys, Model: "forgeplay-structure-v1", BalanceHint: "已生成结构并通过 Runtime Schema 校验，可继续自动平衡", Provenance: s.mintProvenance()}, nil
+	s.record(ctx, req.Runtime, PatchSuggestion{Ops: ops, Model: "classic-games-structure-v1"}, 0, true, "")
+	return StructureResponse{DSLPatch: ops, NewDSL: newDSL, GeneratedKeys: keys, Model: "classic-games-structure-v1", BalanceHint: "已生成结构并通过 Runtime Schema 校验，可继续自动平衡", Provenance: s.mintProvenance()}, nil
 }
 
 func addedStructureKeys(before, after map[string]any, container string) []string {

@@ -120,7 +120,7 @@
 - **状态**:✅ 已定(2026-06-12 拍板,源自 spike 代码评审 schema-F6)
 - **理由**:DSL 的权威校验在 Go 后端(docs/12-ai-prompt.md);需要一个支持 JSON Schema draft 2020-12 的库(schema 用了 oneOf/if-then/propertyNames)。`santhosh-tekuri/jsonschema/v6` 是 Go 生态标准、维护活跃、支持 2020-12。
 - **代价**:引入一个外部依赖(+ 间接 golang.org/x/text)。
-- **落地**:`packages/dsl/schema_validator.go`(Go 模块 `forgeplay/dsl`,后端、CLI、MCP 共用)的 `SchemaValidator`,按 runtime 版本加载 `packages/schemas/<name>-<version>.schema.json`,编译缓存、并发安全。`MinimalValidator` 降为零配置兜底。
+- **落地**:`packages/dsl/schema_validator.go`(Go 模块 `github.com/yldm-tech/classic-games/packages/dsl`,后端、CLI、MCP 共用)的 `SchemaValidator`,按 runtime 版本加载 `packages/schemas/<name>-<version>.schema.json`,编译缓存、并发安全。`MinimalValidator` 降为零配置兜底。
 - **推翻条件**:库停止维护或 2020-12 支持出问题 → 换等价库(接口不变,只换实现)。
 - 详见 [12-ai-prompt](./12-ai-prompt.md)、[09-api-design](./09-api-design.md)。
 
@@ -129,9 +129,9 @@
 - **状态**:✅ 已定(2026-11-10 拍板)
 - **决策**:
   - 顶层目录分两类:`apps/` 放可独立运行或发布的程序(`client` Godot 客户端、`server` Go 后端、`cli` 命令行、`mcp` MCP 服务、`web` 官网),`packages/` 放被多个程序共用的契约与库(`schemas` Mod DSL 的 JSON Schema、`dsl`、`sdk`)。依赖只允许 `apps → packages`。
-  - 补丁(RFC 6902)、DSL 迁移、schema 校验从 `apps/server/internal/ai` 抽成 Go 模块 `forgeplay/dsl`(`packages/dsl`);后端 HTTP API 的类型化客户端做成 Go 模块 `forgeplay/sdk`(`packages/sdk`)。CLI 与 MCP 服务经 `forgeplay/sdk` 走 HTTP 访问后端、经 `forgeplay/dsl` 做离线校验,不 import `forgeplay/server`。
-  - 五个 Go 模块用根目录 `go.work` 组成 workspace,同时彼此以 `require forgeplay/<name> v0.0.0` + 相对路径 `replace` 引用,每个模块在 `GOWORK=off` 下也能独立构建和测试。
-  - 新增三个对外入口:CLI `forgeplay`(cobra)、MCP 服务 `forgeplay-mcp`(官方 `modelcontextprotocol/go-sdk`)、官网与文档站(Astro + Starlight,pnpm)。官网在构建时从 `docs/` 同步文档,不另存副本。
+  - 补丁(RFC 6902)、DSL 迁移、schema 校验从 `apps/server/internal/ai` 抽成 Go 模块 `github.com/yldm-tech/classic-games/packages/dsl`(`packages/dsl`);后端 HTTP API 的类型化客户端做成 Go 模块 `github.com/yldm-tech/classic-games/packages/sdk`(`packages/sdk`)。CLI 与 MCP 服务经 `github.com/yldm-tech/classic-games/packages/sdk` 走 HTTP 访问后端、经 `github.com/yldm-tech/classic-games/packages/dsl` 做离线校验,不 import `github.com/yldm-tech/classic-games/apps/server`。
+  - 五个 Go 模块用根目录 `go.work` 组成 workspace,同时彼此以 `require classic-games/<name> v0.0.0` + 相对路径 `replace` 引用,每个模块在 `GOWORK=off` 下也能独立构建和测试。
+  - 新增三个对外入口:CLI `classic-games`(cobra)、MCP 服务 `classic-games-mcp`(官方 `modelcontextprotocol/go-sdk`)、官网与文档站(Astro + Starlight,pnpm)。官网在构建时从 `docs/` 同步文档,不另存副本。
   - 项目以 Apache-2.0 开源,第三方归属记在根目录 `NOTICE` 与 [legal/licenses](./legal/licenses.md)。
   - 公开仓库从一个全新的根提交开始,不带本仓库此前的 git 历史。早期提交跟踪过后来移出公开目录的内部文档(文档索引里缺的 2、15、17 号,以及进度记录与计划目录);把文件移出工作树并不会把它们从历史里去掉,只要这些提交被推到公开 remote,内容就仍然可读。因此首次公开推送的内容必须是只含最终公开树的 orphan 根提交(或等价的压缩导入),现有分支及其祖先提交只留在私有仓库。没有选用 `git filter-repo` 改写历史:它同样会改掉全部提交的 SHA,还要求把要剔除的路径逐条列全,漏一条就泄露,而全新根提交按构造就不含旧内容。
 - **理由**:
@@ -141,11 +141,11 @@
   - 选 Apache-2.0 是因为它带明确的专利授权和贡献条款(第 5 条,inbound = outbound),并且与现有依赖(MIT / BSD / Apache-2.0)和 Godot(MIT)兼容。
 - **代价**:
   - Go 模块从 1 个变成 5 个,`replace` 指令不会传递:一个模块依赖另一个本地模块时,要为后者的本地依赖再写一遍 `replace`;依赖版本要在五个 `go.mod` 之间保持一致,CI 因此同时跑 workspace 与 `GOWORK=off` 两种模式。
-  - 模块路径 `forgeplay/<name>` 只在本仓库内有效,没有发布到模块代理,仓库外的项目不能 `go get`,CLI 和 MCP 服务也只能在仓库检出内构建。要对外提供 Go SDK,需要把模块路径改成带域名的可解析路径,这是一次破坏性改名。
-  - `packages/schemas` 不是 Go 模块,schema 无法 `go:embed` 进 CLI 或 MCP 的二进制:离线校验需要磁盘上的 schema 目录(仓库检出内自动找到,否则用 `FORGEPLAY_SCHEMA_DIR` 指定)。
+  - 模块路径 `classic-games/<name>` 只在本仓库内有效,没有发布到模块代理,仓库外的项目不能 `go get`,CLI 和 MCP 服务也只能在仓库检出内构建。要对外提供 Go SDK,需要把模块路径改成带域名的可解析路径,这是一次破坏性改名。
+  - `packages/schemas` 不是 Go 模块,schema 无法 `go:embed` 进 CLI 或 MCP 的二进制:离线校验需要磁盘上的 schema 目录(仓库检出内自动找到,否则用 `CLASSIC_GAMES_SCHEMA_DIR` 指定)。
   - 双端一致性的 golden 测试随代码移到了 `packages/dsl`,它读取 `apps/client/runtime/shooter` 下的 baseline 与 golden;这是 `packages → apps` 方向上唯一的例外,只存在于测试数据,不是代码依赖。
   - 工具链从两套变成三套(Go、Godot、Node + pnpm),官网的构建会因为 `docs/` 里的断链而失败,写文档的人需要知道这一点。
-  - `forgeplay/sdk` 自己定义了 `PatchOp`,没有依赖 `forgeplay/dsl`(为了保持只用标准库),CLI/MCP 在两种补丁类型之间要逐元素转换。
+  - `github.com/yldm-tech/classic-games/packages/sdk` 自己定义了 `PatchOp`,没有依赖 `github.com/yldm-tech/classic-games/packages/dsl`(为了保持只用标准库),CLI/MCP 在两种补丁类型之间要逐元素转换。
   - 公开仓库看不到开源之前的提交历史,`git blame` 与 `git log` 只能追溯到导入提交。`scripts/check-architecture.sh` 只检查当前工作树没有跟踪内部文档目录,看不到历史;历史由 `scripts/check-public-history.sh` 单独检查,它在任何 ref 的历史里出现过这些路径或内容时失败,并且拒绝在浅克隆上运行。私有仓库的现有历史按定义过不了这项检查,所以它是发布门禁而不是日常门禁:首次公开推送前必须在待公开的仓库上跑通,并确认待推送分支的根提交(`git rev-list --max-parents=0 <分支>`)是新建的导入提交。
 - **推翻条件**:需要对外发布 Go SDK 或独立发版 CLI → 改用可解析的模块路径并给各模块打 tag;后端团队独立 → 按 ADR-012 的推翻条件拆仓,`packages/` 随契约的归属方走。
 - 详见根 [README](../README.md)、[04-architecture](./04-architecture.md)、[CONTRIBUTING](../CONTRIBUTING.md)。

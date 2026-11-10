@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"forgeplay/server/internal/app"
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/app"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 type storageRecord struct {
@@ -37,7 +37,7 @@ func TestOpenSupportsInMemoryMigrations(t *testing.T) {
 }
 
 func TestOpenPersistsFileDatabaseAcrossConnections(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "forgeplay.db")
+	path := filepath.Join(t.TempDir(), "classic-games.db")
 	first, err := storage.Open(path)
 	if err != nil {
 		t.Fatal(err)

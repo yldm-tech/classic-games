@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"forgeplay/server/internal/games"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
 )
 
 func TestTransportMutatesAuthenticatedLibrary(t *testing.T) {

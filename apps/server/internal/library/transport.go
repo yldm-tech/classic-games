@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 )
 
 // RegisterRoutes 挂载「我的库」端点(docs/09-api-design.md)。

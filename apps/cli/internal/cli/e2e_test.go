@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 // envE2EURL points TestE2E at a running backend, for example one started from apps/server with a temporary database. The test is skipped without it. Each run creates one guest account and spends one unit of the client IP's daily AI quota.
-const envE2EURL = "FORGEPLAY_CLI_E2E_URL"
+const envE2EURL = "CLASSIC_GAMES_CLI_E2E_URL"
 
 // TestE2E drives the real command tree against a real backend: login, AI generation saved as a draft, an edit, publication, and logout. It only assumes what every backend guarantees; it does not rely on the stub AI or on admin rights.
 func TestE2E(t *testing.T) {

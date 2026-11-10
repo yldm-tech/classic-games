@@ -7,19 +7,19 @@ import (
 	"net/http"
 	"net/url"
 
-	"forgeplay/mcp/internal/config"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/config"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 const (
 	// maxBackendMessage caps the message of a backend error envelope in a tool error. Real messages are one sentence.
 	maxBackendMessage = 1000
-	// maxForeignExcerpt is how much of an answer that is not a ForgePlay error is quoted: enough to recognise a proxy page or another service, not enough to flood the model's context.
+	// maxForeignExcerpt is how much of an answer that is not a Classic Games error is quoted: enough to recognise a proxy page or another service, not enough to flood the model's context.
 	maxForeignExcerpt = 200
 )
 
 // errAuthRequired is returned by tools that need a signed-in user when no token is configured. It is raised before any request is sent.
-var errAuthRequired = errors.New("authentication required: set " + config.EnvToken + " (obtain with: forgeplay auth login, then forgeplay auth token)")
+var errAuthRequired = errors.New("authentication required: set " + config.EnvToken + " (obtain with: classic-games auth login, then classic-games auth token)")
 
 // requireToken fails with errAuthRequired when the backend client is anonymous.
 func (s *service) requireToken() error {
@@ -29,7 +29,7 @@ func (s *service) requireToken() error {
 	return nil
 }
 
-// backendError turns an error from forgeplay/sdk into a tool error that says what failed, what the backend answered and what to do next. action names the attempted step, such as "fork game g_1". The text goes to the model, so it never carries the raw backend URL (it may hold credentials) and never more than a short excerpt of an answer that is not a ForgePlay error.
+// backendError turns an error from github.com/yldm-tech/classic-games/packages/sdk into a tool error that says what failed, what the backend answered and what to do next. action names the attempted step, such as "fork game g_1". The text goes to the model, so it never carries the raw backend URL (it may hold credentials) and never more than a short excerpt of an answer that is not a Classic Games error.
 func (s *service) backendError(action string, err error) error {
 	var apiErr *sdk.APIError
 	if errors.As(err, &apiErr) {
@@ -44,15 +44,15 @@ func (s *service) backendError(action string, err error) error {
 	}
 	switch {
 	case errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded):
-		return fmt.Errorf("%s: the request to the ForgePlay backend at %s was cancelled or timed out: %v", action, s.backendURL, cause)
+		return fmt.Errorf("%s: the request to the Classic Games backend at %s was cancelled or timed out: %v", action, s.backendURL, cause)
 	case transport:
-		return fmt.Errorf("%s: cannot reach the ForgePlay backend at %s: %v. Check that the backend is running and that %s points at it", action, s.backendURL, cause, config.EnvServerURL)
+		return fmt.Errorf("%s: cannot reach the Classic Games backend at %s: %v. Check that the backend is running and that %s points at it", action, s.backendURL, cause, config.EnvServerURL)
 	case errors.Is(err, sdk.ErrInvalidArgument):
 		return fmt.Errorf("%s: no request was sent, because the id is not usable: %v. Pass an id exactly as a tool returned it", action, err)
 	case errors.Is(err, sdk.ErrBadResponse):
-		return fmt.Errorf("%s: %s answered, but not like a ForgePlay backend: %v. Check that %s is the root URL of the backend, without /api/v1", action, s.backendURL, err, config.EnvServerURL)
+		return fmt.Errorf("%s: %s answered, but not like a Classic Games backend: %v. Check that %s is the root URL of the backend, without /api/v1", action, s.backendURL, err, config.EnvServerURL)
 	default:
-		return fmt.Errorf("%s: the request to the ForgePlay backend at %s failed: %v", action, s.backendURL, err)
+		return fmt.Errorf("%s: the request to the Classic Games backend at %s failed: %v", action, s.backendURL, err)
 	}
 }
 
@@ -64,7 +64,7 @@ func (s *service) answerError(action string, apiErr *sdk.APIError) error {
 		if apiErr.Message != "" && apiErr.Message != http.StatusText(apiErr.StatusCode) {
 			answer += fmt.Sprintf(", and the body starts with %q", excerpt(apiErr.Message, maxForeignExcerpt))
 		}
-		return fmt.Errorf("%s: %s answered %s. That is not a ForgePlay API error: %s probably points at another service, or a proxy in front of the backend failed", action, s.backendURL, answer, config.EnvServerURL)
+		return fmt.Errorf("%s: %s answered %s. That is not a Classic Games API error: %s probably points at another service, or a proxy in front of the backend failed", action, s.backendURL, answer, config.EnvServerURL)
 	}
 	answer := fmt.Sprintf("%d %s", apiErr.StatusCode, apiErr.Code)
 	if apiErr.Message != "" && apiErr.Message != apiErr.Code {
@@ -79,7 +79,7 @@ func (s *service) hint(apiErr *sdk.APIError) string {
 	case apiErr.StatusCode == http.StatusUnauthorized && s.backend.Token() == "":
 		return "This server is anonymous; " + errAuthRequired.Error() + "."
 	case apiErr.StatusCode == http.StatusUnauthorized:
-		return "The token in " + config.EnvToken + " was rejected (expired, revoked or for another backend). Obtain a new one with: forgeplay auth login --force, then forgeplay auth token."
+		return "The token in " + config.EnvToken + " was rejected (expired, revoked or for another backend). Obtain a new one with: classic-games auth login --force, then classic-games auth token."
 	case apiErr.Code == sdk.CodeQuotaExceeded:
 		return "The daily AI generation quota is used up. Write the patch yourself: check it with apply_dsl_patch and save it with update_mod."
 	case apiErr.StatusCode == http.StatusTooManyRequests:

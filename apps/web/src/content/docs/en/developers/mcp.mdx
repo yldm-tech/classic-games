@@ -1,13 +1,13 @@
 ---
 title: MCP server
-description: forgeplay-mcp exposes ForgePlay's DSL tools and backend API to AI assistants as Model Context Protocol tools.
+description: classic-games-mcp exposes Classic Games's DSL tools and backend API to AI assistants as Model Context Protocol tools.
 sidebar:
   order: 3
 ---
 
 import { repoDir, repoFile } from '../../../../config/site.ts';
 
-`forgeplay-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Its source is in <a href={repoDir('apps/mcp')}>apps/mcp</a> (Go module `forgeplay/mcp`), built on the official MCP Go SDK. It lets an MCP-capable AI assistant read schemas, validate and patch DSL, and fork, edit and publish mods through the backend.
+`classic-games-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Its source is in <a href={repoDir('apps/mcp')}>apps/mcp</a> (Go module `github.com/yldm-tech/classic-games/apps/mcp`), built on the official MCP Go SDK. It lets an MCP-capable AI assistant read schemas, validate and patch DSL, and fork, edit and publish mods through the backend.
 
 :::note
 For client configuration files, the behaviour of each tool and the security notes, see <a href={repoFile('apps/mcp/README.md')}>apps/mcp/README.md</a>.
@@ -16,7 +16,7 @@ For client configuration files, the behaviour of each tool and the security note
 ## Build
 
 ```bash
-make mcp-build          # writes apps/mcp/bin/forgeplay-mcp
+make mcp-build          # writes apps/mcp/bin/classic-games-mcp
 ```
 
 Built there, the binary finds the schemas in `packages/schemas` of the repository by itself, whatever directory a client starts it from: the directory of the binary is searched before the working directory, so a project with its own `packages/schemas` directory cannot replace them.
@@ -42,7 +42,7 @@ Built there, the binary finds the schemas in `packages/schemas` of the repositor
 
 The offline tools run the same `packages/dsl` code as the backend. `create_mod` and `update_mod` apply the patch and validate the result locally before anything is sent, so content that breaks the schema is never stored.
 
-The server also offers the schemas as resources (`forgeplay://schemas/<runtime>-<version>`) and a resource template for the effective DSL of a game (`forgeplay://games/{game_id}/dsl`).
+The server also offers the schemas as resources (`classic-games://schemas/<runtime>-<version>`) and a resource template for the effective DSL of a game (`classic-games://games/{game_id}/dsl`).
 
 ## How to run it
 
@@ -61,16 +61,16 @@ The HTTP transport has no authentication of its own: anyone who can reach the li
 
 | Variable | Meaning |
 |---|---|
-| `FORGEPLAY_SERVER_URL` | Backend root URL; the default is `http://localhost:8080` |
-| `FORGEPLAY_TOKEN` | Bearer token of the account the server acts as. Without it the server is anonymous and the tools that need a token return an error |
-| `FORGEPLAY_SCHEMA_DIR` | Directory with the Mod DSL schemas. When unset, `packages/schemas` is looked up above the binary, then above the working directory; a `packages/schemas` directory without `<runtime>-<version>.schema.json` files is skipped |
-| `FORGEPLAY_LANG` | Language of backend messages and titles: `zh`, `en` or `ja` |
+| `CLASSIC_GAMES_SERVER_URL` | Backend root URL; the default is `http://localhost:8080` |
+| `CLASSIC_GAMES_TOKEN` | Bearer token of the account the server acts as. Without it the server is anonymous and the tools that need a token return an error |
+| `CLASSIC_GAMES_SCHEMA_DIR` | Directory with the Mod DSL schemas. When unset, `packages/schemas` is looked up above the binary, then above the working directory; a `packages/schemas` directory without `<runtime>-<version>.schema.json` files is skipped |
+| `CLASSIC_GAMES_LANG` | Language of backend messages and titles: `zh`, `en` or `ja` |
 
 The token comes from the CLI:
 
 ```bash
-forgeplay auth login
-export FORGEPLAY_TOKEN="$(forgeplay auth token)"
+classic-games auth login
+export CLASSIC_GAMES_TOKEN="$(classic-games auth token)"
 ```
 
 ## Connect an MCP client
@@ -80,12 +80,12 @@ Most MCP clients start a stdio server from a configuration of this shape. Which 
 ```json
 {
   "mcpServers": {
-    "forgeplay": {
-      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+    "classic-games": {
+      "command": "/absolute/path/to/classic-games/apps/mcp/bin/classic-games-mcp",
       "args": [],
       "env": {
-        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
-        "FORGEPLAY_TOKEN": "your-token"
+        "CLASSIC_GAMES_SERVER_URL": "http://localhost:8080",
+        "CLASSIC_GAMES_TOKEN": "your-token"
       }
     }
   }

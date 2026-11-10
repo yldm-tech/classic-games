@@ -290,7 +290,7 @@ export function syncDocs({ repoRoot, contentDir }: DocsSyncPaths): DocsSyncResul
 export function docsSync(): AstroIntegration {
 	let paths: DocsSyncPaths | undefined;
 	return {
-		name: 'forgeplay-docs-sync',
+		name: 'classic-games-docs-sync',
 		hooks: {
 			'astro:config:setup': ({ config, logger }) => {
 				const webRoot = fileURLToPath(config.root);

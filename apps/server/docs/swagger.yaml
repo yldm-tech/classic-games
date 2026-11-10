@@ -11,7 +11,7 @@ definitions:
           type: integer
         type: array
     type: object
-  forgeplay_server_pkg_httpx.Body:
+  github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Body:
     properties:
       code:
         type: string
@@ -21,10 +21,10 @@ definitions:
       message:
         type: string
     type: object
-  forgeplay_server_pkg_httpx.Envelope:
+  github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope:
     properties:
       error:
-        $ref: '#/definitions/forgeplay_server_pkg_httpx.Body'
+        $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Body'
     type: object
   internal_ai.BalanceMetrics:
     properties:
@@ -857,7 +857,7 @@ definitions:
 info:
   contact: {}
   description: AI 驱动的小游戏创作社区后端(详见 docs/09-api-design.md)。
-  title: ForgePlay API
+  title: Classic Games API
   version: "0.1"
 paths:
   /achievements:
@@ -897,11 +897,11 @@ paths:
         "400":
           description: COMMERCE_INVALID(未达成 / 已领取)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: COMMERCE_INVALID(成就不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 领取成就奖励
       tags:
       - commerce
@@ -945,11 +945,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 自动平衡 Runtime DSL
       tags:
       - ai
@@ -975,15 +975,15 @@ paths:
         "400":
           description: BAD_REQUEST
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "422":
           description: DSL_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "429":
           description: QUOTA_EXCEEDED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: AI 改 DSL(核心接口)
       tags:
       - ai
@@ -1009,15 +1009,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "429":
           description: Too Many Requests
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 生成敌人或波次结构
       tags:
       - ai
@@ -1037,7 +1037,7 @@ paths:
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 校验 DSL 是否合法
       tags:
       - ai
@@ -1060,7 +1060,7 @@ paths:
         "400":
           description: EVENT_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 上报埋点事件(game_viewed/fork_started/ai_edit_started/mod_published 等)
       tags:
       - analytics
@@ -1076,7 +1076,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 埋点汇总(admin:Fork 转化率 / AI 改完发布率 / 最大 Fork 深度)
       tags:
       - analytics
@@ -1128,15 +1128,15 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "401":
           description: OAUTH_FAILED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "503":
           description: OAUTH_FAILED(第三方服务不可用)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 第三方登录(wechat/apple/google...)
       tags:
       - auth
@@ -1155,15 +1155,15 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "401":
           description: OAUTH_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "503":
           description: OAUTH_INVALID(第三方服务不可用)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 第三方登录(通用 provider+code 交换接口)
       tags:
       - auth
@@ -1182,15 +1182,15 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "401":
           description: AUTH_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "429":
           description: AUTH_INVALID(登录尝试过于频繁)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 账号密码登录
       tags:
       - auth
@@ -1207,7 +1207,7 @@ paths:
         "401":
           description: AUTH_REQUIRED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 续期(旧 token 换新 token)
       tags:
       - auth
@@ -1242,7 +1242,7 @@ paths:
         "401":
           description: AUTH_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 验证码登录(未注册自动建号)
       tags:
       - auth
@@ -1279,7 +1279,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / COMMERCE_INVALID(未拥有该道具)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 装扮换装(角色 / 座驾 / 特效)
       tags:
       - commerce
@@ -1380,11 +1380,11 @@ paths:
         "400":
           description: BAD_REQUEST(idx 非整数)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: NOT_FOUND(idx 越界)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 会话气泡(对方种子消息 + 自动回复模板)
       tags:
       - inbox
@@ -1408,7 +1408,7 @@ paths:
         "400":
           description: BAD_REQUEST(idx 非整数或消息格式错误) / MESSAGE_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 发私信(按会话索引)
       tags:
       - inbox
@@ -1431,7 +1431,7 @@ paths:
         "403":
           description: NOT_FRIEND(非好友关系不能查看)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 会话消息(按对方 handle)
       tags:
       - inbox
@@ -1455,11 +1455,11 @@ paths:
         "400":
           description: MESSAGE_INVALID(消息格式错误)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "403":
           description: NOT_FRIEND(非好友关系不能私信)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 发私信(按对方 handle)
       tags:
       - inbox
@@ -1540,7 +1540,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 我的草稿(未发布的 Mod)
       tags:
       - mods
@@ -1575,7 +1575,7 @@ paths:
         "400":
           description: BAD_REQUEST
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 以当前草稿为父保存不可变新版本(RFC 6902 patch)
       tags:
       - mods
@@ -1592,7 +1592,7 @@ paths:
         "500":
           description: PARTICIPATION_ERROR
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 当前用户的提现记录
       tags:
       - participation
@@ -1619,11 +1619,11 @@ paths:
         "400":
           description: BAD_REQUEST
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "409":
           description: WITHDRAWAL_INVALID(超额/重复提现)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 申请收益提现
       tags:
       - participation
@@ -1663,7 +1663,7 @@ paths:
         "400":
           description: EVENT_JOIN_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 参加活动
       tags:
       - participation
@@ -1680,7 +1680,7 @@ paths:
         "500":
           description: PARTICIPATION_ERROR
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 我已参加的活动 id 列表
       tags:
       - participation
@@ -1697,7 +1697,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 我的收藏列表
       tags:
       - social
@@ -1725,15 +1725,15 @@ paths:
         "400":
           description: BAD_REQUEST / FEEDBACK_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "422":
           description: CONTENT_REJECTED(内容审核不通过)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "503":
           description: MODERATION_UNAVAILABLE(审核服务不可用)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 提交用户反馈
       tags:
       - feedback
@@ -1759,7 +1759,7 @@ paths:
         "400":
           description: BAD_REQUEST(type 非法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 关注 / 粉丝列表
       tags:
       - inbox
@@ -1803,7 +1803,7 @@ paths:
         "500":
           description: INTERNAL
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 加好友
       tags:
       - inbox
@@ -1885,7 +1885,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 游戏详情
       tags:
       - games
@@ -1927,7 +1927,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 发评论
       tags:
       - social
@@ -1949,7 +1949,7 @@ paths:
         "500":
           description: COMMUNITY_ERROR
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 游戏社区面板(评分摘要 + 帖子列表)
       tags:
       - community
@@ -1982,11 +1982,11 @@ paths:
         "400":
           description: BAD_REQUEST / POST_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "422":
           description: CONTENT_REJECTED(内容审核不通过)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 发社区帖子
       tags:
       - community
@@ -2019,7 +2019,7 @@ paths:
         "400":
           description: BAD_REQUEST / RATING_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 给游戏打分(1-5,覆盖式更新)
       tags:
       - community
@@ -2043,7 +2043,7 @@ paths:
         "409":
           description: INVALID_STATE
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 审核裁决(admin)
       tags:
       - games
@@ -2065,15 +2065,15 @@ paths:
         "403":
           description: FORBIDDEN
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "409":
           description: INVALID_STATE
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 作者下架自己已发布的作品
       tags:
       - games
@@ -2096,7 +2096,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 收藏 / 取消收藏
       tags:
       - social
@@ -2118,7 +2118,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 收藏 / 取消收藏
       tags:
       - social
@@ -2187,7 +2187,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 对某游戏标记"不感兴趣"(从列表隐藏)
       tags:
       - moderation
@@ -2256,7 +2256,7 @@ paths:
         "400":
           description: BAD_REQUEST / REPLAY_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 上传对局回放(逐帧轨迹,服务端复核分数)
       tags:
       - replays
@@ -2283,7 +2283,7 @@ paths:
         "404":
           description: REPLAY_NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 取某用户在某游戏的最新回放
       tags:
       - replays
@@ -2306,7 +2306,7 @@ paths:
         "500":
           description: INTERNAL
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 游戏回放排行榜(前 20)
       tags:
       - replays
@@ -2328,15 +2328,15 @@ paths:
         "403":
           description: FORBIDDEN
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "409":
           description: INVALID_STATE
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 作者将被拒作品重新提交(回到审核中)
       tags:
       - games
@@ -2358,7 +2358,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 我的作品(各审核状态:published/reviewing/rejected/delisted)
       tags:
       - games
@@ -2431,7 +2431,7 @@ paths:
         "400":
           description: COMMERCE_INVALID(余额不足)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 直播间刷礼物(扣创作点)
       tags:
       - commerce
@@ -2449,7 +2449,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/internal_commerce.MembershipView'
-      summary: 会员 ForgePlay+(权益 + 套餐)
+      summary: 会员 Classic Games+(权益 + 套餐)
       tags:
       - commerce
   /moderation/queue:
@@ -2474,7 +2474,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 审核队列(仅 reviewing,admin,游标分页)
       tags:
       - games
@@ -2518,7 +2518,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 取生效 DSL(基线 + 补丁链)
       tags:
       - mods
@@ -2590,7 +2590,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 我创建的 mod(全部,含草稿与已用于发布的)
       tags:
       - mods
@@ -2607,7 +2607,7 @@ paths:
         "500":
           description: PAYMENT_ERROR
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 当前用户的支付订单
       tags:
       - payments
@@ -2634,7 +2634,7 @@ paths:
         "400":
           description: BAD_REQUEST / PAYMENT_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 创建支付订单
       tags:
       - payments
@@ -2656,7 +2656,7 @@ paths:
         "404":
           description: PAYMENT_NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 查询支付订单
       tags:
       - payments
@@ -2665,7 +2665,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: 回调载荷,需带 X-ForgePlay-Signature 签名头
+      - description: 回调载荷,需带 X-Classic-Games-Signature 签名头
         in: body
         name: body
         required: true
@@ -2690,7 +2690,7 @@ paths:
         "400":
           description: BAD_REQUEST / PAYMENT_REJECTED(签名或状态不合法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 支付渠道回调(确认订单支付结果)
       tags:
       - payments
@@ -2749,7 +2749,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 设置通知开关
       tags:
       - prefs
@@ -2791,7 +2791,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在或取值非法)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 设置隐私选项
       tags:
       - prefs
@@ -2826,7 +2826,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / PIN_INVALID(PIN 校验失败)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 开关青少年模式(校验 PIN)
       tags:
       - prefs
@@ -2866,7 +2866,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 举报(游戏/评论/用户)
       tags:
       - moderation
@@ -2882,7 +2882,7 @@ paths:
         "400":
           description: ROOM_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 创建房间(创建者自动加入并成为房主)
       tags:
       - rooms
@@ -2904,11 +2904,11 @@ paths:
         "403":
           description: ROOM_INVALID(非房间成员)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: ROOM_INVALID(房间不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 查询房间详情
       tags:
       - rooms
@@ -2938,7 +2938,7 @@ paths:
         "400":
           description: BAD_REQUEST / MATCH_INVALID(非法输入/过期序号/对局未开始或已结束)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 提交一帧权威对局输入(移动/开火)
       tags:
       - rooms
@@ -2971,7 +2971,7 @@ paths:
         "400":
           description: BAD_REQUEST / ROOM_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 设置本人在房间内的准备状态
       tags:
       - rooms
@@ -2993,7 +2993,7 @@ paths:
         "400":
           description: MATCH_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 取当前对局快照(用于轮询)
       tags:
       - rooms
@@ -3015,11 +3015,11 @@ paths:
         "400":
           description: ROOM_INVALID(未全员准备)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "403":
           description: ROOM_INVALID(非房主)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 开始对局(仅房主,需全员准备且 >=2 人)
       tags:
       - rooms
@@ -3047,7 +3047,7 @@ paths:
         "400":
           description: BAD_REQUEST / ROOM_INVALID(已满/已开始/不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 按房间码加入房间
       tags:
       - rooms
@@ -3075,11 +3075,11 @@ paths:
         "400":
           description: BAD_REQUEST
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 取 Runtime 基线 DSL
       tags:
       - runtimes
@@ -3107,11 +3107,11 @@ paths:
         "400":
           description: BAD_REQUEST
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: NOT_FOUND
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 取 Runtime 的 DSL JSON Schema(客户端校验 / AI 约束用)
       tags:
       - runtimes
@@ -3151,11 +3151,11 @@ paths:
         "400":
           description: COMMERCE_INVALID(余额不足)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: COMMERCE_INVALID(商品不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 购买商城商品(皮肤 / 道具,扣创作点)
       tags:
       - commerce
@@ -3197,7 +3197,7 @@ paths:
         "500":
           description: INTERNAL
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 关注 / 取关(按用户 id)
       tags:
       - inbox
@@ -3295,7 +3295,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 实名审核裁决(admin)
       tags:
       - users
@@ -3309,7 +3309,7 @@ paths:
         "500":
           description: DELETE_FAILED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 注销账号(删除当前用户,登录态)
       tags:
       - auth
@@ -3330,7 +3330,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 当前用户(需登录)
       tags:
       - auth
@@ -3354,11 +3354,11 @@ paths:
         "400":
           description: PROFILE_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "500":
           description: INTERNAL(持久化失败)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 编辑资料(局部更新,仅传字段生效)
       tags:
       - users
@@ -3377,11 +3377,11 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / OAUTH_BIND_FAILED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "409":
           description: OAUTH_BIND_FAILED(该第三方身份已被绑定)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 绑定第三方账号(登录态)
       tags:
       - auth
@@ -3400,7 +3400,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / PASSWORD_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 设置 / 修改登录密码(登录态)
       tags:
       - auth
@@ -3419,7 +3419,7 @@ paths:
         "400":
           description: BAD_REQUEST(请求体非法) / PHONE_CHANGE_FAILED
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 更换绑定手机号(需短信验证码,登录态)
       tags:
       - auth
@@ -3444,11 +3444,11 @@ paths:
         "400":
           description: PROFILE_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "500":
           description: INTERNAL(持久化失败)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 编辑资料(整份覆盖更新:昵称/简介/头像/地区)
       tags:
       - users
@@ -3502,7 +3502,7 @@ paths:
         "400":
           description: VERIFICATION_INVALID
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 实名认证(合规):提交姓名+证件号,进入待审核
       tags:
       - users
@@ -3549,7 +3549,7 @@ paths:
         "400":
           description: COMMERCE_INVALID(今日已签到)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 每日签到(领取创作点奖励)
       tags:
       - commerce
@@ -3572,11 +3572,11 @@ paths:
         "400":
           description: COMMERCE_INVALID(未达成 / 已领取)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
         "404":
           description: COMMERCE_INVALID(任务不存在)
           schema:
-            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+            $ref: '#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope'
       summary: 领取福利任务奖励
       tags:
       - commerce

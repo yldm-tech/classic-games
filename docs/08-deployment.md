@@ -4,7 +4,7 @@
 
 本文描述的是目标部署形态,其中一部分还没有实现。当前代码的实际状态:
 
-- **数据库只支持 SQLite。** 后端只链接了 `github.com/ncruces/go-sqlite3/gormlite` 一个驱动,`FORGEPLAY_DB` 的值是 SQLite 文件路径(不设时用工作目录下的 `forgeplay.db`;`FORGEPLAY_ENV=production` 时必须显式设置)。填 PostgreSQL DSN 会在启动时打开数据库失败。SQLite 是单文件数据库,所以下文的「无状态、可水平扩展」要等 PostgreSQL 驱动接入后才成立。
+- **数据库只支持 SQLite。** 后端只链接了 `github.com/ncruces/go-sqlite3/gormlite` 一个驱动,`CLASSIC_GAMES_DB` 的值是 SQLite 文件路径(不设时用工作目录下的 `classic-games.db`;`CLASSIC_GAMES_ENV=production` 时必须显式设置)。填 PostgreSQL DSN 会在启动时打开数据库失败。SQLite 是单文件数据库,所以下文的「无状态、可水平扩展」要等 PostgreSQL 驱动接入后才成立。
 - **没有对象存储。** 后端没有 S3/MinIO 相关代码,也没有对应的环境变量;封面等素材目前随客户端工程分发。
 - **模型 provider 只有一个。** `apps/server/internal/ai` 里只有 `ClaudeProvider` 和无 API key 时使用的 `StubProvider`([ADR-008](./decisions.md))。
 
@@ -19,7 +19,7 @@
 ## 后端部署
 
 - **容器化**:Go 编译成单二进制,打多阶段 Docker 镜像(scratch/distroless),无状态,可水平扩。
-- **配置**:全部走环境变量,不硬编码、不进仓库;现有变量的完整清单见 [`.env.example`](../.env.example)(数据库文件路径 `FORGEPLAY_DB`、服务端密钥 `FORGEPLAY_SECRET`、模型 API key、短信 / 第三方登录 / 内容审核网关等)。对象存储的变量要等对象存储实现后才会有。
+- **配置**:全部走环境变量,不硬编码、不进仓库;现有变量的完整清单见 [`.env.example`](../.env.example)(数据库文件路径 `CLASSIC_GAMES_DB`、服务端密钥 `CLASSIC_GAMES_SECRET`、模型 API key、短信 / 第三方登录 / 内容审核网关等)。对象存储的变量要等对象存储实现后才会有。
 - **数据库迁移**:`apps/server/internal/app/migrations.go` 持有唯一有序 migration registry；应用在注册路由前集中执行 GORM `AutoMigrate`，仓储和业务 package 禁止自行迁移。跨版本变更以稳定 migration ID 追加，不在旧项上原地改写。
 - **环境**:dev / staging / prod 三套,staging 与 prod 同构。
 - **关键中间件**:
@@ -30,8 +30,8 @@
 
 当前仓库里的自动化只有门禁,没有发布流水线:`.github/workflows/ci.yml` 在 push / PR 到 main 时跑四个 job——后端(`apps/server` 的 vet + test)、Go 模块(`packages/dsl`、`packages/sdk`、`apps/cli`、`apps/mcp` 的格式、tidy、vet、test 与编译,workspace 和 `GOWORK=off` 各一遍)、官网(`apps/web` 的类型检查、构建与断链检查)、Godot headless。镜像构建、部署、客户端导出签名、CLI/MCP 二进制发布和官网托管都还没有对应的 workflow;下面是目标形态。
 
-- **后端**:push → CI 跑 lint + 测试 + 构建镜像 → 部署 staging → 验收 → 上 prod。后端镜像的构建上下文需要同时包含 `apps/server` 与 `packages/dsl`(后端经相对路径 `replace` 引用它),运行时还要带上 `packages/schemas` 和 `apps/client/runtime` 下的 baseline,并用 `FORGEPLAY_SCHEMA_DIR`、`FORGEPLAY_RUNTIME_DIR`、`FORGEPLAY_BASELINE` 等环境变量指向它们(默认值是相对 `apps/server` 的开发路径)。
-- **CLI 与 MCP 服务**:`make cli-build` / `make mcp-build` 产出单个二进制。它们离线校验时需要磁盘上的 schema 目录,脱离仓库检出分发时要一并带上 `packages/schemas` 并设置 `FORGEPLAY_SCHEMA_DIR`。
+- **后端**:push → CI 跑 lint + 测试 + 构建镜像 → 部署 staging → 验收 → 上 prod。后端镜像的构建上下文需要同时包含 `apps/server` 与 `packages/dsl`(后端经相对路径 `replace` 引用它),运行时还要带上 `packages/schemas` 和 `apps/client/runtime` 下的 baseline,并用 `CLASSIC_GAMES_SCHEMA_DIR`、`CLASSIC_GAMES_RUNTIME_DIR`、`CLASSIC_GAMES_BASELINE` 等环境变量指向它们(默认值是相对 `apps/server` 的开发路径)。
+- **CLI 与 MCP 服务**:`make cli-build` / `make mcp-build` 产出单个二进制。它们离线校验时需要磁盘上的 schema 目录,脱离仓库检出分发时要一并带上 `packages/schemas` 并设置 `CLASSIC_GAMES_SCHEMA_DIR`。
 - **官网**:`make web-build` 产出纯静态站点(`apps/web/dist`),可放任意静态托管;站点地址用 `SITE_URL` 配置,目前只支持部署在域名根路径。
 - **客户端(Godot)**:
   - 用 Godot 的**命令行 headless 导出**,在 CI 里一键导出 5 端产物。

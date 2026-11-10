@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"forgeplay/server/internal/games"
-	"forgeplay/server/internal/library"
-	"forgeplay/server/internal/ranking"
-	"forgeplay/server/internal/users"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/library"
+	"github.com/yldm-tech/classic-games/apps/server/internal/ranking"
+	"github.com/yldm-tech/classic-games/apps/server/internal/users"
 )
 
 type catalogModule struct{}

@@ -64,7 +64,7 @@
 | `scripts/tests` | 门禁脚本自身的 fail-closed 契约(测试 runner、两个架构检查器) | `make script-test`、`make boundary-test`、`make architecture-test` |
 | `apps/web` | 类型检查、构建、文档同步与两道断链检查 | `make ci-web` |
 
-`make ci` 把 Go 与 Godot 的门禁全部跑一遍,其中 Go 模块在 workspace 和 `GOWORK=off` 两种模式下各跑一次;`scripts/spike-integration.sh` 起真实后端,让 Godot 客户端调真实接口。`packages/sdk` 与 `apps/cli` 另有对真实后端的 e2e 测试(`TestE2E`),需要设置 `FORGEPLAY_SDK_E2E_URL` / `FORGEPLAY_CLI_E2E_URL` 才运行,不在 `make ci` 里。
+`make ci` 把 Go 与 Godot 的门禁全部跑一遍,其中 Go 模块在 workspace 和 `GOWORK=off` 两种模式下各跑一次;`scripts/spike-integration.sh` 起真实后端,让 Godot 客户端调真实接口。`packages/sdk` 与 `apps/cli` 另有对真实后端的 e2e 测试(`TestE2E`),需要设置 `CLASSIC_GAMES_SDK_E2E_URL` / `CLASSIC_GAMES_CLI_E2E_URL` 才运行,不在 `make ci` 里。
 
 ## 质量门(CI)
 

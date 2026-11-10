@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"forgeplay/server/internal/community"
-	"forgeplay/server/internal/inbox"
-	"forgeplay/server/internal/moderation"
-	"forgeplay/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/internal/community"
+	"github.com/yldm-tech/classic-games/apps/server/internal/inbox"
+	"github.com/yldm-tech/classic-games/apps/server/internal/moderation"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
 )
 
 type communityModule struct{}

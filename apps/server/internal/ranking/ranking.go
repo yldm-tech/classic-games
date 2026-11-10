@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"forgeplay/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
 )
 
 // GameSource 提供已发布作品(games.Service 满足)。

@@ -34,13 +34,13 @@ func TestDirDefaultsToTheUserConfigDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := filepath.Join(base, "forgeplay"); got != want {
+	if want := filepath.Join(base, "classic-games"); got != want {
 		t.Fatalf("Dir = %q, want %q", got, want)
 	}
 }
 
 func TestSettingsRoundTrip(t *testing.T) {
-	store := NewStore(filepath.Join(t.TempDir(), "nested", "forgeplay"))
+	store := NewStore(filepath.Join(t.TempDir(), "nested", "classic-games"))
 
 	empty, err := store.LoadSettings()
 	if err != nil {
@@ -64,7 +64,7 @@ func TestSettingsRoundTrip(t *testing.T) {
 }
 
 func TestCredentialsAreStoredPerServerWithOwnerOnlyPermissions(t *testing.T) {
-	store := NewStore(filepath.Join(t.TempDir(), "forgeplay"))
+	store := NewStore(filepath.Join(t.TempDir(), "classic-games"))
 	first := Credential{Token: "token-a", UserID: "u1", Nickname: "Ada", Method: "guest", SavedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)}
 	second := Credential{Token: "token-b", UserID: "u2", Method: "password", SavedAt: time.Date(2026, 2, 2, 3, 4, 5, 0, time.UTC)}
 

@@ -1,16 +1,16 @@
 ---
 title: CLI
-description: The forgeplay command-line tool browses games and mods, asks the AI for patches, and validates, patches and migrates DSL offline.
+description: The classic-games command-line tool browses games and mods, asks the AI for patches, and validates, patches and migrates DSL offline.
 sidebar:
   order: 2
 ---
 
 import { repoDir, repoFile } from '../../../../config/site.ts';
 
-`forgeplay` is the ForgePlay command-line tool. Its source is in <a href={repoDir('apps/cli')}>apps/cli</a> (Go module `forgeplay/cli`). It talks to the backend through the [Go SDK](/en/developers/sdk/) and reuses the patch, migration and validation code in `packages/dsl`, so it reaches the same verdict on a DSL document as the backend does.
+`classic-games` is the Classic Games command-line tool. Its source is in <a href={repoDir('apps/cli')}>apps/cli</a> (Go module `github.com/yldm-tech/classic-games/apps/cli`). It talks to the backend through the [Go SDK](/en/developers/sdk/) and reuses the patch, migration and validation code in `packages/dsl`, so it reaches the same verdict on a DSL document as the backend does.
 
 :::note
-This page lists the command structure. For every flag, the output formats and worked examples, see <a href={repoFile('apps/cli/README.md')}>apps/cli/README.md</a> and `forgeplay <group> <command> --help`.
+This page lists the command structure. For every flag, the output formats and worked examples, see <a href={repoFile('apps/cli/README.md')}>apps/cli/README.md</a> and `classic-games <group> <command> --help`.
 :::
 
 ## Build
@@ -18,39 +18,39 @@ This page lists the command structure. For every flag, the output formats and wo
 The CLI is built from a checkout of the repository; there are no published binaries.
 
 ```bash
-make cli-build          # writes apps/cli/bin/forgeplay
-apps/cli/bin/forgeplay version
+make cli-build          # writes apps/cli/bin/classic-games
+apps/cli/bin/classic-games version
 ```
 
 ## Commands
 
 | Group | Commands | Needs the backend |
 |---|---|---|
-| `forgeplay version` | Prints the version, commit, build date, Go version and SDK version | No |
-| `forgeplay config` | `get`, `set`, `unset`, `path`. Keys: `server`, `language`, `schema-dir` | No |
-| `forgeplay auth` | `login`, `logout`, `status`, `refresh`, `set-password`, `token` | Yes |
-| `forgeplay server` | `health`, `info` | Yes |
-| `forgeplay games` | `list`, `show`, `dsl`, `ranking`, `fork`, `mine`, `delist`, `resubmit` | Yes |
-| `forgeplay mods` | `list`, `create`, `fork`, `save`, `show`, `dsl`, `lineage`, `publish` | Yes |
-| `forgeplay ai` | `generate`, `quota` | Yes |
-| `forgeplay dsl` | `validate`, `patch`, `migrate` | No |
+| `classic-games version` | Prints the version, commit, build date, Go version and SDK version | No |
+| `classic-games config` | `get`, `set`, `unset`, `path`. Keys: `server`, `language`, `schema-dir` | No |
+| `classic-games auth` | `login`, `logout`, `status`, `refresh`, `set-password`, `token` | Yes |
+| `classic-games server` | `health`, `info` | Yes |
+| `classic-games games` | `list`, `show`, `dsl`, `ranking`, `fork`, `mine`, `delist`, `resubmit` | Yes |
+| `classic-games mods` | `list`, `create`, `fork`, `save`, `show`, `dsl`, `lineage`, `publish` | Yes |
+| `classic-games ai` | `generate`, `quota` | Yes |
+| `classic-games dsl` | `validate`, `patch`, `migrate` | No |
 
 The `dsl` commands run fully offline. They only need to read the schema directory, which is found automatically inside a repository checkout.
 
 ## A first session
 
 ```bash
-forgeplay dsl validate apps/client/runtime/shooter/baseline.dsl.json
-forgeplay server health
-forgeplay auth login
-forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-forgeplay mods list
-forgeplay mods publish <mod-id> --title "Cat Shooter"
+classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json
+classic-games server health
+classic-games auth login
+classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+classic-games mods list
+classic-games mods publish <mod-id> --title "Cat Shooter"
 ```
 
 `auth login` creates a guest session by default and stores its token per server URL; SMS and password login are available with `--method`. A published game starts in status `reviewing` and becomes public once a moderator approves it.
 
-`ai generate --save` stores the patch as a draft mod. The draft carries the AI-generated mark only when the backend has `FORGEPLAY_SECRET` set; a backend started with a plain `make dev` does not, and the draft is saved unmarked. The `AI generated mark` line of the output says which.
+`ai generate --save` stores the patch as a draft mod. The draft carries the AI-generated mark only when the backend has `CLASSIC_GAMES_SECRET` set; a backend started with a plain `make dev` does not, and the draft is saved unmarked. The `AI generated mark` line of the output says which.
 
 :::caution
 A development backend is seeded with showcase games that have no mod behind them. `games dsl`, `games fork` and `ai generate --game` fail on those with `GAME_HAS_NO_MOD`. Start from a runtime baseline instead (`--runtime shooter@1.0.0`), or from a game you published yourself.
@@ -60,7 +60,7 @@ A development backend is seeded with showcase games that have no mod behind them
 
 | Flag | Meaning |
 |---|---|
-| `--server <url>` | Backend root URL, such as `http://localhost:8080`; overrides `FORGEPLAY_SERVER_URL` and the config file |
+| `--server <url>` | Backend root URL, such as `http://localhost:8080`; overrides `CLASSIC_GAMES_SERVER_URL` and the config file |
 | `--output table` or `--output json` | Output format. `table` is the default; `json` is meant for scripts |
 
 Errors go to standard error as `Error: <message>` with exit status 1; a backend error is rendered as `CODE: message`. An interrupt exits with status 130.
@@ -69,11 +69,11 @@ Errors go to standard error as `Error: <message>` with exit status 1; a backend 
 
 | Variable | Meaning |
 |---|---|
-| `FORGEPLAY_SERVER_URL` | Backend root URL. A backend started locally with `make dev` is at `http://localhost:8080`, which is also the default |
-| `FORGEPLAY_SCHEMA_DIR` | Directory with the Mod DSL schemas for the `dsl` commands, `packages/schemas` in the repository |
-| `FORGEPLAY_LANG` | Language of backend messages: `zh`, `en` or `ja`. Without it the backend answers in Chinese |
-| `FORGEPLAY_CONFIG_DIR` | Directory for `config.json` and `credentials.json`, in place of the per-user default. Useful in CI |
+| `CLASSIC_GAMES_SERVER_URL` | Backend root URL. A backend started locally with `make dev` is at `http://localhost:8080`, which is also the default |
+| `CLASSIC_GAMES_SCHEMA_DIR` | Directory with the Mod DSL schemas for the `dsl` commands, `packages/schemas` in the repository |
+| `CLASSIC_GAMES_LANG` | Language of backend messages: `zh`, `en` or `ja`. Without it the backend answers in Chinese |
+| `CLASSIC_GAMES_CONFIG_DIR` | Directory for `config.json` and `credentials.json`, in place of the per-user default. Useful in CI |
 
 ## Where the AI runs
 
-`forgeplay ai generate` does not call a model on your machine. It sends the request to the backend, which calls the model, applies the patch, validates the result against the schema, and returns the patch together with the new DSL. That is the same path the client uses; see [AI prompt engineering](/en/docs/12-ai-prompt/) (Chinese). Each call counts against a daily quota, shown by `forgeplay ai quota`.
+`classic-games ai generate` does not call a model on your machine. It sends the request to the backend, which calls the model, applies the patch, validates the result against the schema, and returns the patch together with the new DSL. That is the same path the client uses; see [AI prompt engineering](/en/docs/12-ai-prompt/) (Chinese). Each call counts against a daily quota, shown by `classic-games ai quota`.

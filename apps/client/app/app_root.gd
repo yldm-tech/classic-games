@@ -694,7 +694,7 @@ func _render_chrome() -> void:
 		_render_sidebar(labels)
 	# 桌面用系统原生窗口栏,把当前页名写到原生标题上
 	if is_inside_tree() and OS.has_feature("pc"):
-		get_window().title = "ForgePlay — %s" % _window_title()
+		get_window().title = "Classic Games — %s" % _window_title()
 
 ## iPad 左侧 rail:竖排 5 tab(glyph 大字 + 标签),消息带未读红点。
 func _render_rail(labels: Array) -> void:

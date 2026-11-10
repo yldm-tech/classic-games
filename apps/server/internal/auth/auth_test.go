@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 	"golang.org/x/crypto/bcrypt"
 	"testing"
 	"time"

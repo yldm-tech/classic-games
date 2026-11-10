@@ -19,7 +19,7 @@ const DEFAULT_POINTS := 0
 const DEFAULT_PROFILE := {"name": "@guest", "bio": "", "gender": 2, "region": "", "tone": "ember"}
 
 ## 持久化路径;测试注入临时路径避免污染真实存档。
-var save_path := "user://forgeplay.cfg"
+var save_path := "user://classic-games.cfg"
 
 var authed := false
 var token := ""
@@ -28,7 +28,7 @@ var profile := DEFAULT_PROFILE.duplicate(true)
 var theme := Tokens.THEME_DARK
 var locale := Strings.DEFAULT_LOCALE
 var points := DEFAULT_POINTS  # 创作点余额(签到/任务/商城/成就共用)
-var member := false      # ForgePlay+ 会员
+var member := false      # Classic Games+ 会员
 var search_recents: Array = []
 var teen_enabled := false
 var teen_day := ""

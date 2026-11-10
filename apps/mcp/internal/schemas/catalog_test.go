@@ -228,7 +228,7 @@ func TestIsSchemaFile(t *testing.T) {
 }
 
 func TestValidateLegacyShooter(t *testing.T) {
-	// shooter@0.x documents are migrated by forgeplay/dsl before validation, so the catalog accepts them without a 0.x schema file.
+	// shooter@0.x documents are migrated by github.com/yldm-tech/classic-games/packages/dsl before validation, so the catalog accepts them without a 0.x schema file.
 	legacy := map[string]any{
 		"meta":    map[string]any{"runtime": "shooter", "runtime_version": "0.9.0"},
 		"player":  map[string]any{"sprite": "plane", "hp": 100, "speed": 10, "weapon": "straight"},

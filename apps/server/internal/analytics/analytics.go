@@ -1,4 +1,4 @@
-// Package analytics records the minimum product events needed to evaluate ForgePlay's creation flywheel.
+// Package analytics records the minimum product events needed to evaluate Classic Games's creation flywheel.
 package analytics
 
 import (

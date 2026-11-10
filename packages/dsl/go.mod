@@ -1,4 +1,4 @@
-module forgeplay/dsl
+module github.com/yldm-tech/classic-games/packages/dsl
 
 go 1.26
 

@@ -1,9 +1,9 @@
 {
-  "name": "@forgeplay/web",
+  "name": "@classic-games/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Official ForgePlay website: landing page and documentation site.",
+  "description": "Official Classic Games website: landing page and documentation site.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22.23.4"

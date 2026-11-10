@@ -3,7 +3,7 @@ package users
 import (
 	"testing"
 
-	"forgeplay/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
 )
 
 // A profile listing is public. The works and forks branches already restrict themselves to published games, but the

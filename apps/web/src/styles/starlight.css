@@ -1,4 +1,4 @@
-/* Maps the ForgePlay tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. */
+/* Maps the Classic Games tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. */
 
 :root {
 	--sl-font: var(--fp-font-sans);

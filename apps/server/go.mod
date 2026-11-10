@@ -1,15 +1,15 @@
-module forgeplay/server
+module github.com/yldm-tech/classic-games/apps/server
 
 go 1.26
 
 require (
-	forgeplay/dsl v0.0.0
 	github.com/anthropics/anthropic-sdk-go v1.62.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/ncruces/go-sqlite3/gormlite v0.34.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
 	github.com/swaggo/swag v1.16.6
+	github.com/yldm-tech/classic-games/packages/dsl v0.0.0
 	golang.org/x/crypto v0.50.0
 	golang.org/x/text v0.36.0
 	gorm.io/gorm v1.31.2
@@ -74,4 +74,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace forgeplay/dsl => ../../packages/dsl
+replace github.com/yldm-tech/classic-games/packages/dsl => ../../packages/dsl

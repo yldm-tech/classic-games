@@ -1,4 +1,4 @@
-# ForgePlay
+# Classic Games
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 
@@ -16,29 +16,29 @@ AI 驱动的小游戏创作与社区平台。用户无需编程，通过自然�
 2. **AI 改。** 客户端把当前生效 DSL 和用户的一句话发给后端。后端让模型产出 JSON Patch，应用补丁，按 schema 校验结果，校验失败就把错误回灌给模型重试（次数有上限）。模型的输出空间就是 schema，不存在从模型输出通向代码执行的路径。
 3. **发布。** 草稿提交为游戏，经过审核后公开，其他人可以继续 Fork。
 
-同样的三步既可以在 Godot 客户端里完成，也可以用命令行 `forgeplay` 完成，AI 助手则通过 `forgeplay-mcp` 完成。
+同样的三步既可以在 Godot 客户端里完成，也可以用命令行 `classic-games` 完成，AI 助手则通过 `classic-games-mcp` 完成。
 
 ## 仓库结构
 
 ```
-forgeplay/
+classic-games/
 ├── apps/
 │   ├── client/      单一 Godot 4.6 工程，一套代码导出 5 端（iOS / Android / macOS / Windows / Web）
-│   ├── server/      Go 后端（gin + GORM），模块 forgeplay/server：领域服务、HTTP API、AI 编排
-│   ├── cli/         命令行工具 forgeplay（cobra），模块 forgeplay/cli：目录、mod、AI 生成，离线校验 / 补丁 / 迁移
-│   ├── mcp/         MCP 服务 forgeplay-mcp（官方 Go SDK），模块 forgeplay/mcp：把同样的能力作为工具交给 AI 助手
+│   ├── server/      Go 后端（gin + GORM），模块 github.com/yldm-tech/classic-games/apps/server：领域服务、HTTP API、AI 编排
+│   ├── cli/         命令行工具 classic-games（cobra），模块 github.com/yldm-tech/classic-games/apps/cli：目录、mod、AI 生成，离线校验 / 补丁 / 迁移
+│   ├── mcp/         MCP 服务 classic-games-mcp（官方 Go SDK），模块 github.com/yldm-tech/classic-games/apps/mcp：把同样的能力作为工具交给 AI 助手
 │   └── web/         官网：落地页 + 文档站（Astro + Starlight，pnpm）
 ├── packages/
 │   ├── schemas/     Mod DSL 的 JSON Schema（AI 输出约束、后端校验、Runtime 加载共用）
-│   ├── dsl/         Go 模块 forgeplay/dsl：RFC 6902 补丁、DSL 迁移、schema 校验，后端 / CLI / MCP 共用
-│   └── sdk/         Go 模块 forgeplay/sdk：后端 HTTP API 的类型化客户端，CLI / MCP 共用
+│   ├── dsl/         Go 模块 github.com/yldm-tech/classic-games/packages/dsl：RFC 6902 补丁、DSL 迁移、schema 校验，后端 / CLI / MCP 共用
+│   └── sdk/         Go 模块 github.com/yldm-tech/classic-games/packages/sdk：后端 HTTP API 的类型化客户端，CLI / MCP 共用
 ├── docs/            技术文档（愿景 / 架构 / DSL / API / 测试 / 合规），中文
 ├── scripts/         仓库门禁与辅助脚本（架构边界检查、Godot 测试 runner、双端集成）
 ├── go.work          Go workspace，串起上面五个 Go 模块
 └── .github/         CI：Go 各模块、官网、Godot headless，跑在 GitHub 托管 runner
 ```
 
-依赖只有一个方向：`apps` 依赖 `packages`。五个 Go 模块由 [`go.work`](./go.work) 组成 workspace，同时彼此用 `require forgeplay/<name> v0.0.0` 加相对路径 `replace` 引用，所以每个模块在 `GOWORK=off` 下也能独立构建。这些模块路径只在本仓库内有效，没有发布到模块代理。
+依赖只有一个方向：`apps` 依赖 `packages`。五个 Go 模块由 [`go.work`](./go.work) 组成 workspace，同时彼此用 `require classic-games/<name> v0.0.0` 加相对路径 `replace` 引用，所以每个模块在 `GOWORK=off` 下也能独立构建。这些模块路径只在本仓库内有效，没有发布到模块代理。
 
 单仓（monorepo）的理由见 [decisions ADR-012](./docs/decisions.md)，`apps/` + `packages/` 布局、共享模块与许可证的决策见 [ADR-015](./docs/decisions.md)。
 
@@ -72,7 +72,7 @@ Go 后端，栈选型 [ADR-011](./docs/decisions.md)。框架无关的核心层�
 
 ### packages/dsl/
 
-补丁、迁移与 schema 校验不在 `apps/server` 内，而在共享 Go 模块 `packages/dsl`（`forgeplay/dsl`），后端、CLI、MCP 共用同一份实现（说明见 [packages/dsl/README](./packages/dsl/README.md)）：
+补丁、迁移与 schema 校验不在 `apps/server` 内，而在共享 Go 模块 `packages/dsl`（`github.com/yldm-tech/classic-games/packages/dsl`），后端、CLI、MCP 共用同一份实现（说明见 [packages/dsl/README](./packages/dsl/README.md)）：
 
 - `patch.go` — RFC 6902 实现，与客户端 `json_patch.gd` **刻意同语义**
 - `migrate.go` — 历史 DSL 大版本升级（shooter 0.x → 1.0.0）
@@ -80,12 +80,12 @@ Go 后端，栈选型 [ADR-011](./docs/decisions.md)。框架无关的核心层�
 
 ### packages/sdk/
 
-`forgeplay/sdk` 是后端 HTTP API 的类型化 Go 客户端，只依赖标准库。CLI 和 MCP 服务都经它访问后端，不 import `forgeplay/server`。方法列表见 [packages/sdk/README](./packages/sdk/README.md)。
+`github.com/yldm-tech/classic-games/packages/sdk` 是后端 HTTP API 的类型化 Go 客户端，只依赖标准库。CLI 和 MCP 服务都经它访问后端，不 import `github.com/yldm-tech/classic-games/apps/server`。方法列表见 [packages/sdk/README](./packages/sdk/README.md)。
 
 ### apps/cli/ 与 apps/mcp/
 
-- `forgeplay`：联网命令（`auth` / `server` / `games` / `mods` / `ai`）走 `forgeplay/sdk`，离线命令（`dsl validate` / `dsl patch` / `dsl migrate`）走 `forgeplay/dsl`，与后端对同一份 DSL 得出同一个结论。命令说明见 [apps/cli/README](./apps/cli/README.md)。
-- `forgeplay-mcp`：14 个工具（离线的 schema / 校验 / 补丁，后端的游戏与 mod 读写），stdio 与 streamable HTTP 两种传输，`--read-only` 时不注册写工具。保存补丁前先在本地应用并校验，不合 schema 的内容不会落库。工具列表、客户端配置与安全说明见 [apps/mcp/README](./apps/mcp/README.md)。
+- `classic-games`：联网命令（`auth` / `server` / `games` / `mods` / `ai`）走 `github.com/yldm-tech/classic-games/packages/sdk`，离线命令（`dsl validate` / `dsl patch` / `dsl migrate`）走 `github.com/yldm-tech/classic-games/packages/dsl`，与后端对同一份 DSL 得出同一个结论。命令说明见 [apps/cli/README](./apps/cli/README.md)。
+- `classic-games-mcp`：14 个工具（离线的 schema / 校验 / 补丁，后端的游戏与 mod 读写），stdio 与 streamable HTTP 两种传输，`--read-only` 时不注册写工具。保存补丁前先在本地应用并校验，不合 schema 的内容不会落库。工具列表、客户端配置与安全说明见 [apps/mcp/README](./apps/mcp/README.md)。
 
 ### apps/web/
 
@@ -125,28 +125,28 @@ curl http://localhost:8080/healthz    # {"ok":true}
 
 ```bash
 make import GODOT=/path/to/godot      # 首次导入资源
-FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
+CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
 ```
 
 CLI：
 
 ```bash
-make cli-build                        # 产物在 apps/cli/bin/forgeplay
+make cli-build                        # 产物在 apps/cli/bin/classic-games
 export PATH="$PWD/apps/cli/bin:$PATH"
 
-forgeplay dsl validate apps/client/runtime/shooter/baseline.dsl.json   # 离线
-forgeplay server health
-forgeplay auth login                  # 游客会话
-forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-forgeplay mods list
+classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json   # 离线
+classic-games server health
+classic-games auth login                  # 游客会话
+classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+classic-games mods list
 ```
 
 MCP 服务：
 
 ```bash
-make mcp-build                        # 产物在 apps/mcp/bin/forgeplay-mcp
-export FORGEPLAY_TOKEN="$(forgeplay auth token)"    # 可选；不设则匿名运行
-claude mcp add forgeplay --env FORGEPLAY_SERVER_URL=http://localhost:8080 --env FORGEPLAY_TOKEN="$FORGEPLAY_TOKEN" -- "$PWD/apps/mcp/bin/forgeplay-mcp"
+make mcp-build                        # 产物在 apps/mcp/bin/classic-games-mcp
+export CLASSIC_GAMES_TOKEN="$(classic-games auth token)"    # 可选；不设则匿名运行
+claude mcp add classic-games --env CLASSIC_GAMES_SERVER_URL=http://localhost:8080 --env CLASSIC_GAMES_TOKEN="$CLASSIC_GAMES_TOKEN" -- "$PWD/apps/mcp/bin/classic-games-mcp"
 ```
 
 官网：
@@ -188,7 +188,7 @@ GODOT=/path/to/godot scripts/spike-integration.sh    # 真实客户端对真实�
 
 模块化架构重构已完成：客户端由单一 `AppRoot` 装配 identity、catalog、creation、community、engagement、commerce、operations 七个纵向切片；服务端由对应七个 installer 组成模块化单体。旧的全局壳与全局 API 入口已删除，架构边界由 `scripts/check-architecture.sh`、客户端 boundary checker、Go/Godot 测试和真实双端集成共同守护。
 
-仓库已整理为 `apps/` + `packages/` 的 monorepo：补丁、迁移与 schema 校验抽成共享模块 `forgeplay/dsl`，后端 API 客户端抽成 `forgeplay/sdk`，在其上新增了 CLI、MCP 服务和官网。
+仓库已整理为 `apps/` + `packages/` 的 monorepo：补丁、迁移与 schema 校验抽成共享模块 `github.com/yldm-tech/classic-games/packages/dsl`，后端 API 客户端抽成 `github.com/yldm-tech/classic-games/packages/sdk`，在其上新增了 CLI、MCP 服务和官网。
 
 ## 参与贡献
 
@@ -200,4 +200,4 @@ GODOT=/path/to/godot scripts/spike-integration.sh    # 真实客户端对真实�
 
 ## 许可证
 
-ForgePlay 以 [Apache License 2.0](./LICENSE) 发布。第三方归属见 [NOTICE](./NOTICE) 与 [docs/legal/licenses.md](./docs/legal/licenses.md)。
+Classic Games 以 [Apache License 2.0](./LICENSE) 发布。第三方归属见 [NOTICE](./NOTICE) 与 [docs/legal/licenses.md](./docs/legal/licenses.md)。

@@ -1,6 +1,6 @@
-# forgeplay/dsl
+# github.com/yldm-tech/classic-games/packages/dsl
 
-The Go implementation of the ForgePlay Mod DSL rules: applying RFC 6902 JSON Patch documents, migrating documents written for an older runtime major, and validating a document against the JSON Schemas in [`packages/schemas`](../schemas). It is one package, `dsl`, shared by the backend (`apps/server`), the `forgeplay` CLI (`apps/cli`) and the MCP server (`apps/mcp`), so all three reach the same verdict on the same document.
+The Go implementation of the Classic Games Mod DSL rules: applying RFC 6902 JSON Patch documents, migrating documents written for an older runtime major, and validating a document against the JSON Schemas in [`packages/schemas`](../schemas). It is one package, `dsl`, shared by the backend (`apps/server`), the `classic-games` CLI (`apps/cli`) and the MCP server (`apps/mcp`), so all three reach the same verdict on the same document.
 
 The game client has its own GDScript implementation of the patch and migration semantics ([`apps/client/runtime/json_patch.gd`](../../apps/client/runtime/json_patch.gd), [`apps/client/runtime/dsl_migrations.gd`](../../apps/client/runtime/dsl_migrations.gd)). The two must agree, and the tests of this package read the same baseline and golden file as the client's tests to pin them together. A change to the semantics here is a change to the client in the same pull request.
 
@@ -9,12 +9,12 @@ The game client has its own GDScript implementation of the patch and migration s
 The module lives in this repository and is consumed through a `replace` directive. From `apps/cli`, for example:
 
 ```
-require forgeplay/dsl v0.0.0
+require github.com/yldm-tech/classic-games/packages/dsl v0.0.0
 
-replace forgeplay/dsl => ../../packages/dsl
+replace github.com/yldm-tech/classic-games/packages/dsl => ../../packages/dsl
 ```
 
-Then run `GOWORK=off go mod tidy`. A `replace` is not inherited: a module that requires another local module which itself requires `forgeplay/dsl` needs its own `replace` for it.
+Then run `GOWORK=off go mod tidy`. A `replace` is not inherited: a module that requires another local module which itself requires `github.com/yldm-tech/classic-games/packages/dsl` needs its own `replace` for it.
 
 ## API
 

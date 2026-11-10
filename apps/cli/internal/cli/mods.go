@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -71,7 +71,7 @@ func (a *app) modsListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List your draft mods, newest first",
-		Long:  "List your draft mods, newest first. The backend lists drafts only: a mod created with --draft=false or a draft that was published is reached through 'forgeplay games mine' and the game's mod id.",
+		Long:  "List your draft mods, newest first. The backend lists drafts only: a mod created with --draft=false or a draft that was published is reached through 'classic-games games mine' and the game's mod id.",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			current, err := a.connectSignedIn()
@@ -103,9 +103,9 @@ func (a *app) modsCreateCommand() *cobra.Command {
 		Short: "Create a mod from a patch file",
 		Long: `Create a mod: a JSON Patch relative to the runtime baseline (--runtime) or to the effective DSL of another mod (--parent). Requires a login.
 
-The backend stores the patch without applying it. Run 'forgeplay mods dsl <id>' afterwards to confirm the patch applies, or check it offline first with 'forgeplay dsl patch --validate'.`,
-		Example: `  forgeplay mods create --runtime shooter@1.0.0 --patch patch.json
-  forgeplay mods create --parent <mod-id> --patch - < patch.json`,
+The backend stores the patch without applying it. Run 'classic-games mods dsl <id>' afterwards to confirm the patch applies, or check it offline first with 'classic-games dsl patch --validate'.`,
+		Example: `  classic-games mods create --runtime shooter@1.0.0 --patch patch.json
+  classic-games mods create --parent <mod-id> --patch - < patch.json`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if (request.Runtime == "") == (request.ParentID == "") {
@@ -140,7 +140,7 @@ The backend stores the patch without applying it. Run 'forgeplay mods dsl <id>' 
 	flags.StringVar(&request.ParentID, "parent", "", "id of the mod to build on")
 	flags.StringVar(&patchPath, "patch", "", "JSON Patch file (- for standard input); omitted means an empty patch")
 	flags.BoolVar(&request.Draft, "draft", true, "create a draft that can be saved again and published; --draft=false creates a final mod")
-	flags.StringVar(&request.AIProvenance, "provenance", "", "provenance value from 'forgeplay ai generate --output json', which marks the mod as AI-generated")
+	flags.StringVar(&request.AIProvenance, "provenance", "", "provenance value from 'classic-games ai generate --output json', which marks the mod as AI-generated")
 	return command
 }
 
@@ -275,7 +275,7 @@ func (a *app) modsPublishCommand() *cobra.Command {
 		Long: `Submit a mod as a game. The game starts in status "reviewing" and becomes public once a moderator approves it. Requires a login as the mod's author.
 
 A draft is published through its draft endpoint, which also clears the draft flag so other users can fork the result; a final mod is published directly.`,
-		Example: `  forgeplay mods publish <mod-id> --title "Cat Shooter" --summary "The player is a cat" --tag cat --tag shooter`,
+		Example: `  classic-games mods publish <mod-id> --title "Cat Shooter" --summary "The player is a cat" --tag cat --tag shooter`,
 		Args:    idArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(tags) > 3 {

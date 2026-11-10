@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // StubProvider 是开发/测试用的确定性 provider —— 不接入任何真实模型,

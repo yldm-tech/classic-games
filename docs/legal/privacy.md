@@ -1,4 +1,4 @@
-# ForgePlay 隐私政策
+# Classic Games 隐私政策
 
 生效日期：2026-08-24  
 English inquiries can be submitted through in-app Help & Feedback.
@@ -16,7 +16,7 @@ English inquiries can be submitted through in-app Help & Feedback.
 
 ## 3. 存储与传输
 
-数据经 HTTPS 传输。密钥与数据库凭据仅存在服务端环境。生产环境拒绝开发者后门（如 `FORGEPLAY_DEV_ADMIN`）。
+数据经 HTTPS 传输。密钥与数据库凭据仅存在服务端环境。生产环境拒绝开发者后门（如 `CLASSIC_GAMES_DEV_ADMIN`）。
 
 ## 4. 共享
 

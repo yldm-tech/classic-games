@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // maxChainDepth 防御异常深链 / 环。

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // ai 包在 apps/server/internal/ai/,到仓库根是 4 层。

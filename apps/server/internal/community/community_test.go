@@ -1,7 +1,7 @@
 package community
 
 import (
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 	"testing"
 )
 

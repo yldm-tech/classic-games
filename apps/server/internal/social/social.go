@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"forgeplay/server/pkg/pagex"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/pagex"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -39,7 +39,7 @@ func NewKeywordModerator(words ...string) TextModerator {
 	return &keywordModerator{words: words}
 }
 
-// defaultBlockWords 是随程序分发的最低安全基线；生产可用 FORGEPLAY_BLOCK_WORDS_FILE 外置扩充。
+// defaultBlockWords 是随程序分发的最低安全基线；生产可用 CLASSIC_GAMES_BLOCK_WORDS_FILE 外置扩充。
 var defaultBlockWords = []string{"fuck", "shit", "spam", "傻逼", "草泥马"}
 
 func (m *keywordModerator) Check(text string) error {

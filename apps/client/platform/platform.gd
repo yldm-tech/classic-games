@@ -1,10 +1,10 @@
 class_name PlatformBridge
 extends RefCounted
 
-## 五端原生能力的唯一入口。优先调用 ForgePlayPlatform 原生单例；Web 使用浏览器 API；
+## 五端原生能力的唯一入口。优先调用 ClassicGamesPlatform 原生单例；Web 使用浏览器 API；
 ## 桌面使用系统 URL handler。返回 false 表示平台未接受动作，UI 不得伪报成功。
 
-const NATIVE_SINGLETON := "ForgePlayPlatform"
+const NATIVE_SINGLETON := "ClassicGamesPlatform"
 
 static func capabilities() -> Dictionary:
 	var native := _native()

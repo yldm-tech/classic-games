@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GODOT="${GODOT:-godot}"
-OUT_DIR="${FORGEPLAY_SHOT_DIR:-/tmp/fp-shots}"
+OUT_DIR="${CLASSIC_GAMES_SHOT_DIR:-/tmp/fp-shots}"
 EXPECTED_VERSION="$(<"$ROOT/apps/client/.godot-version")"
 ACTUAL_VERSION="$("$GODOT" --version)"
 
@@ -14,7 +14,7 @@ if [[ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" && "$ACTUAL_VERSION" != "$EXPECTE
 fi
 
 mkdir -p "$OUT_DIR"
-export FORGEPLAY_SHOT_DIR="$OUT_DIR"
+export CLASSIC_GAMES_SHOT_DIR="$OUT_DIR"
 
 # Prefer the on-screen X11 path so viewport pixels are real. Fall back to
 # whatever display the caller already exported.

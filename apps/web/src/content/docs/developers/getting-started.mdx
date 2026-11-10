@@ -1,6 +1,6 @@
 ---
 title: 快速开始
-description: 从源码运行 ForgePlay 的后端、Godot 客户端和本站，并在本地复现 CI 门禁。
+description: 从源码运行 Classic Games 的后端、Godot 客户端和本站，并在本地复现 CI 门禁。
 sidebar:
   order: 1
 ---
@@ -8,7 +8,7 @@ sidebar:
 import { Code } from '@astrojs/starlight/components';
 import { REPO_URL, repoFile } from '../../../config/site.ts';
 
-ForgePlay 处于预发布阶段：没有公开构建，也没有应用商店版本。下面的步骤全部从源码开始，用到的 `make` 目标都定义在仓库根目录的 <a href={repoFile('Makefile')}>Makefile</a> 里。
+Classic Games 处于预发布阶段：没有公开构建，也没有应用商店版本。下面的步骤全部从源码开始，用到的 `make` 目标都定义在仓库根目录的 <a href={repoFile('Makefile')}>Makefile</a> 里。
 
 ## 准备
 
@@ -49,10 +49,10 @@ curl http://localhost:8080/healthz
 make import GODOT=/path/to/godot
 ```
 
-再启动工程。客户端从环境变量 `FORGEPLAY_API` 读取后端地址：
+再启动工程。客户端从环境变量 `CLASSIC_GAMES_API` 读取后端地址：
 
 ```bash
-FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
+CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
 ```
 
 也可以用 Godot 4.6.3 编辑器直接打开 `apps/client`。
@@ -60,18 +60,18 @@ FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
 ## 构建 CLI 与 MCP 服务
 
 ```bash
-make cli-build    # apps/cli/bin/forgeplay
-make mcp-build    # apps/mcp/bin/forgeplay-mcp
+make cli-build    # apps/cli/bin/classic-games
+make mcp-build    # apps/mcp/bin/classic-games-mcp
 ```
 
 后端启动后，第一次使用大致是这样：
 
 ```bash
 export PATH="$PWD/apps/cli/bin:$PATH"
-forgeplay server health
-forgeplay auth login
-forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-forgeplay mods list
+classic-games server health
+classic-games auth login
+classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+classic-games mods list
 ```
 
 后续内容见 [CLI](/developers/cli/) 和 [MCP 服务](/developers/mcp/)。
@@ -112,6 +112,6 @@ pnpm web:build    # 输出静态文件到 apps/web/dist
 ## 下一步
 
 - 想在终端里操作：[CLI](/developers/cli/)
-- 想把 ForgePlay 接到 AI 助手：[MCP 服务](/developers/mcp/)
+- 想把 Classic Games 接到 AI 助手：[MCP 服务](/developers/mcp/)
 - 想在 Go 程序里调用后端：[Go SDK](/developers/sdk/)
 - 想了解设计：[技术架构](/docs/04-architecture/) 和 [Mod DSL 设计](/docs/05-dsl-design/)

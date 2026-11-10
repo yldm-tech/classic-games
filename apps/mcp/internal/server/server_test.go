@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"forgeplay/mcp/internal/server"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/server"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -68,13 +68,13 @@ func TestInitialize(t *testing.T) {
 	if result.ServerInfo.Name != server.Name || result.ServerInfo.Version != testVersion {
 		t.Errorf("server info = %+v, want name %q version %q", result.ServerInfo, server.Name, testVersion)
 	}
-	mustContain(t, result.Instructions, "Never write or request executable code", "RFC 6902", "fork_game", "update_mod", "validate", "publish_mod", "No FORGEPLAY_TOKEN is configured")
+	mustContain(t, result.Instructions, "Never write or request executable code", "RFC 6902", "fork_game", "update_mod", "validate", "publish_mod", "No CLASSIC_GAMES_TOKEN is configured")
 	if result.Capabilities.Tools == nil || result.Capabilities.Resources == nil {
 		t.Errorf("capabilities = %+v, want tools and resources", result.Capabilities)
 	}
 
 	withToken := connect(t, session{token: "tok"}).InitializeResult().Instructions
-	if strings.Contains(withToken, "No FORGEPLAY_TOKEN") || strings.Contains(withToken, "read-only") {
+	if strings.Contains(withToken, "No CLASSIC_GAMES_TOKEN") || strings.Contains(withToken, "read-only") {
 		t.Errorf("instructions with a token mention a missing token or read-only mode: %q", withToken)
 	}
 	mustContain(t, connect(t, session{readOnly: true}).InitializeResult().Instructions, "read-only mode")

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -70,19 +70,19 @@ type publishModInput struct {
 func (s *service) addWriteTools(server *mcp.Server) {
 	addTool(server, &mcp.Tool{
 		Name:        "fork_game",
-		Description: "Start editing an existing game: create a draft mod owned by the signed-in user whose DSL starts equal to the game's, and return its mod_id and DSL. Every call creates a new draft and counts as one fork of the game. Needs FORGEPLAY_TOKEN.",
+		Description: "Start editing an existing game: create a draft mod owned by the signed-in user whose DSL starts equal to the game's, and return its mod_id and DSL. Every call creates a new draft and counts as one fork of the game. Needs CLASSIC_GAMES_TOKEN.",
 		Annotations: additive("Fork game"),
 	}, func(input *jsonschema.Schema) { requireID(input, "game_id") }, s.forkGame)
 
 	addTool(server, &mcp.Tool{
 		Name:        "create_mod",
-		Description: "Start a new game from scratch: create a draft mod on a runtime's baseline DSL, optionally with a first patch, and return its mod_id and effective DSL. The patch is applied and validated against the runtime schema first; if the result is invalid nothing is stored and the violations are returned. Needs FORGEPLAY_TOKEN.",
+		Description: "Start a new game from scratch: create a draft mod on a runtime's baseline DSL, optionally with a first patch, and return its mod_id and effective DSL. The patch is applied and validated against the runtime schema first; if the result is invalid nothing is stored and the violations are returned. Needs CLASSIC_GAMES_TOKEN.",
 		Annotations: additive("Create mod"),
 	}, func(input *jsonschema.Schema) { patchInput(input, 0) }, s.createMod)
 
 	addTool(server, &mcp.Tool{
 		Name:        "update_mod",
-		Description: "Save a patch on top of one of your drafts. The patch is applied to the draft's current DSL and validated against the runtime schema first; if it does not apply or the result is invalid nothing is stored and the reason is returned. Drafts are immutable versions: the result carries a new mod_id that supersedes the one passed in, so use it for every later call. Needs FORGEPLAY_TOKEN.",
+		Description: "Save a patch on top of one of your drafts. The patch is applied to the draft's current DSL and validated against the runtime schema first; if it does not apply or the result is invalid nothing is stored and the reason is returned. Drafts are immutable versions: the result carries a new mod_id that supersedes the one passed in, so use it for every later call. Needs CLASSIC_GAMES_TOKEN.",
 		Annotations: additive("Update mod"),
 	}, func(input *jsonschema.Schema) {
 		requireID(input, "mod_id")
@@ -99,7 +99,7 @@ func (s *service) addWriteTools(server *mcp.Server) {
 
 	addTool(server, &mcp.Tool{
 		Name:        "publish_mod",
-		Description: "Submit a draft as a game. The draft stops being a draft and the game enters moderation with status reviewing; it becomes public once a moderator approves it. This cannot be undone from this server, so call it only when the user asked to publish. Needs FORGEPLAY_TOKEN.",
+		Description: "Submit a draft as a game. The draft stops being a draft and the game enters moderation with status reviewing; it becomes public once a moderator approves it. This cannot be undone from this server, so call it only when the user asked to publish. Needs CLASSIC_GAMES_TOKEN.",
 		// Publishing is not additive: it permanently clears the draft state of the mod and submits content under the user's name, so the destructive hint is set and clients ask for confirmation.
 		Annotations: &mcp.ToolAnnotations{Title: "Publish mod", ReadOnlyHint: false, IdempotentHint: false, DestructiveHint: boolPtr(true), OpenWorldHint: boolPtr(true)},
 	}, func(input *jsonschema.Schema) {

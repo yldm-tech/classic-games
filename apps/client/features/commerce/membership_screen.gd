@@ -3,7 +3,7 @@ extends ScreenBase
 
 const PlatformBridge:=preload("res://platform/platform.gd")
 
-## 会员 ForgePlay+:权益展示；订阅支付只在非手机平台展示。
+## 会员 Classic Games+:权益展示；订阅支付只在非手机平台展示。
 
 signal subscribed(order_desc: String, order_id: String)
 
@@ -64,7 +64,7 @@ func _build() -> void:
 	var col := Widgets.vbox(Tokens.SPACE_2)
 	head.add_child(col)
 	var row := Widgets.hbox(Tokens.SPACE_2)
-	row.add_child(Widgets.heading("ForgePlay+", 2, theme_name()))
+	row.add_child(Widgets.heading("Classic Games+", 2, theme_name()))
 	row.add_child(Widgets.badge(txt("mem_badge"), theme_name()))
 	col.add_child(row)
 	col.add_child(Widgets.body(_tagline(), theme_name(), &"text_secondary"))
@@ -118,7 +118,7 @@ func _build() -> void:
 		var chosen: Dictionary = plan_list[plan]
 		var chosen_id := str(chosen.get("id",""))
 		sub.disabled = true
-		var description:="ForgePlay+ %s" % str(chosen.get("name",""))
+		var description:="Classic Games+ %s" % str(chosen.get("name",""))
 		var started:=await commerce.start_payment_session(chosen_id,"membership",description,state.locale,
 			func(product_id:String,order_id:String)->String:return PlatformBridge.start_payment(product_id,order_id))
 		if not started:

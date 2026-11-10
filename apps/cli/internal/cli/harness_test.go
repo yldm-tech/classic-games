@@ -24,8 +24,8 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	dir := filepath.Join(t.TempDir(), "forgeplay")
-	return &harness{t: t, configDir: dir, env: map[string]string{"FORGEPLAY_CONFIG_DIR": dir}}
+	dir := filepath.Join(t.TempDir(), "classic-games")
+	return &harness{t: t, configDir: dir, env: map[string]string{"CLASSIC_GAMES_CONFIG_DIR": dir}}
 }
 
 type result struct {
@@ -62,7 +62,7 @@ func (h *harness) ok(args ...string) string {
 	h.t.Helper()
 	got := h.run(args...)
 	if got.code != 0 {
-		h.t.Fatalf("forgeplay %s: exit %d\nstdout: %s\nstderr: %s", strings.Join(args, " "), got.code, got.stdout, got.stderr)
+		h.t.Fatalf("classic-games %s: exit %d\nstdout: %s\nstderr: %s", strings.Join(args, " "), got.code, got.stdout, got.stderr)
 	}
 	return got.stdout
 }
@@ -72,7 +72,7 @@ func (h *harness) fails(args ...string) result {
 	h.t.Helper()
 	got := h.run(args...)
 	if got.code != ExitFailure {
-		h.t.Fatalf("forgeplay %s: exit %d, want %d\nstdout: %s\nstderr: %s", strings.Join(args, " "), got.code, ExitFailure, got.stdout, got.stderr)
+		h.t.Fatalf("classic-games %s: exit %d, want %d\nstdout: %s\nstderr: %s", strings.Join(args, " "), got.code, ExitFailure, got.stdout, got.stderr)
 	}
 	return got
 }
@@ -152,7 +152,7 @@ type backend struct {
 	password string
 	quota    int
 	baseline map[string]any
-	// unsigned makes the backend answer like one without FORGEPLAY_SECRET: a generation carries no provenance.
+	// unsigned makes the backend answer like one without CLASSIC_GAMES_SECRET: a generation carries no provenance.
 	unsigned bool
 }
 

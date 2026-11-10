@@ -72,13 +72,13 @@ const docTemplate = `{
                     "400": {
                         "description": "COMMERCE_INVALID(未达成 / 已领取)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "COMMERCE_INVALID(成就不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -146,13 +146,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -192,19 +192,19 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "422": {
                         "description": "DSL_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "429": {
                         "description": "QUOTA_EXCEEDED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -244,19 +244,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "429": {
                         "description": "Too Many Requests",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -287,7 +287,7 @@ const docTemplate = `{
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -323,7 +323,7 @@ const docTemplate = `{
                     "400": {
                         "description": "EVENT_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -348,7 +348,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -419,19 +419,19 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "401": {
                         "description": "OAUTH_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "503": {
                         "description": "OAUTH_INVALID(第三方服务不可用)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -469,19 +469,19 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "401": {
                         "description": "OAUTH_FAILED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "503": {
                         "description": "OAUTH_FAILED(第三方服务不可用)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -510,19 +510,19 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "401": {
                         "description": "AUTH_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "429": {
                         "description": "AUTH_INVALID(登录尝试过于频繁)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -548,7 +548,7 @@ const docTemplate = `{
                     "401": {
                         "description": "AUTH_REQUIRED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -602,7 +602,7 @@ const docTemplate = `{
                     "401": {
                         "description": "AUTH_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -659,7 +659,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / COMMERCE_INVALID(未拥有该道具)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -814,13 +814,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(idx 非整数)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "NOT_FOUND(idx 越界)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -856,7 +856,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(idx 非整数或消息格式错误) / MESSAGE_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -891,7 +891,7 @@ const docTemplate = `{
                     "403": {
                         "description": "NOT_FRIEND(非好友关系不能查看)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -927,13 +927,13 @@ const docTemplate = `{
                     "400": {
                         "description": "MESSAGE_INVALID(消息格式错误)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "403": {
                         "description": "NOT_FRIEND(非好友关系不能私信)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1057,7 +1057,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1111,7 +1111,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1137,7 +1137,7 @@ const docTemplate = `{
                     "500": {
                         "description": "PARTICIPATION_ERROR",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1179,13 +1179,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "409": {
                         "description": "WITHDRAWAL_INVALID(超额/重复提现)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1239,7 +1239,7 @@ const docTemplate = `{
                     "500": {
                         "description": "PARTICIPATION_ERROR",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1273,7 +1273,7 @@ const docTemplate = `{
                     "400": {
                         "description": "EVENT_JOIN_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1299,7 +1299,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1343,19 +1343,19 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / FEEDBACK_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "422": {
                         "description": "CONTENT_REJECTED(内容审核不通过)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "503": {
                         "description": "MODERATION_UNAVAILABLE(审核服务不可用)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1395,7 +1395,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(type 非法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1491,7 +1491,7 @@ const docTemplate = `{
                     "500": {
                         "description": "INTERNAL",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1590,7 +1590,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1624,7 +1624,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1688,7 +1688,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1722,7 +1722,7 @@ const docTemplate = `{
                     "500": {
                         "description": "COMMUNITY_ERROR",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1773,13 +1773,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / POST_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "422": {
                         "description": "CONTENT_REJECTED(内容审核不通过)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1830,7 +1830,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / RATING_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1867,7 +1867,7 @@ const docTemplate = `{
                     "409": {
                         "description": "INVALID_STATE",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1901,19 +1901,19 @@ const docTemplate = `{
                     "403": {
                         "description": "FORBIDDEN",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "409": {
                         "description": "INVALID_STATE",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1948,7 +1948,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -1981,7 +1981,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2086,7 +2086,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2191,7 +2191,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / REPLAY_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2226,7 +2226,7 @@ const docTemplate = `{
                     "500": {
                         "description": "INTERNAL",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2267,7 +2267,7 @@ const docTemplate = `{
                     "404": {
                         "description": "REPLAY_NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2301,19 +2301,19 @@ const docTemplate = `{
                     "403": {
                         "description": "FORBIDDEN",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "409": {
                         "description": "INVALID_STATE",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2425,7 +2425,7 @@ const docTemplate = `{
                     "400": {
                         "description": "COMMERCE_INVALID(余额不足)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2439,7 +2439,7 @@ const docTemplate = `{
                 "tags": [
                     "commerce"
                 ],
-                "summary": "会员 ForgePlay+(权益 + 套餐)",
+                "summary": "会员 Classic Games+(权益 + 套餐)",
                 "parameters": [
                     {
                         "type": "string",
@@ -2492,7 +2492,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2551,7 +2551,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2586,7 +2586,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2697,7 +2697,7 @@ const docTemplate = `{
                     "500": {
                         "description": "PAYMENT_ERROR",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2739,7 +2739,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / PAYMENT_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2773,7 +2773,7 @@ const docTemplate = `{
                     "404": {
                         "description": "PAYMENT_NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2793,7 +2793,7 @@ const docTemplate = `{
                 "summary": "支付渠道回调(确认订单支付结果)",
                 "parameters": [
                     {
-                        "description": "回调载荷,需带 X-ForgePlay-Signature 签名头",
+                        "description": "回调载荷,需带 X-Classic-Games-Signature 签名头",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -2826,7 +2826,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / PAYMENT_REJECTED(签名或状态不合法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2918,7 +2918,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -2983,7 +2983,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在或取值非法)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3037,7 +3037,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / PIN_INVALID(PIN 校验失败)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3099,7 +3099,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3124,7 +3124,7 @@ const docTemplate = `{
                     "400": {
                         "description": "ROOM_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3168,7 +3168,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / ROOM_INVALID(已满/已开始/不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3202,13 +3202,13 @@ const docTemplate = `{
                     "403": {
                         "description": "ROOM_INVALID(非房间成员)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "ROOM_INVALID(房间不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3254,7 +3254,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / MATCH_INVALID(非法输入/过期序号/对局未开始或已结束)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3305,7 +3305,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST / ROOM_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3339,7 +3339,7 @@ const docTemplate = `{
                     "400": {
                         "description": "MATCH_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3373,13 +3373,13 @@ const docTemplate = `{
                     "400": {
                         "description": "ROOM_INVALID(未全员准备)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "403": {
                         "description": "ROOM_INVALID(非房主)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3421,13 +3421,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3469,13 +3469,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "NOT_FOUND",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3537,13 +3537,13 @@ const docTemplate = `{
                     "400": {
                         "description": "COMMERCE_INVALID(余额不足)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "COMMERCE_INVALID(商品不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3577,7 +3577,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3597,7 +3597,7 @@ const docTemplate = `{
                     "500": {
                         "description": "DELETE_FAILED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3634,13 +3634,13 @@ const docTemplate = `{
                     "400": {
                         "description": "PROFILE_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "500": {
                         "description": "INTERNAL(持久化失败)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3669,13 +3669,13 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / OAUTH_BIND_FAILED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "409": {
                         "description": "OAUTH_BIND_FAILED(该第三方身份已被绑定)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3704,7 +3704,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / PASSWORD_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3733,7 +3733,7 @@ const docTemplate = `{
                     "400": {
                         "description": "BAD_REQUEST(请求体非法) / PHONE_CHANGE_FAILED",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3772,13 +3772,13 @@ const docTemplate = `{
                     "400": {
                         "description": "PROFILE_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "500": {
                         "description": "INTERNAL(持久化失败)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3862,7 +3862,7 @@ const docTemplate = `{
                     "400": {
                         "description": "VERIFICATION_INVALID",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -3927,7 +3927,7 @@ const docTemplate = `{
                     "500": {
                         "description": "INTERNAL",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -4077,7 +4077,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -4150,7 +4150,7 @@ const docTemplate = `{
                     "400": {
                         "description": "COMMERCE_INVALID(今日已签到)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -4185,13 +4185,13 @@ const docTemplate = `{
                     "400": {
                         "description": "COMMERCE_INVALID(未达成 / 已领取)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     },
                     "404": {
                         "description": "COMMERCE_INVALID(任务不存在)",
                         "schema": {
-                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                            "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope"
                         }
                     }
                 }
@@ -4216,7 +4216,7 @@ const docTemplate = `{
                 }
             }
         },
-        "forgeplay_server_pkg_httpx.Body": {
+        "github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Body": {
             "type": "object",
             "properties": {
                 "code": {
@@ -4231,11 +4231,11 @@ const docTemplate = `{
                 }
             }
         },
-        "forgeplay_server_pkg_httpx.Envelope": {
+        "github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Envelope": {
             "type": "object",
             "properties": {
                 "error": {
-                    "$ref": "#/definitions/forgeplay_server_pkg_httpx.Body"
+                    "$ref": "#/definitions/github_com_yldm-tech_classic-games_apps_server_pkg_httpx.Body"
                 }
             }
         },
@@ -5489,7 +5489,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "ForgePlay API",
+	Title:            "Classic Games API",
 	Description:      "AI 驱动的小游戏创作社区后端(详见 docs/09-api-design.md)。",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
