@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"forgeplay/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
 )
 
 // Profile 是用户公开资料 + 统计(数值由服务端出,标签客户端本地化)。

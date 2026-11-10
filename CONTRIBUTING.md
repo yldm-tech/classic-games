@@ -1,4 +1,4 @@
-# Contributing to ForgePlay
+# Contributing to Classic Games
 
 Thank you for considering a contribution. This guide covers the repository layout, the tools you need, the checks a change must pass and the architecture rules that reviewers enforce.
 
@@ -11,17 +11,17 @@ By participating you agree to follow the [Code of Conduct](./CODE_OF_CONDUCT.md)
 | Path | Contents |
 |---|---|
 | `apps/client` | Godot 4.6 project: the game client and the game runtimes |
-| `apps/server` | Go backend, module `forgeplay/server` |
+| `apps/server` | Go backend, module `github.com/yldm-tech/classic-games/apps/server` |
 | `apps/web` | Website and documentation site (Astro and Starlight), managed with pnpm |
-| `apps/cli` | Go CLI, module `forgeplay/cli`, binary `forgeplay` |
-| `apps/mcp` | Go MCP server, module `forgeplay/mcp`, binary `forgeplay-mcp` |
+| `apps/cli` | Go CLI, module `github.com/yldm-tech/classic-games/apps/cli`, binary `classic-games` |
+| `apps/mcp` | Go MCP server, module `github.com/yldm-tech/classic-games/apps/mcp`, binary `classic-games-mcp` |
 | `packages/schemas` | Mod DSL JSON Schemas, one file per runtime and version |
-| `packages/dsl` | Go module `forgeplay/dsl`: RFC 6902 patch, DSL migration and schema validation, shared by server, CLI and MCP server |
-| `packages/sdk` | Go module `forgeplay/sdk`: typed HTTP client for the backend API, shared by CLI and MCP server |
+| `packages/dsl` | Go module `github.com/yldm-tech/classic-games/packages/dsl`: RFC 6902 patch, DSL migration and schema validation, shared by server, CLI and MCP server |
+| `packages/sdk` | Go module `github.com/yldm-tech/classic-games/packages/sdk`: typed HTTP client for the backend API, shared by CLI and MCP server |
 | `docs` | Technical documentation, in Chinese |
 | `scripts` | Repository gates and helper scripts |
 
-Dependencies point from `apps` to `packages`, never the other way, and the CLI and the MCP server do not import the backend module; they reach the backend over HTTP through `forgeplay/sdk`. The five Go modules form a workspace ([`go.work`](./go.work)) and also reference each other with `require forgeplay/<name> v0.0.0` and a relative `replace` directive, so each module builds on its own with `GOWORK=off`. A `replace` is not inherited: a module that depends on another local module needs its own `replace` for that module's local dependencies.
+Dependencies point from `apps` to `packages`, never the other way, and the CLI and the MCP server do not import the backend module; they reach the backend over HTTP through `github.com/yldm-tech/classic-games/packages/sdk`. The five Go modules form a workspace ([`go.work`](./go.work)) and also reference each other with `require classic-games/<name> v0.0.0` and a relative `replace` directive, so each module builds on its own with `GOWORK=off`. A `replace` is not inherited: a module that depends on another local module needs its own `replace` for that module's local dependencies.
 
 ## Prerequisites
 
@@ -154,4 +154,4 @@ A new version also needs the built-in version in `apps/client/runtime/runtime_lo
 
 ## Licence of contributions
 
-ForgePlay is licensed under the [Apache License, Version 2.0](./LICENSE). As stated in section 5 of the licence, any contribution you intentionally submit for inclusion in the project is licensed under the same terms, with no additional terms or conditions. You keep the copyright to your work, and you confirm that you have the right to submit it under this licence.
+Classic Games is licensed under the [Apache License, Version 2.0](./LICENSE). As stated in section 5 of the licence, any contribution you intentionally submit for inclusion in the project is licensed under the same terms, with no additional terms or conditions. You keep the copyright to your work, and you confirm that you have the right to submit it under this licence.

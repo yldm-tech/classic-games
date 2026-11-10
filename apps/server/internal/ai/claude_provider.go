@@ -8,7 +8,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // ClaudeProvider 是 LLMProvider 的真实实现,用官方 anthropic-sdk-go 调 Claude(见 ADR-008)。
@@ -46,7 +46,7 @@ func (p *ClaudeProvider) GenerateModPatch(
 ) (PatchSuggestion, error) {
 	curJSON, _ := json.Marshal(currentDSL)
 
-	system := "你是 ForgePlay 的游戏改造助手。只能输出对游戏配置(DSL)的修改,以 RFC 6902 JSON Patch 形式。" +
+	system := "你是 Classic Games 的游戏改造助手。只能输出对游戏配置(DSL)的修改,以 RFC 6902 JSON Patch 形式。" +
 		"只能使用 runtime 已有的枚举值,数值需在范围内;绝不输出代码或自然语言解释(解释放 balance_hint)。" +
 		"你必须调用 " + patchToolName + " 工具返回结果。"
 

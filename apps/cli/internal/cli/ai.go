@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -57,12 +57,12 @@ The DSL to change is chosen by one of:
   --mod <id>        the effective DSL of a mod
   --dsl <file>      a local DSL file (its runtime is read from meta, or given with --runtime)
 
-Nothing is stored unless --save is passed, which creates a draft mod holding the patch (requires a login; not available with --dsl). The draft carries the AI-generated mark only when the backend signs its results, which needs FORGEPLAY_SECRET on the backend; the "AI generated mark" line of the output says whether it does.
+Nothing is stored unless --save is passed, which creates a draft mod holding the patch (requires a login; not available with --dsl). The draft carries the AI-generated mark only when the backend signs its results, which needs CLASSIC_GAMES_SECRET on the backend; the "AI generated mark" line of the output says whether it does.
 
-Each call counts against the daily AI quota (see 'forgeplay ai quota'). On a backend in stub mode the answer is a fixed patch per runtime.`,
-		Example: `  forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0
-  forgeplay ai generate "double the boss health" --game <game-id> --save
-  forgeplay ai generate "more enemies" --dsl my.dsl.json --patch-out patch.json`,
+Each call counts against the daily AI quota (see 'classic-games ai quota'). On a backend in stub mode the answer is a fixed patch per runtime.`,
+		Example: `  classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0
+  classic-games ai generate "double the boss health" --game <game-id> --save
+  classic-games ai generate "more enemies" --dsl my.dsl.json --patch-out patch.json`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.runGenerate(cmd, args[0], options)

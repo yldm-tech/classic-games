@@ -16,10 +16,10 @@ bin/
 go.work.sum
 # Binaries left by a bare `go build ./cmd/...` in the module directory. The leading slash keeps the cmd/<name>/ source directories tracked.
 /apps/server/server
-/apps/cli/forgeplay
-/apps/cli/forgeplay.exe
-/apps/mcp/forgeplay-mcp
-/apps/mcp/forgeplay-mcp.exe
+/apps/cli/classic-games
+/apps/cli/classic-games.exe
+/apps/mcp/classic-games-mcp
+/apps/mcp/classic-games-mcp.exe
 *.test
 *.out
 vendor/
@@ -52,6 +52,6 @@ Thumbs.db
 # Internal strategy and planning notes kept out of the public tree
 docs-internal/
 
-# 运行时 SQLite 数据库(开发默认 apps/server/forgeplay.db)
-forgeplay.db
+# 运行时 SQLite 数据库(开发默认 apps/server/classic-games.db)
+classic-games.db
 *.db

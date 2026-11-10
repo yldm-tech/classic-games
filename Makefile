@@ -1,5 +1,5 @@
-# ForgePlay monorepo — build/test orchestration.
-# apps/server/ = Go backend, apps/client/ = Godot 4.6 project, apps/cli/ = forgeplay CLI, apps/mcp/ = forgeplay-mcp server, apps/web/ = website (pnpm).
+# Classic Games monorepo — build/test orchestration.
+# apps/server/ = Go backend, apps/client/ = Godot 4.6 project, apps/cli/ = classic-games CLI, apps/mcp/ = classic-games-mcp server, apps/web/ = website (pnpm).
 # packages/dsl/ and packages/sdk/ = Go modules shared by the apps.
 # Targets mirror .github/workflows/ci.yml so `make ci` reproduces the Go and Godot gates locally; `make ci-web` reproduces the website gate and `make ci-all` runs both.
 #
@@ -21,7 +21,7 @@ SDK_DIR    := packages/sdk
 GO_MODULES := $(DSL_DIR) $(SDK_DIR) $(SERVER_DIR) $(CLI_DIR) $(MCP_DIR)
 GO_MOD_FILES := $(foreach module,$(GO_MODULES),$(module)/go.mod $(module)/go.sum)
 
-# Version information linked into the forgeplay CLI. Recursive variables, so git and date only run for the targets that use them.
+# Version information linked into the classic-games CLI. Recursive variables, so git and date only run for the targets that use them.
 VERSION    ?= dev
 COMMIT      = $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 BUILD_DATE  = $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -60,8 +60,8 @@ sdk-test: ## go test packages/sdk(后端 HTTP API 客户端)
 # ---- cli (Go) ----
 
 .PHONY: cli-build
-cli-build: ## 编译 CLI 为 apps/cli/bin/forgeplay(版本号用 VERSION=x.y.z 注入)
-	cd $(CLI_DIR) && $(GO) build -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(BUILD_DATE)" -o bin/forgeplay ./cmd/forgeplay
+cli-build: ## 编译 CLI 为 apps/cli/bin/classic-games(版本号用 VERSION=x.y.z 注入)
+	cd $(CLI_DIR) && $(GO) build -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(BUILD_DATE)" -o bin/classic-games ./cmd/classic-games
 
 .PHONY: cli-test
 cli-test: ## go test CLI
@@ -70,8 +70,8 @@ cli-test: ## go test CLI
 # ---- mcp (Go) ----
 
 .PHONY: mcp-build
-mcp-build: ## 编译 MCP 服务为 apps/mcp/bin/forgeplay-mcp
-	cd $(MCP_DIR) && $(GO) build -o bin/forgeplay-mcp ./cmd/forgeplay-mcp
+mcp-build: ## 编译 MCP 服务为 apps/mcp/bin/classic-games-mcp
+	cd $(MCP_DIR) && $(GO) build -o bin/classic-games-mcp ./cmd/classic-games-mcp
 
 .PHONY: mcp-test
 mcp-test: ## go test MCP 服务

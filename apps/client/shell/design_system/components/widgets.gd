@@ -39,17 +39,17 @@ static func big_number(text: String, theme: String, size: int = Tokens.FONT_H2) 
 	l.add_theme_color_override("font_color", Tokens.color(&"text_primary", theme))
 	return l
 
-## 双色品牌 logo:Forge(主文字色)+ Play(熔炉橙红),对照原型 .fp-logo。
+## 双色品牌 logo:Classic(主文字色)+ Games(熔炉橙红),对照原型 .fp-logo。
 static func brand_logo(theme: String, size: int = Tokens.FONT_H3) -> HBoxContainer:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 0)
 	var forge_part := Label.new()
-	forge_part.text = "Forge"
+	forge_part.text = "Classic "
 	forge_part.add_theme_font_size_override("font_size", size)
 	forge_part.add_theme_color_override("font_color", Tokens.color(&"text_primary", theme))
 	box.add_child(forge_part)
 	var play_part := Label.new()
-	play_part.text = "Play"
+	play_part.text = "Games"
 	play_part.add_theme_font_size_override("font_size", size)
 	play_part.add_theme_color_override("font_color", Tokens.color(&"accent_primary", theme))
 	box.add_child(play_part)

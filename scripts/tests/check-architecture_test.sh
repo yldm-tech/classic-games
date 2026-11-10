@@ -17,11 +17,11 @@ fixture() {
 		"$dir/apps/server/cmd/server" "$dir/apps/cli/internal/cli" "$dir/apps/mcp/internal/server" \
 		"$dir/packages/dsl" "$dir/packages/sdk" "$dir/docs"
 	printf '%s\n' 'package app' 'func migrate() { db.AutoMigrate() }' > "$dir/apps/server/internal/app/migrations.go"
-	printf '%s\n' 'module forgeplay/server' 'require (' '	forgeplay/dsl v0.0.0' ')' 'replace forgeplay/dsl => ../../packages/dsl' > "$dir/apps/server/go.mod"
-	printf '%s\n' 'module forgeplay/cli' 'require (' '	forgeplay/dsl v0.0.0' '	forgeplay/sdk v0.0.0' ')' > "$dir/apps/cli/go.mod"
-	printf '%s\n' 'module forgeplay/mcp' 'require (' '	forgeplay/dsl v0.0.0' '	forgeplay/sdk v0.0.0' ')' > "$dir/apps/mcp/go.mod"
-	printf '%s\n' 'module forgeplay/dsl' > "$dir/packages/dsl/go.mod"
-	printf '%s\n' 'module forgeplay/sdk' > "$dir/packages/sdk/go.mod"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/apps/server' 'require (' '	github.com/yldm-tech/classic-games/packages/dsl v0.0.0' ')' 'replace github.com/yldm-tech/classic-games/packages/dsl => ../../packages/dsl' > "$dir/apps/server/go.mod"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/apps/cli' 'require (' '	github.com/yldm-tech/classic-games/packages/dsl v0.0.0' '	github.com/yldm-tech/classic-games/packages/sdk v0.0.0' ')' > "$dir/apps/cli/go.mod"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/apps/mcp' 'require (' '	github.com/yldm-tech/classic-games/packages/dsl v0.0.0' '	github.com/yldm-tech/classic-games/packages/sdk v0.0.0' ')' > "$dir/apps/mcp/go.mod"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/packages/dsl' > "$dir/packages/dsl/go.mod"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/packages/sdk' > "$dir/packages/sdk/go.mod"
 	printf '%s\n' '# Architecture' 'The modular migration is complete.' > "$dir/docs/architecture.md"
 	printf '%s\n' "$dir"
 }
@@ -149,34 +149,34 @@ expect_fail "stale migration documentation" "$case_dir"
 
 for app in cli mcp; do
 	case_dir="$(fixture)"
-	printf '%s\n' "package $app" 'import "forgeplay/server/internal/mods"' > "$case_dir/apps/$app/internal/backend.go"
+	printf '%s\n' "package $app" 'import "github.com/yldm-tech/classic-games/apps/server/internal/mods"' > "$case_dir/apps/$app/internal/backend.go"
 	expect_fail "$app imports the backend module" "$case_dir"
 
 	case_dir="$(fixture)"
-	printf '%s\n' "module forgeplay/$app" 'require forgeplay/server v0.0.0' > "$case_dir/apps/$app/go.mod"
+	printf '%s\n' "module github.com/yldm-tech/classic-games/apps/$app" 'require github.com/yldm-tech/classic-games/apps/server v0.0.0' > "$case_dir/apps/$app/go.mod"
 	expect_fail "$app requires the backend module" "$case_dir"
 done
 
 case_dir="$(fixture)"
-printf '%s\n' 'package sdk' 'import (' '	"forgeplay/server/pkg/httpx"' ')' > "$case_dir/packages/sdk/client.go"
+printf '%s\n' 'package sdk' 'import (' '	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"' ')' > "$case_dir/packages/sdk/client.go"
 expect_fail "shared package imports the backend" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'package dsl' 'import "forgeplay/cli/internal/config"' > "$case_dir/packages/dsl/patch.go"
+printf '%s\n' 'package dsl' 'import "github.com/yldm-tech/classic-games/apps/cli/internal/config"' > "$case_dir/packages/dsl/patch.go"
 expect_fail "shared package imports an application" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'module forgeplay/sdk' 'require forgeplay/mcp v0.0.0' > "$case_dir/packages/sdk/go.mod"
+printf '%s\n' 'module github.com/yldm-tech/classic-games/packages/sdk' 'require github.com/yldm-tech/classic-games/apps/mcp v0.0.0' > "$case_dir/packages/sdk/go.mod"
 expect_fail "shared package requires an application module" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'package sdk' 'import "forgeplay/mcp/internal/server"' > "$case_dir/packages/sdk/client.go"
+printf '%s\n' 'package sdk' 'import "github.com/yldm-tech/classic-games/apps/mcp/internal/server"' > "$case_dir/packages/sdk/client.go"
 expect_fail "shared package imports the MCP server" "$case_dir"
 
 for app in server cli; do
 	case_dir="$(fixture)"
-	printf '%s\n' 'module forgeplay/dsl' "require forgeplay/$app v0.0.0" > "$case_dir/packages/dsl/go.mod"
-	expect_fail "packages/dsl requires forgeplay/$app" "$case_dir"
+	printf '%s\n' 'module github.com/yldm-tech/classic-games/packages/dsl' "require github.com/yldm-tech/classic-games/apps/$app v0.0.0" > "$case_dir/packages/dsl/go.mod"
+	expect_fail "packages/dsl requires the $app application module" "$case_dir"
 done
 
 case_dir="$(fixture)"
@@ -190,12 +190,12 @@ printf '%s\n' 'package ai' > "$case_dir/apps/server/internal/ai/schema_validator
 expect_fail "private schema validator in the backend" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'package catalog' 'import "forgeplay/server/internal/ai/dsl"' > "$case_dir/apps/server/internal/catalog/service.go"
+printf '%s\n' 'package catalog' 'import "github.com/yldm-tech/classic-games/apps/server/internal/ai/dsl"' > "$case_dir/apps/server/internal/catalog/service.go"
 expect_fail "backend imports the removed DSL package" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'module forgeplay/server' > "$case_dir/apps/server/go.mod"
-expect_fail "backend does not require forgeplay/dsl" "$case_dir"
+printf '%s\n' 'module github.com/yldm-tech/classic-games/apps/server' > "$case_dir/apps/server/go.mod"
+expect_fail "backend does not require github.com/yldm-tech/classic-games/packages/dsl" "$case_dir"
 
 for required in apps/client apps/server/internal apps/cli apps/mcp packages/dsl packages/sdk docs; do
 	case_dir="$(fixture)"
@@ -231,11 +231,11 @@ printf '%s\n' '# Website' 'The build stops if a relative link points into `docs-
 expect_pass "apps/web/README.md names docs-internal on purpose" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' '# ForgePlay' '架构仍在迁移。' > "$case_dir/README.zh-CN.md"
+printf '%s\n' '# Classic Games' '架构仍在迁移。' > "$case_dir/README.zh-CN.md"
 expect_fail "stale migration claim in the Chinese README" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' '# ForgePlay' 'The migration is in progress.' > "$case_dir/README.md"
+printf '%s\n' '# Classic Games' 'The migration is in progress.' > "$case_dir/README.md"
 expect_fail "stale migration claim in the English README" "$case_dir"
 
 case_dir="$(fixture)"
@@ -244,9 +244,9 @@ printf '%s\n' '# Plan' 'The client is still migrating.' > "$case_dir/docs/plans/
 expect_fail "stale migration claim under docs/plans" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'package cli' 'import (' '	"forgeplay/dsl"' '	"forgeplay/sdk"' ')' > "$case_dir/apps/cli/internal/cli/app.go"
-printf '%s\n' 'package server' 'import "forgeplay/sdk"' '// The backend module is forgeplay/server; it is reached over HTTP.' > "$case_dir/apps/mcp/internal/server/server.go"
-printf '%s\n' 'package catalog' 'import "forgeplay/dsl"' > "$case_dir/apps/server/internal/catalog/service.go"
+printf '%s\n' 'package cli' 'import (' '	"github.com/yldm-tech/classic-games/packages/dsl"' '	"github.com/yldm-tech/classic-games/packages/sdk"' ')' > "$case_dir/apps/cli/internal/cli/app.go"
+printf '%s\n' 'package server' 'import "github.com/yldm-tech/classic-games/packages/sdk"' '// The backend module is github.com/yldm-tech/classic-games/apps/server; it is reached over HTTP.' > "$case_dir/apps/mcp/internal/server/server.go"
+printf '%s\n' 'package catalog' 'import "github.com/yldm-tech/classic-games/packages/dsl"' > "$case_dir/apps/server/internal/catalog/service.go"
 expect_pass "monorepo module boundaries" "$case_dir"
 
 case_dir="$(fixture)"

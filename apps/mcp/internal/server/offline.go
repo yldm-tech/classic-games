@@ -70,7 +70,7 @@ func (s *service) addOfflineTools(server *mcp.Server) {
 
 	addTool(server, &mcp.Tool{
 		Name:        "get_dsl_schema",
-		Description: "Return the JSON Schema of one runtime's Mod DSL. Read it before writing a patch: it lists every field with its allowed enum values and numeric ranges. Works offline. The same document is available as the resource forgeplay://schemas/<name>-<version>.",
+		Description: "Return the JSON Schema of one runtime's Mod DSL. Read it before writing a patch: it lists every field with its allowed enum values and numeric ranges. Works offline. The same document is available as the resource classic-games://schemas/<name>-<version>.",
 		Annotations: readOnly("Get DSL schema", false),
 	}, nil, s.getDSLSchema)
 

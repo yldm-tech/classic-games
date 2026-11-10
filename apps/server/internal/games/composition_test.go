@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"forgeplay/server/internal/mods"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/internal/mods"
 )
 
 type fakeModGateway struct {

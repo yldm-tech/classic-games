@@ -13,10 +13,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 
 	// swag resolves the httpx.Envelope named in the annotations of this file through its imports; the handlers themselves write errors through i18n.
-	_ "forgeplay/server/pkg/httpx"
+	_ "github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 // safeSegment 限制 name/version 字符集;配合 ".." 检查,杜绝把入参拼进路径造成穿越(系统边界)。

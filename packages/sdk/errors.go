@@ -39,7 +39,7 @@ const (
 var (
 	// ErrInvalidArgument marks an error raised before any request was sent, because an id or name argument cannot be part of a request path: it is empty, contains "/" or is "." or "..".
 	ErrInvalidArgument = errors.New("sdk: invalid argument")
-	// ErrBadResponse marks a 2xx answer that could not be used: the body is not the expected JSON, or it exceeds the size limit. It usually means the base URL does not point at a ForgePlay backend.
+	// ErrBadResponse marks a 2xx answer that could not be used: the body is not the expected JSON, or it exceeds the size limit. It usually means the base URL does not point at a Classic Games backend.
 	ErrBadResponse = errors.New("sdk: unusable response")
 )
 
@@ -85,9 +85,9 @@ func (e *APIError) Error() string {
 		code = http.StatusText(e.StatusCode)
 	}
 	if e.Message == "" || e.Message == code {
-		return fmt.Sprintf("forgeplay: %s %s: %d %s", e.Method, e.Path, e.StatusCode, code)
+		return fmt.Sprintf("classic-games: %s %s: %d %s", e.Method, e.Path, e.StatusCode, code)
 	}
-	return fmt.Sprintf("forgeplay: %s %s: %d %s: %s", e.Method, e.Path, e.StatusCode, code, e.Message)
+	return fmt.Sprintf("classic-games: %s %s: %d %s: %s", e.Method, e.Path, e.StatusCode, code, e.Message)
 }
 
 // IsCode reports whether err is, or wraps, an *APIError with the given envelope code.

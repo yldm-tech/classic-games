@@ -1,4 +1,4 @@
-// Package dsl is the single Go implementation of the ForgePlay Mod DSL rules, shared by the backend, the CLI and the MCP server: applying RFC 6902 JSON Patch documents (Apply), upgrading historical DSL majors (Migrate) and validating an effective DSL against the JSON Schemas in packages/schemas (SchemaValidator).
+// Package dsl is the single Go implementation of the Classic Games Mod DSL rules, shared by the backend, the CLI and the MCP server: applying RFC 6902 JSON Patch documents (Apply), upgrading historical DSL majors (Migrate) and validating an effective DSL against the JSON Schemas in packages/schemas (SchemaValidator).
 //
 // Apply must stay byte-for-byte equivalent to the client implementation in apps/client/runtime/json_patch.gd: the same fork patch chain has to produce the same effective DSL on both sides, otherwise the client preview and what the server stores and validates diverge. See docs/05-dsl-design.md and ADR-013. The golden test in patch_test.go enforces this against the baseline and golden files shared with the client.
 //

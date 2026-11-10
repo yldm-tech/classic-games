@@ -21,7 +21,7 @@ func refresh()->void:
 	rebuild()
 
 func _build() -> void:
-	var logo := Widgets.heading("ForgePlay", 1, theme_name())
+	var logo := Widgets.heading("Classic Games", 1, theme_name())
 	logo.add_theme_color_override("font_color", Tokens.color(&"accent_primary", theme_name()))
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(logo)

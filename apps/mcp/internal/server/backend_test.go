@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-const authRequiredMessage = "authentication required: set FORGEPLAY_TOKEN (obtain with: forgeplay auth login, then forgeplay auth token)"
+const authRequiredMessage = "authentication required: set CLASSIC_GAMES_TOKEN (obtain with: classic-games auth login, then classic-games auth token)"
 
 type gamesOut struct {
 	Games      []gameOut `json:"games"`
@@ -156,7 +156,7 @@ func TestBackendUnreachable(t *testing.T) {
 	url := backend.URL
 	backend.Close()
 	message := callError(t, connect(t, session{backendURL: url}), "list_games", map[string]any{})
-	mustContain(t, message, "cannot reach the ForgePlay backend at "+url, "FORGEPLAY_SERVER_URL")
+	mustContain(t, message, "cannot reach the Classic Games backend at "+url, "CLASSIC_GAMES_SERVER_URL")
 }
 
 func TestBackendFailureHints(t *testing.T) {
@@ -175,15 +175,15 @@ func TestBackendFailureHints(t *testing.T) {
 	fb.fail("POST /api/v1/ai/mod", failure{http.StatusBadGateway, "PROVIDER_ERROR", "upstream down"})
 	mustContain(t, callError(t, cs, "generate_mod", map[string]any{"instruction": "more enemies", "game_id": "g_1"}), "502 PROVIDER_ERROR", "AI provider failed")
 
-	// A response that is not an error envelope still yields a readable message, which says that the answer did not come from a ForgePlay backend.
+	// A response that is not an error envelope still yields a readable message, which says that the answer did not come from a Classic Games backend.
 	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "upstream proxy error", http.StatusBadGateway)
 	}))
 	defer plain.Close()
-	mustContain(t, callError(t, connect(t, session{backendURL: plain.URL}), "get_game", map[string]any{"game_id": "g_1"}), `get game "g_1"`, "502 Bad Gateway", `"upstream proxy error"`, "not a ForgePlay API error", "FORGEPLAY_SERVER_URL")
+	mustContain(t, callError(t, connect(t, session{backendURL: plain.URL}), "get_game", map[string]any{"game_id": "g_1"}), `get game "g_1"`, "502 Bad Gateway", `"upstream proxy error"`, "not a Classic Games API error", "CLASSIC_GAMES_SERVER_URL")
 }
 
-// A wrong FORGEPLAY_SERVER_URL or a proxy error page must not put a whole HTML page into the model's context.
+// A wrong CLASSIC_GAMES_SERVER_URL or a proxy error page must not put a whole HTML page into the model's context.
 func TestForeignAnswersAreNotRelayed(t *testing.T) {
 	page := "<html><body>" + strings.Repeat("<p>login required</p>", 5000) + "</body></html>"
 	notFound := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -193,12 +193,12 @@ func TestForeignAnswersAreNotRelayed(t *testing.T) {
 	}))
 	defer notFound.Close()
 	message := callError(t, connect(t, session{backendURL: notFound.URL}), "get_game", map[string]any{"game_id": "g_1"})
-	mustContain(t, message, "404 Not Found", "<html><body><p>login required</p>", "FORGEPLAY_SERVER_URL")
+	mustContain(t, message, "404 Not Found", "<html><body><p>login required</p>", "CLASSIC_GAMES_SERVER_URL")
 	if len(message) > 1000 {
 		t.Errorf("the tool error holds %d bytes of a %d byte page, want at most 1000", len(message), len(page))
 	}
 	if strings.Contains(message, "list_games returns game ids") {
-		t.Errorf("a foreign 404 got the hint for a ForgePlay 404: %q", message)
+		t.Errorf("a foreign 404 got the hint for a Classic Games 404: %q", message)
 	}
 
 	// A 200 that is not JSON is an answer, so the backend was reached; the message must not send the agent after a connection problem.
@@ -208,7 +208,7 @@ func TestForeignAnswersAreNotRelayed(t *testing.T) {
 	}))
 	defer html.Close()
 	message = callError(t, connect(t, session{backendURL: html.URL}), "get_game", map[string]any{"game_id": "g_1"})
-	mustContain(t, message, "answered, but not like a ForgePlay backend", "FORGEPLAY_SERVER_URL")
+	mustContain(t, message, "answered, but not like a Classic Games backend", "CLASSIC_GAMES_SERVER_URL")
 	if strings.Contains(message, "cannot reach") || len(message) > 1000 {
 		t.Errorf("a 200 text/html answer was reported as %q", message)
 	}
@@ -220,11 +220,11 @@ func TestForeignAnswersAreNotRelayed(t *testing.T) {
 	mustContain(t, message, "400 BAD_REQUEST: 长长长", "(4000 more characters)")
 }
 
-// Credentials in FORGEPLAY_SERVER_URL (a backend behind basic auth) belong neither in a tool result nor in the log.
+// Credentials in CLASSIC_GAMES_SERVER_URL (a backend behind basic auth) belong neither in a tool result nor in the log.
 func TestBackendURLCredentialsStayOutOfToolErrors(t *testing.T) {
 	cs := connect(t, session{backendURL: "http://user:secret@127.0.0.1:1"})
 	message := callError(t, cs, "list_games", map[string]any{})
-	mustContain(t, message, "cannot reach the ForgePlay backend at http://127.0.0.1:1", "FORGEPLAY_SERVER_URL")
+	mustContain(t, message, "cannot reach the Classic Games backend at http://127.0.0.1:1", "CLASSIC_GAMES_SERVER_URL")
 	for _, leaked := range []string{"secret", "user:", "user@"} {
 		if strings.Contains(message, leaked) {
 			t.Errorf("the tool error contains %q: %q", leaked, message)
@@ -314,7 +314,7 @@ func TestRejectedToken(t *testing.T) {
 	fb := newFakeBackend(t)
 	cs := connect(t, session{backendURL: fb.server.URL, token: "expired-token"})
 	message := callError(t, cs, "fork_game", map[string]any{"game_id": "g_1"})
-	mustContain(t, message, "401 AUTH_REQUIRED", "The token in FORGEPLAY_TOKEN was rejected", "forgeplay auth login", "forgeplay auth token")
+	mustContain(t, message, "401 AUTH_REQUIRED", "The token in CLASSIC_GAMES_TOKEN was rejected", "classic-games auth login", "classic-games auth token")
 	if strings.Contains(message, "expired-token") {
 		t.Errorf("the error message leaks the token: %q", message)
 	}

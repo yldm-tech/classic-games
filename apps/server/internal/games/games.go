@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"forgeplay/server/pkg/pagex"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/pagex"
 )
 
 // Status 是作品审核状态机:reviewing → published / rejected;published → delisted。

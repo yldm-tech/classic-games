@@ -3,8 +3,8 @@ package ranking
 import (
 	"testing"
 
-	"forgeplay/server/internal/games"
-	"forgeplay/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
 )
 
 func publishApprove(t *testing.T, g *games.Service, title string) games.Game {

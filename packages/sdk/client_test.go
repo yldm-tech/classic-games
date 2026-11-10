@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 func TestNewValidatesBaseURL(t *testing.T) {
@@ -28,7 +28,7 @@ func TestNewValidatesBaseURL(t *testing.T) {
 		{name: "plain", baseURL: "http://localhost:8080", want: "http://localhost:8080"},
 		{name: "trailing slash trimmed", baseURL: "http://localhost:8080/", want: "http://localhost:8080"},
 		{name: "surrounding space trimmed", baseURL: "  https://api.example.com  ", want: "https://api.example.com"},
-		{name: "path prefix kept", baseURL: "https://example.com/forgeplay/", want: "https://example.com/forgeplay"},
+		{name: "path prefix kept", baseURL: "https://example.com/classic-games/", want: "https://example.com/classic-games"},
 		{name: "empty", baseURL: ""},
 		{name: "no scheme", baseURL: "localhost:8080"},
 		{name: "unsupported scheme", baseURL: "ftp://example.com"},
@@ -58,7 +58,7 @@ func TestNewValidatesBaseURL(t *testing.T) {
 
 func TestBaseURLPathPrefixIsKept(t *testing.T) {
 	server, seen := fakeBackend(t, 200, `{"ok":true,"id":"g1"}`)
-	client := newClient(t, server.URL+"/forgeplay/")
+	client := newClient(t, server.URL+"/classic-games/")
 
 	if err := client.Health(context.Background()); err != nil {
 		t.Fatalf("Health: %v", err)
@@ -67,7 +67,7 @@ func TestBaseURLPathPrefixIsKept(t *testing.T) {
 		t.Fatalf("GetGame: %v", err)
 	}
 	got := []string{seen()[0].path, seen()[1].path}
-	want := []string{"/forgeplay/healthz", "/forgeplay/api/v1/games/g1"}
+	want := []string{"/classic-games/healthz", "/classic-games/api/v1/games/g1"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("paths: got %v, want %v", got, want)
 	}
@@ -84,7 +84,7 @@ func TestDefaultHeadersWithoutOptions(t *testing.T) {
 	if _, present := header["Authorization"]; present {
 		t.Errorf("Authorization header: got %q, want none for an anonymous client", header.Get("Authorization"))
 	}
-	if got, want := header.Get("User-Agent"), "forgeplay-sdk-go/"+sdk.Version; got != want {
+	if got, want := header.Get("User-Agent"), "classic-games-sdk-go/"+sdk.Version; got != want {
 		t.Errorf("User-Agent header: got %q, want %q", got, want)
 	}
 }
@@ -375,65 +375,65 @@ func TestAPIErrorMapping(t *testing.T) {
 			name: "envelope", status: 404, contentType: "application/json",
 			body:     `{"error":{"code":"NOT_FOUND","message":"The requested resource was not found"}}`,
 			want:     sdk.APIError{StatusCode: 404, Code: sdk.CodeNotFound, Message: "The requested resource was not found"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 404 NOT_FOUND: The requested resource was not found",
+			wantText: "classic-games: GET /api/v1/games/g1: 404 NOT_FOUND: The requested resource was not found",
 		},
 		{
 			name: "envelope with details", status: 422, contentType: "application/json",
 			body:     `{"error":{"code":"DSL_INVALID","message":"DSL 不合法","details":{"detail":"/player/speed: must be >= 0"}}}`,
 			want:     sdk.APIError{StatusCode: 422, Code: sdk.CodeDSLInvalid, Message: "DSL 不合法", Details: map[string]any{"detail": "/player/speed: must be >= 0"}},
-			wantText: "forgeplay: GET /api/v1/games/g1: 422 DSL_INVALID: DSL 不合法",
+			wantText: "classic-games: GET /api/v1/games/g1: 422 DSL_INVALID: DSL 不合法",
 		},
 		{
 			name: "quota exceeded", status: 429, contentType: "application/json",
 			body:     `{"error":{"code":"QUOTA_EXCEEDED","message":"Daily AI quota exhausted"}}`,
 			want:     sdk.APIError{StatusCode: 429, Code: sdk.CodeQuotaExceeded, Message: "Daily AI quota exhausted"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 429 QUOTA_EXCEEDED: Daily AI quota exhausted",
+			wantText: "classic-games: GET /api/v1/games/g1: 429 QUOTA_EXCEEDED: Daily AI quota exhausted",
 		},
 		{
 			name: "envelope without message", status: 401, contentType: "application/json",
 			body:     `{"error":{"code":"AUTH_REQUIRED","message":""}}`,
 			want:     sdk.APIError{StatusCode: 401, Code: sdk.CodeAuthRequired},
-			wantText: "forgeplay: GET /api/v1/games/g1: 401 AUTH_REQUIRED",
+			wantText: "classic-games: GET /api/v1/games/g1: 401 AUTH_REQUIRED",
 		},
 		{
 			name: "plain text from router", status: 404, contentType: "text/plain",
 			body:     "404 page not found\n",
 			want:     sdk.APIError{StatusCode: 404, Message: "404 page not found"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 404 Not Found: 404 page not found",
+			wantText: "classic-games: GET /api/v1/games/g1: 404 Not Found: 404 page not found",
 		},
 		{
 			name: "html from proxy", status: 502, contentType: "text/html",
 			body:     "<html>bad gateway</html>",
 			want:     sdk.APIError{StatusCode: 502, Message: "<html>bad gateway</html>"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 502 Bad Gateway: <html>bad gateway</html>",
+			wantText: "classic-games: GET /api/v1/games/g1: 502 Bad Gateway: <html>bad gateway</html>",
 		},
 		{
 			name: "long page from proxy is cut", status: 502, contentType: "text/html",
 			body:     strings.Repeat("x", 510) + "é" + strings.Repeat("y", 300_000),
 			want:     sdk.APIError{StatusCode: 502, Message: strings.Repeat("x", 510) + "é ... (300000 more bytes)"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 502 Bad Gateway: " + strings.Repeat("x", 510) + "é ... (300000 more bytes)",
+			wantText: "classic-games: GET /api/v1/games/g1: 502 Bad Gateway: " + strings.Repeat("x", 510) + "é ... (300000 more bytes)",
 		},
 		{
 			name: "long page is cut on a rune boundary", status: 502, contentType: "text/html",
 			body:     strings.Repeat("x", 511) + "é" + strings.Repeat("y", 100),
 			want:     sdk.APIError{StatusCode: 502, Message: strings.Repeat("x", 511) + " ... (102 more bytes)"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 502 Bad Gateway: " + strings.Repeat("x", 511) + " ... (102 more bytes)",
+			wantText: "classic-games: GET /api/v1/games/g1: 502 Bad Gateway: " + strings.Repeat("x", 511) + " ... (102 more bytes)",
 		},
 		{
 			name: "empty body", status: 500,
 			want:     sdk.APIError{StatusCode: 500, Message: "Internal Server Error"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 500 Internal Server Error",
+			wantText: "classic-games: GET /api/v1/games/g1: 500 Internal Server Error",
 		},
 		{
 			name: "json that is not an envelope", status: 400, contentType: "application/json",
 			body:     `{"detail":"nope"}`,
 			want:     sdk.APIError{StatusCode: 400, Message: `{"detail":"nope"}`},
-			wantText: `forgeplay: GET /api/v1/games/g1: 400 Bad Request: {"detail":"nope"}`,
+			wantText: `classic-games: GET /api/v1/games/g1: 400 Bad Request: {"detail":"nope"}`,
 		},
 		{
 			name: "redirect is not success", status: 304,
 			want:     sdk.APIError{StatusCode: 304, Message: "Not Modified"},
-			wantText: "forgeplay: GET /api/v1/games/g1: 304 Not Modified",
+			wantText: "classic-games: GET /api/v1/games/g1: 304 Not Modified",
 		},
 	}
 	for _, tc := range cases {

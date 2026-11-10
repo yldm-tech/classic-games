@@ -8,13 +8,13 @@ import (
 	"slices"
 	"strings"
 
-	"forgeplay/cli/internal/config"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/cli/internal/config"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
 
-// Keys accepted by "forgeplay config get|set|unset".
+// Keys accepted by "classic-games config get|set|unset".
 const (
 	keyServer    = "server"
 	keyLanguage  = "language"
@@ -209,7 +209,7 @@ func (a *app) configPathCommand() *cobra.Command {
 	}
 }
 
-// resolveSchemaDir picks the schema directory: the --schema-dir flag, then FORGEPLAY_SCHEMA_DIR, then the config file, then packages/schemas of the repository that contains the working directory.
+// resolveSchemaDir picks the schema directory: the --schema-dir flag, then CLASSIC_GAMES_SCHEMA_DIR, then the config file, then packages/schemas of the repository that contains the working directory.
 func (a *app) resolveSchemaDir(settings config.Settings, flag string) setting {
 	result := setting{Key: keySchemaDir, Source: sourceUnset}
 	switch {

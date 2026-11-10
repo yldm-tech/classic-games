@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"forgeplay/server/internal/games"
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 func newSvc(t *testing.T) *Service {

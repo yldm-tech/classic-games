@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"forgeplay/dsl"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 func newValidator(t *testing.T) *dsl.SchemaValidator {

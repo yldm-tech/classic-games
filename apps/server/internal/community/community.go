@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"forgeplay/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
 )
 
 var (

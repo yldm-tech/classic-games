@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/mcp/internal/schemas"
-	"forgeplay/mcp/internal/server"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/schemas"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/server"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )

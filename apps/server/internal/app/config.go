@@ -93,36 +93,36 @@ func LoadConfig(lookup LookupEnv) (Config, error) {
 		return fallback
 	}
 
-	environment := Environment(get("FORGEPLAY_ENV", string(Development)))
+	environment := Environment(get("CLASSIC_GAMES_ENV", string(Development)))
 	if environment != Development && environment != Production {
-		return Config{}, fmt.Errorf("config: unsupported FORGEPLAY_ENV %q", environment)
+		return Config{}, fmt.Errorf("config: unsupported CLASSIC_GAMES_ENV %q", environment)
 	}
 
-	shutdownTimeout, err := time.ParseDuration(get("FORGEPLAY_SHUTDOWN_TIMEOUT", "10s"))
+	shutdownTimeout, err := time.ParseDuration(get("CLASSIC_GAMES_SHUTDOWN_TIMEOUT", "10s"))
 	if err != nil || shutdownTimeout <= 0 {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_SHUTDOWN_TIMEOUT must be positive duration")
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_SHUTDOWN_TIMEOUT must be positive duration")
 	}
-	maxBodyBytes, err := strconv.ParseInt(get("FORGEPLAY_MAX_BODY_BYTES", strconv.FormatInt(1<<20, 10)), 10, 64)
+	maxBodyBytes, err := strconv.ParseInt(get("CLASSIC_GAMES_MAX_BODY_BYTES", strconv.FormatInt(1<<20, 10)), 10, 64)
 	if err != nil || maxBodyBytes <= 0 {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_MAX_BODY_BYTES must be a positive integer")
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_MAX_BODY_BYTES must be a positive integer")
 	}
-	devAdmin, err := strconv.ParseBool(get("FORGEPLAY_DEV_ADMIN", "false"))
+	devAdmin, err := strconv.ParseBool(get("CLASSIC_GAMES_DEV_ADMIN", "false"))
 	if err != nil {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_DEV_ADMIN must be boolean: %w", err)
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_DEV_ADMIN must be boolean: %w", err)
 	}
 	if environment == Production && devAdmin {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_DEV_ADMIN cannot be enabled in production")
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_DEV_ADMIN cannot be enabled in production")
 	}
-	secret := get("FORGEPLAY_SECRET", "")
+	secret := get("CLASSIC_GAMES_SECRET", "")
 	if environment == Production && len(secret) < 32 {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_SECRET must be at least 32 characters in production")
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_SECRET must be at least 32 characters in production")
 	}
-	dsn := get("FORGEPLAY_DB", "")
+	dsn := get("CLASSIC_GAMES_DB", "")
 	if environment == Production && dsn == "" {
-		return Config{}, fmt.Errorf("config: FORGEPLAY_DB must be set in production")
+		return Config{}, fmt.Errorf("config: CLASSIC_GAMES_DB must be set in production")
 	}
 	if dsn == "" {
-		dsn = "forgeplay.db"
+		dsn = "classic-games.db"
 	}
 
 	oauthProviders := make(map[string]OAuthProviderConfig)
@@ -152,18 +152,18 @@ func LoadConfig(lookup LookupEnv) (Config, error) {
 		Environment: environment,
 		HTTP: HTTPConfig{
 			Port:            get("PORT", "8080"),
-			TrustedProxies:  splitUnique(get("FORGEPLAY_TRUSTED_PROXIES", "")),
+			TrustedProxies:  splitUnique(get("CLASSIC_GAMES_TRUSTED_PROXIES", "")),
 			MaxBodyBytes:    maxBodyBytes,
 			ShutdownTimeout: shutdownTimeout,
 			HSTS:            environment == Production,
 		},
 		Database: DatabaseConfig{DSN: dsn},
 		Content: ContentConfig{
-			SchemaDir:            get("FORGEPLAY_SCHEMA_DIR", "../../packages/schemas"),
-			RuntimeDir:           get("FORGEPLAY_RUNTIME_DIR", "../client/runtime"),
-			ShooterBaseline:      get("FORGEPLAY_BASELINE", "../client/runtime/shooter/baseline.dsl.json"),
-			SurvivorBaseline:     get("FORGEPLAY_SURVIVOR_BASELINE", "../client/runtime/survivor/baseline.dsl.json"),
-			TowerDefenseBaseline: get("FORGEPLAY_TOWER_DEFENSE_BASELINE", "../client/runtime/tower_defense/baseline.dsl.json"),
+			SchemaDir:            get("CLASSIC_GAMES_SCHEMA_DIR", "../../packages/schemas"),
+			RuntimeDir:           get("CLASSIC_GAMES_RUNTIME_DIR", "../client/runtime"),
+			ShooterBaseline:      get("CLASSIC_GAMES_BASELINE", "../client/runtime/shooter/baseline.dsl.json"),
+			SurvivorBaseline:     get("CLASSIC_GAMES_SURVIVOR_BASELINE", "../client/runtime/survivor/baseline.dsl.json"),
+			TowerDefenseBaseline: get("CLASSIC_GAMES_TOWER_DEFENSE_BASELINE", "../client/runtime/tower_defense/baseline.dsl.json"),
 		},
 		AI:       AIConfig{AnthropicKey: get("ANTHROPIC_API_KEY", "")},
 		Security: SecurityConfig{Secret: secret},
@@ -171,11 +171,11 @@ func LoadConfig(lookup LookupEnv) (Config, error) {
 			SMSGatewayURL:   get("SMS_GATEWAY_URL", ""),
 			SMSGatewayToken: get("SMS_GATEWAY_TOKEN", ""),
 			OAuthProviders:  oauthProviders,
-			AdminIDs:        splitUnique(get("FORGEPLAY_ADMIN_IDS", "")),
+			AdminIDs:        splitUnique(get("CLASSIC_GAMES_ADMIN_IDS", "")),
 			DevAdmin:        devAdmin,
 		},
 		Moderation: ModerationConfig{
-			BlockWordsFile: get("FORGEPLAY_BLOCK_WORDS_FILE", ""),
+			BlockWordsFile: get("CLASSIC_GAMES_BLOCK_WORDS_FILE", ""),
 			URL:            get("CONTENT_MODERATION_URL", ""),
 			Token:          get("CONTENT_MODERATION_TOKEN", ""),
 		},
@@ -206,7 +206,7 @@ func (c Config) PublicCapabilities() map[string]any {
 	}
 }
 
-// databaseForLog returns the FORGEPLAY_DB value in a form that is safe to log. The value is meant to be a SQLite file path, which is shown without its query parameters. A value that looks like the connection string of another database (a URL whose scheme is not "file", or keyword=value pairs) can carry a password, and the configuration is logged before the database is opened, so such a value is replaced as a whole.
+// databaseForLog returns the CLASSIC_GAMES_DB value in a form that is safe to log. The value is meant to be a SQLite file path, which is shown without its query parameters. A value that looks like the connection string of another database (a URL whose scheme is not "file", or keyword=value pairs) can carry a password, and the configuration is logged before the database is opened, so such a value is replaced as a whole.
 func databaseForLog(dsn string) string {
 	path, _, _ := strings.Cut(dsn, "?")
 	if (strings.Contains(path, "://") && !strings.HasPrefix(path, "file:")) || strings.ContainsAny(path, "=@") {

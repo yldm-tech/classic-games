@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/internal/games"
-	"forgeplay/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
 )
 
 func init() { gin.SetMode(gin.TestMode) }

@@ -1,9 +1,9 @@
 extends SceneTree
 
 ## 双端集成测试:Godot 客户端经 feature gateway 调用真·Go 后端 /ai/mod、/ai/validate。
-## 需先起后端:  cd apps/server && PORT=8099 FORGEPLAY_SCHEMA_DIR=../../packages/schemas go run ./cmd/server
+## 需先起后端:  cd apps/server && PORT=8099 CLASSIC_GAMES_SCHEMA_DIR=../../packages/schemas go run ./cmd/server
 ## 运行:        godot --headless --path apps/client --script res://net_integration_test.gd
-## 后端地址可用环境变量 FORGEPLAY_API 覆盖(默认 http://127.0.0.1:8099)。
+## 后端地址可用环境变量 CLASSIC_GAMES_API 覆盖(默认 http://127.0.0.1:8099)。
 
 const HttpClientScript := preload("res://core/http/http_client.gd")
 const IdentityApiScript := preload("res://features/identity/identity_api.gd")
@@ -105,8 +105,8 @@ class IntegrationOperationsClient:
 
 func _initialize() -> void:
 	var base_url := "http://127.0.0.1:8099"
-	if OS.has_environment("FORGEPLAY_API"):
-		base_url = OS.get_environment("FORGEPLAY_API")
+	if OS.has_environment("CLASSIC_GAMES_API"):
+		base_url = OS.get_environment("CLASSIC_GAMES_API")
 
 	var baseline := _load_json("res://runtime/shooter/baseline.dsl.json")
 	var identity_http := HttpClientScript.new(base_url)
@@ -123,7 +123,7 @@ func _initialize() -> void:
 	# _initialize 里刚加入的节点要等一帧才真正 inside_tree,HTTPRequest 才能发起。
 	await process_frame
 
-	# 0. 游客登录:换取 token(写接口/审核裁决都需鉴权;后端开了 FORGEPLAY_DEV_ADMIN 让登录用户可裁决)
+	# 0. 游客登录:换取 token(写接口/审核裁决都需鉴权;后端开了 CLASSIC_GAMES_DEV_ADMIN 让登录用户可裁决)
 	var guest = await identity.guest_login()
 	_check("游客登录 → 200 且拿到 token", guest.ok and guest.data.get("token", "") != "")
 	identity_http.set_token(guest.data.get("token", ""))

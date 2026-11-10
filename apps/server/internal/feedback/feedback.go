@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"forgeplay/server/internal/social"
+	"github.com/yldm-tech/classic-games/apps/server/internal/social"
 	"strings"
 	"time"
 	"unicode/utf8"

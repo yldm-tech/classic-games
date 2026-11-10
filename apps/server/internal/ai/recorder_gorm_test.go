@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 // GormRecorder 持久化 ai_calls 并能聚合 token(成本核算基础);

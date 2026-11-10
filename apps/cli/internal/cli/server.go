@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )

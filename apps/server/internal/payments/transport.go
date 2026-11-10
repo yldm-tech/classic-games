@@ -1,8 +1,8 @@
 package payments
 
 import (
-	"forgeplay/server/pkg/httpx"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 	"net/http"
 )
 
@@ -86,7 +86,7 @@ func getOrder(s *Service) gin.HandlerFunc {
 // @Tags     payments
 // @Accept   json
 // @Produce  json
-// @Param    body  body      object{order_id=string,transaction_id=string,amount=int,currency=string}  true  "回调载荷,需带 X-ForgePlay-Signature 签名头"
+// @Param    body  body      object{order_id=string,transaction_id=string,amount=int,currency=string}  true  "回调载荷,需带 X-Classic-Games-Signature 签名头"
 // @Success  200   {object}  Order
 // @Failure  400   {object}  httpx.Envelope  "BAD_REQUEST / PAYMENT_REJECTED(签名或状态不合法)"
 // @Router   /payments/webhook [post]
@@ -102,7 +102,7 @@ func paymentsWebhook(s *Service) gin.HandlerFunc {
 			httpx.WriteError(c, 400, "BAD_REQUEST", "invalid body")
 			return
 		}
-		o, e := s.Confirm(b.OrderID, b.TransactionID, b.Amount, b.Currency, c.GetHeader("X-ForgePlay-Signature"))
+		o, e := s.Confirm(b.OrderID, b.TransactionID, b.Amount, b.Currency, c.GetHeader("X-Classic-Games-Signature"))
 		if e != nil {
 			httpx.WriteError(c, 400, "PAYMENT_REJECTED", e.Error())
 			return

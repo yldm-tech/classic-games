@@ -18,12 +18,12 @@ func TestFromEnv(t *testing.T) {
 	}
 
 	cfg := FromEnv(env(map[string]string{
-		EnvServerURL: " https://forgeplay.example/api-root ",
+		EnvServerURL: " https://classic-games.example/api-root ",
 		EnvToken:     " secret-token\n",
 		EnvSchemaDir: "/srv/schemas",
 		EnvLanguage:  "en",
 	}))
-	want := Config{ServerURL: "https://forgeplay.example/api-root", Token: "secret-token", SchemaDir: "/srv/schemas", Language: "en"}
+	want := Config{ServerURL: "https://classic-games.example/api-root", Token: "secret-token", SchemaDir: "/srv/schemas", Language: "en"}
 	if cfg != want {
 		t.Errorf("FromEnv = %+v, want %+v", cfg, want)
 	}

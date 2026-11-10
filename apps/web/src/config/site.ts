@@ -9,7 +9,7 @@ export const REPO_BRANCH = 'main';
 /** Site origin used for canonical URLs and the sitemap. Override with SITE_URL when deploying. */
 export const DEFAULT_SITE_URL = 'http://localhost:4321';
 
-export const SITE_NAME = 'ForgePlay';
+export const SITE_NAME = 'Classic Games';
 
 export const LICENSE_NAME = 'Apache-2.0';
 

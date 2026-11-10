@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"forgeplay/server/internal/auth"
+	"github.com/yldm-tech/classic-games/apps/server/internal/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,11 +45,11 @@ func (identityModule) Install(ctx *moduleContext) error {
 	if len(ctx.cfg.Auth.AdminIDs) > 0 {
 		service.SetAdmins(ctx.cfg.Auth.AdminIDs...)
 	} else {
-		log.Print("auth: 未设 FORGEPLAY_ADMIN_IDS,审核裁决端点将拒绝所有请求(403)")
+		log.Print("auth: 未设 CLASSIC_GAMES_ADMIN_IDS,审核裁决端点将拒绝所有请求(403)")
 	}
 	if ctx.cfg.Auth.DevAdmin {
 		service.SetDevAdmin(true)
-		log.Print("auth: ⚠️ FORGEPLAY_DEV_ADMIN=1,所有登录用户均被当作管理员(仅限 dev,勿用于生产)")
+		log.Print("auth: ⚠️ CLASSIC_GAMES_DEV_ADMIN=1,所有登录用户均被当作管理员(仅限 dev,勿用于生产)")
 	}
 	result := &IdentityModuleResult{
 		Required:      auth.Required(service),

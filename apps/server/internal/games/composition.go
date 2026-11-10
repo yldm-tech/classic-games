@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/internal/mods"
-	"forgeplay/server/pkg/httpx"
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/internal/mods"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 )
 
 // ModGateway keeps the public game resource API while delegating DSL lineage storage to mods.

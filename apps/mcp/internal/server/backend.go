@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"forgeplay/mcp/internal/schemas"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/schemas"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// The read tools query the ForgePlay backend and change nothing there.
+// The read tools query the Classic Games backend and change nothing there.
 
 const (
 	defaultGamesLimit  = 10
@@ -89,13 +89,13 @@ func (s *service) addReadTools(server *mcp.Server) {
 
 	addTool(server, &mcp.Tool{
 		Name:        "get_mod_dsl",
-		Description: "Return the effective DSL of a mod. Use it to reload the current state of one of your drafts before writing the next patch. A draft is readable by its author only, so it needs FORGEPLAY_TOKEN.",
+		Description: "Return the effective DSL of a mod. Use it to reload the current state of one of your drafts before writing the next patch. A draft is readable by its author only, so it needs CLASSIC_GAMES_TOKEN.",
 		Annotations: readOnly("Get mod DSL", true),
 	}, func(input *jsonschema.Schema) { requireID(input, "mod_id") }, s.getModDSL)
 
 	addTool(server, &mcp.Tool{
 		Name:        "list_my_drafts",
-		Description: "List the unpublished draft mods of the signed-in user, newest first, to resume earlier work. Because every update_mod creates a new draft version, older versions of the same work are listed too; parent_mod_id links them. Needs FORGEPLAY_TOKEN.",
+		Description: "List the unpublished draft mods of the signed-in user, newest first, to resume earlier work. Because every update_mod creates a new draft version, older versions of the same work are listed too; parent_mod_id links them. Needs CLASSIC_GAMES_TOKEN.",
 		Annotations: readOnly("List my drafts", true),
 	}, func(input *jsonschema.Schema) {
 		intRange(input, "limit", 1, maxDraftsLimit, defaultDraftsLimit)

@@ -1,4 +1,4 @@
-// Package cli implements the forgeplay command tree. Networked commands go through forgeplay/sdk, offline DSL commands through forgeplay/dsl; the package itself holds no business rules.
+// Package cli implements the classic-games command tree. Networked commands go through github.com/yldm-tech/classic-games/packages/sdk, offline DSL commands through github.com/yldm-tech/classic-games/packages/dsl; the package itself holds no business rules.
 package cli
 
 import (
@@ -8,20 +8,20 @@ import (
 	"io"
 	"strings"
 
-	"forgeplay/cli/internal/config"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/apps/cli/internal/config"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
 
-// Environment variables read by the CLI. config.EnvConfigDir (FORGEPLAY_CONFIG_DIR) is the fourth one.
+// Environment variables read by the CLI. config.EnvConfigDir (CLASSIC_GAMES_CONFIG_DIR) is the fourth one.
 const (
 	// EnvServerURL overrides the configured backend URL; the --server flag overrides both.
-	EnvServerURL = "FORGEPLAY_SERVER_URL"
+	EnvServerURL = "CLASSIC_GAMES_SERVER_URL"
 	// EnvSchemaDir points the offline dsl commands at the directory with the Mod DSL JSON Schemas; the --schema-dir flag overrides it.
-	EnvSchemaDir = "FORGEPLAY_SCHEMA_DIR"
+	EnvSchemaDir = "CLASSIC_GAMES_SCHEMA_DIR"
 	// EnvLanguage selects the language of server messages ("zh", "en" or "ja") and overrides the configured one.
-	EnvLanguage = "FORGEPLAY_LANG"
+	EnvLanguage = "CLASSIC_GAMES_LANG"
 )
 
 const (
@@ -84,11 +84,11 @@ type app struct {
 func NewRootCommand(options Options) *cobra.Command {
 	a := &app{options: options}
 	root := &cobra.Command{
-		Use:   "forgeplay",
-		Short: "Command-line client for the ForgePlay backend and the Mod DSL",
-		Long: `forgeplay talks to a ForgePlay backend (catalog, mods, AI generation) and works with Mod DSL documents offline (schema validation, RFC 6902 patches, migration).
+		Use:   "classic-games",
+		Short: "Command-line client for the Classic Games backend and the Mod DSL",
+		Long: `classic-games talks to a Classic Games backend (catalog, mods, AI generation) and works with Mod DSL documents offline (schema validation, RFC 6902 patches, migration).
 
-The backend URL comes from --server, then ` + EnvServerURL + `, then "forgeplay config set server", then ` + sdk.DefaultBaseURL + `.`,
+The backend URL comes from --server, then ` + EnvServerURL + `, then "classic-games config set server", then ` + sdk.DefaultBaseURL + `.`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -222,7 +222,7 @@ func (a *app) connect() (*session, error) {
 			return nil, err
 		}
 	}
-	client, err := sdk.New(server.Value, sdk.WithUserAgent("forgeplay-cli/"+a.options.Build.Version), sdk.WithLanguage(language.Value))
+	client, err := sdk.New(server.Value, sdk.WithUserAgent("classic-games-cli/"+a.options.Build.Version), sdk.WithLanguage(language.Value))
 	if err != nil {
 		return nil, fmt.Errorf("invalid server URL %q (from %s): want http(s)://host[:port][/prefix]", server.Value, server.Source)
 	}
@@ -246,7 +246,7 @@ func (a *app) connectSignedIn() (*session, error) {
 		return nil, err
 	}
 	if !current.loggedIn {
-		return nil, fmt.Errorf("not logged in to %s: run 'forgeplay auth login' first", current.client.BaseURL())
+		return nil, fmt.Errorf("not logged in to %s: run 'classic-games auth login' first", current.client.BaseURL())
 	}
 	return current, nil
 }
@@ -268,7 +268,7 @@ func describeError(err error) string {
 	text := strings.Replace(err.Error(), apiError.Error(), code+": "+message, 1)
 	if sdk.IsUnauthorized(err) && apiError.Code != sdk.CodeAuthInvalid {
 		// --force is part of the hint because a rejected session is still stored, and a plain login refuses to replace a stored session.
-		text += "\nThe stored login is missing, expired or revoked: run 'forgeplay auth login --force'."
+		text += "\nThe stored login is missing, expired or revoked: run 'classic-games auth login --force'."
 	}
 	return text
 }

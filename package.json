@@ -1,7 +1,7 @@
 {
-  "name": "forgeplay",
+  "name": "classic-games",
   "private": true,
-  "description": "ForgePlay monorepo root. Node tooling here only serves apps/web; Go and Godot builds go through the Makefile.",
+  "description": "Classic Games monorepo root. Node tooling here only serves apps/web; Go and Godot builds go through the Makefile.",
   "license": "Apache-2.0",
   "packageManager": "pnpm@12.3.4",
   "engines": {
@@ -9,9 +9,9 @@
     "pnpm": ">=12"
   },
   "scripts": {
-    "web:dev": "pnpm --filter @forgeplay/web dev",
-    "web:build": "pnpm --filter @forgeplay/web build",
-    "web:preview": "pnpm --filter @forgeplay/web preview",
-    "web:check": "pnpm --filter @forgeplay/web check"
+    "web:dev": "pnpm --filter @classic-games/web dev",
+    "web:build": "pnpm --filter @classic-games/web build",
+    "web:preview": "pnpm --filter @classic-games/web preview",
+    "web:check": "pnpm --filter @classic-games/web check"
   }
 }

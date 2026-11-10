@@ -5,7 +5,7 @@ import "fmt"
 // MinimalValidator 只做最基本的结构 sanity check(顶层必需键、meta.runtime 一致),
 // 不做完整 schema 校验。它是零配置兜底,用于测试或未配置 schema 目录的场景。
 //
-// 权威校验是 forgeplay/dsl 的 SchemaValidator(packages/dsl/schema_validator.go),用 santhosh-tekuri/jsonschema 按
+// 权威校验是 github.com/yldm-tech/classic-games/packages/dsl 的 SchemaValidator(packages/dsl/schema_validator.go),用 santhosh-tekuri/jsonschema 按
 // runtime 版本加载 packages/schemas 下对应 schema 文件做完整校验(见 ADR-014)。生产用后者。
 type MinimalValidator struct{}
 

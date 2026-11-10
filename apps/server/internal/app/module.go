@@ -3,15 +3,15 @@ package app
 import (
 	"fmt"
 
-	"forgeplay/server/internal/ai"
-	"forgeplay/server/internal/auth"
+	"github.com/yldm-tech/classic-games/apps/server/internal/ai"
+	"github.com/yldm-tech/classic-games/apps/server/internal/auth"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 
-	_ "forgeplay/server/docs"
+	_ "github.com/yldm-tech/classic-games/apps/server/docs"
 )
 
 type moduleInstaller interface {

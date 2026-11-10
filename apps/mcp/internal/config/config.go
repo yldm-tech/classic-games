@@ -1,4 +1,4 @@
-// Package config reads the forgeplay-mcp configuration from the environment and locates the Mod DSL schema directory.
+// Package config reads the classic-games-mcp configuration from the environment and locates the Mod DSL schema directory.
 package config
 
 import (
@@ -7,26 +7,26 @@ import (
 	"path/filepath"
 	"strings"
 
-	"forgeplay/mcp/internal/schemas"
+	"github.com/yldm-tech/classic-games/apps/mcp/internal/schemas"
 )
 
-// Environment variables read by forgeplay-mcp.
+// Environment variables read by classic-games-mcp.
 const (
-	EnvServerURL = "FORGEPLAY_SERVER_URL"
-	EnvToken     = "FORGEPLAY_TOKEN"
-	EnvSchemaDir = "FORGEPLAY_SCHEMA_DIR"
-	EnvLanguage  = "FORGEPLAY_LANG"
+	EnvServerURL = "CLASSIC_GAMES_SERVER_URL"
+	EnvToken     = "CLASSIC_GAMES_TOKEN"
+	EnvSchemaDir = "CLASSIC_GAMES_SCHEMA_DIR"
+	EnvLanguage  = "CLASSIC_GAMES_LANG"
 )
 
 // DefaultServerURL is where a locally started backend listens.
 const DefaultServerURL = "http://localhost:8080"
 
-// repoSchemaDir is where the schemas live inside the ForgePlay repository.
+// repoSchemaDir is where the schemas live inside the Classic Games repository.
 var repoSchemaDir = filepath.Join("packages", "schemas")
 
 // Config is the environment-provided part of the configuration.
 type Config struct {
-	// ServerURL is the root address of the ForgePlay backend, without the /api/v1 prefix.
+	// ServerURL is the root address of the Classic Games backend, without the /api/v1 prefix.
 	ServerURL string
 	// Token is the bearer token for the backend, or "" to stay anonymous.
 	Token string
@@ -54,7 +54,7 @@ func FromEnv(getenv func(string) string) Config {
 func ResolveSchemaDir(explicit string, searchFrom ...string) (string, error) {
 	if explicit != "" {
 		if !hasSchemas(explicit) {
-			return "", fmt.Errorf("%s=%s does not contain any <runtime>-<version>.schema.json file; point it at packages/schemas of the ForgePlay repository", EnvSchemaDir, explicit)
+			return "", fmt.Errorf("%s=%s does not contain any <runtime>-<version>.schema.json file; point it at packages/schemas of the Classic Games repository", EnvSchemaDir, explicit)
 		}
 		return filepath.Abs(explicit)
 	}
@@ -78,7 +78,7 @@ func ResolveSchemaDir(explicit string, searchFrom ...string) (string, error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("cannot find the ForgePlay DSL schemas: set %s to the directory holding the <runtime>-<version>.schema.json files (packages/schemas in the ForgePlay repository); looked for %s at or above: %s", EnvSchemaDir, repoSchemaDir, strings.Join(searched, ", "))
+	return "", fmt.Errorf("cannot find the Classic Games DSL schemas: set %s to the directory holding the <runtime>-<version>.schema.json files (packages/schemas in the Classic Games repository); looked for %s at or above: %s", EnvSchemaDir, repoSchemaDir, strings.Join(searched, ", "))
 }
 
 // hasSchemas reports whether dir is a directory with at least one file the schema catalog loads. It uses the catalog's own file-name rule, so a directory is never chosen here and then refused by schemas.Open.

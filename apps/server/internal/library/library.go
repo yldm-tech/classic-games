@@ -6,7 +6,7 @@ package library
 
 import (
 	"errors"
-	"forgeplay/server/internal/games"
+	"github.com/yldm-tech/classic-games/apps/server/internal/games"
 	"sync"
 )
 

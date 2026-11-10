@@ -498,11 +498,11 @@ func _initialize() -> void:
 	_check("N 原生菜单动作完整", DesktopIntegration.menu_actions() == ["import_dsl", "export_dsl", "preview_window"])
 	var desktop := DesktopIntegration.new()
 	root.add_child(desktop)
-	var desktop_path := "user://desktop_roundtrip.forgeplay.json"
+	var desktop_path := "user://desktop_roundtrip.classic-games.json"
 	_check("N DSL 文件导出成功", desktop.save_dsl(desktop_path, baseline))
 	_check("N DSL 文件无损导入", desktop.load_dsl(desktop_path) == baseline)
-	var bad_file := FileAccess.open("user://desktop_bad.forgeplay.json", FileAccess.WRITE); bad_file.store_string("[]"); bad_file.close()
-	_check("N 非对象文件拒绝导入", desktop.load_dsl("user://desktop_bad.forgeplay.json").is_empty())
+	var bad_file := FileAccess.open("user://desktop_bad.classic-games.json", FileAccess.WRITE); bad_file.store_string("[]"); bad_file.close()
+	_check("N 非对象文件拒绝导入", desktop.load_dsl("user://desktop_bad.classic-games.json").is_empty())
 	var preview_window := desktop.open_preview_window("shooter@1.0.0", baseline)
 	_check("N 多窗口运行真实 Runtime", preview_window is Window and preview_window.get_node_or_null("ShooterRuntime") != null)
 	preview_window.queue_free(); desktop.queue_free()

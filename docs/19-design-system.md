@@ -1,6 +1,6 @@
 # 设计系统
 
-已有一套 HTML/CSS 原型(Claude Design 导出)定义了 ForgePlay 的视觉语言:深色为主、橙红(熔炉)主色、设计 token 化。
+已有一套 HTML/CSS 原型(Claude Design 导出)定义了 Classic Games 的视觉语言:深色为主、橙红(熔炉)主色、设计 token 化。
 本文档讲怎么把它**落到 Godot**,以及实现时对照哪些既有产物。
 
 ## 来源

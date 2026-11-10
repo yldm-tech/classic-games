@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"forgeplay/server/internal/storage"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 
 	"gorm.io/gorm"
 )

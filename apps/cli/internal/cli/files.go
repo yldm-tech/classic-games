@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"forgeplay/dsl"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/dsl"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -96,7 +96,7 @@ func readPatch(cmd *cobra.Command, path string) ([]dsl.Op, error) {
 	return ops, nil
 }
 
-// supportedOps are the RFC 6902 operations the Mod DSL accepts, on the backend, in the client and in forgeplay/dsl.
+// supportedOps are the RFC 6902 operations the Mod DSL accepts, on the backend, in the client and in github.com/yldm-tech/classic-games/packages/dsl.
 var supportedOps = []string{"add", "replace", "remove", "test"}
 
 // toSDKPatch converts a patch to the wire type of the SDK. The two types have identical fields.

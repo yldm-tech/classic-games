@@ -1,4 +1,4 @@
-// Package sdk is a typed Go client for the ForgePlay backend HTTP API (apps/server). It is the transport layer shared by the forgeplay CLI and the forgeplay-mcp server, and it only depends on the standard library.
+// Package sdk is a typed Go client for the Classic Games backend HTTP API (apps/server). It is the transport layer shared by the classic-games CLI and the classic-games-mcp server, and it only depends on the standard library.
 //
 // Create a client with New, authenticate with one of the Login methods plus SetToken, then call the endpoint methods. Every call takes a context and returns typed values; a non-2xx response is returned as *APIError.
 package sdk
@@ -27,13 +27,13 @@ const DefaultTimeout = 2 * time.Minute
 
 const (
 	apiPrefix        = "/api/v1"
-	defaultUserAgent = "forgeplay-sdk-go/" + Version
+	defaultUserAgent = "classic-games-sdk-go/" + Version
 	maxErrorBody     = 1 << 20
-	// maxResponseBody bounds a 2xx body. It is far above any real answer (the largest are replays with 18,000 frames and full listing pages, a few MiB), so reaching it means the URL does not point at a ForgePlay backend.
+	// maxResponseBody bounds a 2xx body. It is far above any real answer (the largest are replays with 18,000 frames and full listing pages, a few MiB), so reaching it means the URL does not point at a Classic Games backend.
 	maxResponseBody = 32 << 20
 )
 
-// Client talks to one ForgePlay backend. It is safe for concurrent use.
+// Client talks to one Classic Games backend. It is safe for concurrent use.
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
@@ -75,7 +75,7 @@ func WithLanguage(language string) Option {
 	return func(c *Client) { c.language = language }
 }
 
-// New returns a client for the backend at baseURL, which is the server root such as "http://localhost:8080" (not the /api/v1 prefix; the client adds it). A path prefix is kept, so a backend published under "https://example.com/forgeplay" works.
+// New returns a client for the backend at baseURL, which is the server root such as "http://localhost:8080" (not the /api/v1 prefix; the client adds it). A path prefix is kept, so a backend published under "https://example.com/classic-games" works.
 func New(baseURL string, options ...Option) (*Client, error) {
 	trimmed := strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	parsed, err := url.Parse(trimmed)

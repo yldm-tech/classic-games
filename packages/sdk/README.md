@@ -1,15 +1,15 @@
-# forgeplay/sdk
+# github.com/yldm-tech/classic-games/packages/sdk
 
-Typed Go client for the ForgePlay backend HTTP API (`apps/server`). It is the transport layer shared by the `forgeplay` CLI (`apps/cli`) and the MCP server (`apps/mcp`), and it depends only on the Go standard library.
+Typed Go client for the Classic Games backend HTTP API (`apps/server`). It is the transport layer shared by the `classic-games` CLI (`apps/cli`) and the MCP server (`apps/mcp`), and it depends only on the Go standard library.
 
 ## Install
 
 The module lives in this repository and is consumed through a `replace` directive. From another module in the monorepo, for example `apps/cli`:
 
 ```
-require forgeplay/sdk v0.0.0
+require github.com/yldm-tech/classic-games/packages/sdk v0.0.0
 
-replace forgeplay/sdk => ../../packages/sdk
+replace github.com/yldm-tech/classic-games/packages/sdk => ../../packages/sdk
 ```
 
 Then run `GOWORK=off go mod tidy`.
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"log"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 func main() {
@@ -104,12 +104,12 @@ Reads of the public catalog (games, ranking, runtimes, comments, profiles) need 
 
 ## Error handling
 
-Every non-2xx response is returned as `*sdk.APIError` carrying the HTTP status, the backend's error code and its localized message. When the body is not a ForgePlay error envelope (a proxy error page, for example), `Message` holds only its first 512 bytes. Network failures and context cancellation are returned as ordinary wrapped errors.
+Every non-2xx response is returned as `*sdk.APIError` carrying the HTTP status, the backend's error code and its localized message. When the body is not a Classic Games error envelope (a proxy error page, for example), `Message` holds only its first 512 bytes. Network failures and context cancellation are returned as ordinary wrapped errors.
 
 Two kinds of failure are raised by the client itself and can be matched with `errors.Is`:
 
 - `sdk.ErrInvalidArgument`: an id or name argument is empty, contains `/` or is `.` or `..`. Path parameters are escaped, which keeps `?` and `#` out of the query string, but the backend routes on the decoded path, so such an id would reach a different endpoint. The call fails before any request is sent.
-- `sdk.ErrBadResponse`: a 2xx answer whose body is not the expected JSON or is larger than 32 MiB, which usually means the base URL does not point at a ForgePlay backend.
+- `sdk.ErrBadResponse`: a 2xx answer whose body is not the expected JSON or is larger than 32 MiB, which usually means the base URL does not point at a Classic Games backend.
 
 Some words are endpoints of their own: `GET /games/mine`, `GET /users/me`, `GET /games/{id}/replays/leaderboard`. Passing such a word as an id makes the backend answer 200 with something else. `GetGame`, `GetMod`, `GetModForkTree`, `GetUserProfile` and `GetLatestReplay` compare the id of the answer with the id that was asked for and return a `404 NOT_FOUND` `*sdk.APIError` on a mismatch, so `sdk.IsNotFound` covers this case and no zero-value resource is returned.
 
@@ -140,12 +140,12 @@ GOWORK=off go vet ./...
 GOWORK=off go test ./... -count=1
 ```
 
-`TestE2E` runs against a real backend and is skipped unless `FORGEPLAY_SDK_E2E_URL` is set. Start a backend with the stub AI provider (no `ANTHROPIC_API_KEY`) and a throwaway database, then point the test at it:
+`TestE2E` runs against a real backend and is skipped unless `CLASSIC_GAMES_SDK_E2E_URL` is set. Start a backend with the stub AI provider (no `ANTHROPIC_API_KEY`) and a throwaway database, then point the test at it:
 
 ```
 cd apps/server
-PORT=18080 FORGEPLAY_DB=/tmp/forgeplay-e2e.db FORGEPLAY_SECRET=local-e2e-secret go run ./cmd/server
+PORT=18080 CLASSIC_GAMES_DB=/tmp/classic-games-e2e.db CLASSIC_GAMES_SECRET=local-e2e-secret go run ./cmd/server
 
 cd packages/sdk
-FORGEPLAY_SDK_E2E_URL=http://127.0.0.1:18080 GOWORK=off go test ./... -run TestE2E -count=1 -v
+CLASSIC_GAMES_SDK_E2E_URL=http://127.0.0.1:18080 GOWORK=off go test ./... -run TestE2E -count=1 -v
 ```

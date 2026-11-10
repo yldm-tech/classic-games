@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"strings"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const (
-	schemaURIPrefix = "forgeplay://schemas/"
-	gameURIPrefix   = "forgeplay://games/"
+	schemaURIPrefix = "classic-games://schemas/"
+	gameURIPrefix   = "classic-games://games/"
 	gameDSLSuffix   = "/dsl"
 	gameDSLTemplate = gameURIPrefix + "{game_id}" + gameDSLSuffix
 )
 
-// schemaURI is the stable resource URI of a runtime schema: forgeplay://schemas/<name>-<version>.
+// schemaURI is the stable resource URI of a runtime schema: classic-games://schemas/<name>-<version>.
 func schemaURI(name, version string) string {
 	return schemaURIPrefix + name + "-" + version
 }
@@ -48,7 +48,7 @@ func (s *service) addResources(server *mcp.Server) {
 		URITemplate: gameDSLTemplate,
 		Name:        "game-dsl",
 		Title:       "Game DSL",
-		Description: "Effective DSL of a game, read from the ForgePlay backend: the runtime baseline with the game's whole patch chain applied. game_id is a game id as returned by the list_games tool.",
+		Description: "Effective DSL of a game, read from the Classic Games backend: the runtime baseline with the game's whole patch chain applied. game_id is a game id as returned by the list_games tool.",
 		MIMEType:    "application/json",
 	}, s.readGameDSL)
 }

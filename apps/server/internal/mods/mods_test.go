@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/dsl"
-	"forgeplay/server/pkg/provenance"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/provenance"
+	"github.com/yldm-tech/classic-games/packages/dsl"
 )
 
 // 有效 AI 溯源令牌 → mod 标记 AI;无效/缺失 → 非 AI。IsAIGenerated 据此回报。

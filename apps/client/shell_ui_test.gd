@@ -291,7 +291,7 @@ func _test_app_state() -> void:
 	_check("D 不记录越界通知已读", state.unread() == 0 and not state.is_read(0))
 	state.queue_free()
 	var prefs: Node = AppStateScript.new()
-	prefs.save_path = "user://forgeplay_prefs_test.cfg"
+	prefs.save_path = "user://classic_games_prefs_test.cfg"
 	root.add_child(prefs)
 	prefs.set_theme("light")
 	prefs.set_locale("en")
@@ -317,7 +317,7 @@ func _test_app_state() -> void:
 
 func _new_state() -> Node:
 	var s: Node = AppStateScript.new()
-	s.save_path = "user://forgeplay_test.cfg"  # 不污染真实存档
+	s.save_path = "user://classic_games_test.cfg"  # 不污染真实存档
 	root.add_child(s)
 	return s
 

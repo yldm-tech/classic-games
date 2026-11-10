@@ -11,4 +11,4 @@ func _ready() -> void:
 	if OS.has_feature("pc"):
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
 	AppState.restore()
-	add_child(AppRootScript.new(AppState, OS.get_environment("FORGEPLAY_API")))
+	add_child(AppRootScript.new(AppState, OS.get_environment("CLASSIC_GAMES_API")))

@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"forgeplay/dsl"
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/dsl"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/spf13/cobra"
@@ -22,9 +22,9 @@ func (a *app) dslCommand() *cobra.Command {
 		a.dslPatchCommand(&schemaDir),
 		a.dslMigrateCommand(),
 	)
-	command.Long = `Work with Mod DSL documents without a backend. These commands use the same Go implementation as the server (forgeplay/dsl), so a document that passes here passes there.
+	command.Long = `Work with Mod DSL documents without a backend. These commands use the same Go implementation as the server (github.com/yldm-tech/classic-games/packages/dsl), so a document that passes here passes there.
 
-Schema validation needs the directory with the JSON Schemas (packages/schemas in the repository). It is taken from --schema-dir, then ` + EnvSchemaDir + `, then "forgeplay config set schema-dir", and is found automatically when the command runs inside a repository checkout.`
+Schema validation needs the directory with the JSON Schemas (packages/schemas in the repository). It is taken from --schema-dir, then ` + EnvSchemaDir + `, then "classic-games config set schema-dir", and is found automatically when the command runs inside a repository checkout.`
 	command.PersistentFlags().StringVar(&schemaDir, "schema-dir", "", "directory with the <runtime>-<version>.schema.json files")
 	return command
 }
@@ -60,7 +60,7 @@ func (a *app) schemaValidator(flag string) (*dsl.SchemaValidator, string, error)
 	}
 	directory := a.resolveSchemaDir(settings, flag)
 	if directory.Value == "" {
-		return nil, "", fmt.Errorf("no schema directory: pass --schema-dir, set %s, run 'forgeplay config set schema-dir <dir>', or run the command inside a repository checkout (packages/schemas)", EnvSchemaDir)
+		return nil, "", fmt.Errorf("no schema directory: pass --schema-dir, set %s, run 'classic-games config set schema-dir <dir>', or run the command inside a repository checkout (packages/schemas)", EnvSchemaDir)
 	}
 	if !hasSchemas(directory.Value) {
 		return nil, "", fmt.Errorf("schema directory %s (from %s) holds no *%s files", directory.Value, directory.Source, schemaFileSuffix)
@@ -120,8 +120,8 @@ func (a *app) dslValidateCommand(schemaDir *string) *cobra.Command {
 		Long: `Validate one or more DSL files against the JSON Schema of their runtime. The runtime ref is read from meta.runtime and meta.runtime_version of each file unless --runtime is given.
 
 Exits with status 1 when any file is invalid and lists every violation with its JSON Pointer.`,
-		Example: `  forgeplay dsl validate apps/client/runtime/shooter/baseline.dsl.json
-  forgeplay dsl validate --schema-dir packages/schemas --output json my.dsl.json`,
+		Example: `  classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json
+  classic-games dsl validate --schema-dir packages/schemas --output json my.dsl.json`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if runtime != "" {
@@ -209,8 +209,8 @@ func (a *app) dslPatchCommand(schemaDir *string) *cobra.Command {
 Supported operations are add, replace, remove and test; move and copy are rejected, as on the backend and in the client. The first failing operation aborts the patch. Object keys of the result are sorted, which makes the output a canonical form.
 
 With --validate the result is also checked against the runtime schema, and nothing is written when it is invalid. One of the two files may be - for standard input.`,
-		Example: `  forgeplay dsl patch baseline.dsl.json patch.json -o modded.dsl.json
-  forgeplay dsl patch baseline.dsl.json patch.json --validate`,
+		Example: `  classic-games dsl patch baseline.dsl.json patch.json -o modded.dsl.json
+  classic-games dsl patch baseline.dsl.json patch.json --validate`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if args[0] == stdioPath && args[1] == stdioPath {
@@ -291,7 +291,7 @@ func (a *app) dslMigrateCommand() *cobra.Command {
 The only migration path that exists is shooter 0.x to shooter 1.x: it rewrites meta, turns a string weapon into a weapon object, defaults player.size and converts array-form enemies and drops into id-keyed maps. Any other request fails.
 
 The source runtime ref is read from meta.runtime and meta.runtime_version unless --from is given; legacy files often lack them.`,
-		Example: `  forgeplay dsl migrate old.dsl.json --from shooter@0.9.0 --to 1.0.0 -o new.dsl.json`,
+		Example: `  classic-games dsl migrate old.dsl.json --from shooter@0.9.0 --to 1.0.0 -o new.dsl.json`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			document, err := readDSL(cmd, args[0])

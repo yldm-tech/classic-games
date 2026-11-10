@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 // The examples below are compiled with the tests but not executed, because they need a running backend. They mirror the snippets in README.md.

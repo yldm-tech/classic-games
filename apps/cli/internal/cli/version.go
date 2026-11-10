@@ -5,7 +5,7 @@ import (
 	"io"
 	"runtime"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ func (a *app) versionCommand() *cobra.Command {
 				SDKVersion: sdk.Version,
 			}
 			return a.emit(cmd, report, func(w io.Writer) error {
-				_, err := fmt.Fprintf(w, "forgeplay %s (commit %s, built %s, %s %s/%s, sdk %s)\n", report.Version, report.Commit, report.Date, report.GoVersion, report.OS, report.Arch, report.SDKVersion)
+				_, err := fmt.Fprintf(w, "classic-games %s (commit %s, built %s, %s %s/%s, sdk %s)\n", report.Version, report.Commit, report.Date, report.GoVersion, report.OS, report.Arch, report.SDKVersion)
 				return err
 			})
 		},

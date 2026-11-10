@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// PatchOp is one RFC 6902 JSON Patch operation, the unit the AI emits and a mod stores. The backend applies add, replace, remove and test; move and copy are rejected. Its fields and JSON shape are identical to dsl.Op in forgeplay/dsl, so a value converts directly with dsl.Op(op) or sdk.PatchOp(op).
+// PatchOp is one RFC 6902 JSON Patch operation, the unit the AI emits and a mod stores. The backend applies add, replace, remove and test; move and copy are rejected. Its fields and JSON shape are identical to dsl.Op in github.com/yldm-tech/classic-games/packages/dsl, so a value converts directly with dsl.Op(op) or sdk.PatchOp(op).
 type PatchOp struct {
 	Op    string          `json:"op"`
 	Path  string          `json:"path"`

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"forgeplay/server/internal/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 )
 
 func TestPaymentOrderHTTP(t *testing.T) {

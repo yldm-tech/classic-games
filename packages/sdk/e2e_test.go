@@ -13,16 +13,16 @@ import (
 	"testing"
 	"time"
 
-	"forgeplay/sdk"
+	"github.com/yldm-tech/classic-games/packages/sdk"
 )
 
 // e2eURLEnv names the environment variable that points TestE2E at a running backend. The backend package is internal to apps/server and cannot be booted in-process from this module, so the test talks to a real server over HTTP and is skipped when the variable is unset.
 //
 // The backend must run with the stub AI provider (no ANTHROPIC_API_KEY) so generation is deterministic and free. From apps/server:
 //
-//	PORT=18080 FORGEPLAY_DB=/tmp/forgeplay-e2e.db FORGEPLAY_SECRET=local-e2e-secret go run ./cmd/server
-//	FORGEPLAY_SDK_E2E_URL=http://127.0.0.1:18080 go test ./... -run TestE2E -count=1   (from packages/sdk)
-const e2eURLEnv = "FORGEPLAY_SDK_E2E_URL"
+//	PORT=18080 CLASSIC_GAMES_DB=/tmp/classic-games-e2e.db CLASSIC_GAMES_SECRET=local-e2e-secret go run ./cmd/server
+//	CLASSIC_GAMES_SDK_E2E_URL=http://127.0.0.1:18080 go test ./... -run TestE2E -count=1   (from packages/sdk)
+const e2eURLEnv = "CLASSIC_GAMES_SDK_E2E_URL"
 
 func wantAPIError(t *testing.T, label string, err error, status int, code string) {
 	t.Helper()
@@ -72,7 +72,7 @@ func TestE2E(t *testing.T) {
 	defer cancel()
 
 	anonymous := newClient(t, baseURL, sdk.WithLanguage("en"))
-	client := newClient(t, baseURL, sdk.WithLanguage("en"), sdk.WithUserAgent("forgeplay-sdk-e2e"))
+	client := newClient(t, baseURL, sdk.WithLanguage("en"), sdk.WithUserAgent("classic-games-sdk-e2e"))
 
 	// ---- health and meta ----
 	if err := anonymous.Health(ctx); err != nil {

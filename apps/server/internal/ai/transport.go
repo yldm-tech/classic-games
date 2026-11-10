@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"forgeplay/server/internal/quota"
-	"forgeplay/server/pkg/i18n"
+	"github.com/yldm-tech/classic-games/apps/server/internal/quota"
+	"github.com/yldm-tech/classic-games/apps/server/pkg/i18n"
 
 	// swag resolves the httpx.Envelope named in the annotations of this file through its imports; the handlers themselves write errors through i18n.
-	_ "forgeplay/server/pkg/httpx"
+	_ "github.com/yldm-tech/classic-games/apps/server/pkg/httpx"
 )
 
 // writeError 走 i18n 统一错误信封(docs/09-api-design.md):按请求语言本地化错误码文案,

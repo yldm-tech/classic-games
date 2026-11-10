@@ -3,9 +3,9 @@ package app
 import (
 	"fmt"
 
-	"forgeplay/server/internal/library"
-	"forgeplay/server/internal/replays"
-	"forgeplay/server/internal/rooms"
+	"github.com/yldm-tech/classic-games/apps/server/internal/library"
+	"github.com/yldm-tech/classic-games/apps/server/internal/replays"
+	"github.com/yldm-tech/classic-games/apps/server/internal/rooms"
 )
 
 type engagementModule struct{}

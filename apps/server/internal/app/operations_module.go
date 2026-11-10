@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"forgeplay/server/internal/analytics"
-	"forgeplay/server/internal/feedback"
-	"forgeplay/server/internal/meta"
-	"forgeplay/server/internal/prefs"
+	"github.com/yldm-tech/classic-games/apps/server/internal/analytics"
+	"github.com/yldm-tech/classic-games/apps/server/internal/feedback"
+	"github.com/yldm-tech/classic-games/apps/server/internal/meta"
+	"github.com/yldm-tech/classic-games/apps/server/internal/prefs"
 )
 
 type operationsModule struct{}

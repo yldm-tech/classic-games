@@ -1,6 +1,6 @@
-# ForgePlay website
+# Classic Games website
 
-The official ForgePlay site: a bilingual landing page and the documentation site. It is a static site built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build), with no UI framework, no analytics and no third-party fonts or CDNs.
+The official Classic Games site: a bilingual landing page and the documentation site. It is a static site built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build), with no UI framework, no analytics and no third-party fonts or CDNs.
 
 - Default locale: Simplified Chinese (`zh-CN`), served from `/`.
 - Second locale: English (`en`), served from `/en/`.
@@ -24,13 +24,13 @@ Run these from the repository root:
 | `pnpm web:build` | Builds the static site into `apps/web/dist/` |
 | `pnpm web:preview` | Serves `apps/web/dist/` locally |
 
-The same scripts exist in this package as `dev`, `check`, `build` and `preview`, for use with `pnpm --filter @forgeplay/web <script>`.
+The same scripts exist in this package as `dev`, `check`, `build` and `preview`, for use with `pnpm --filter @classic-games/web <script>`.
 
 The root `Makefile` wraps the gate that CI runs: `make web-install` (`pnpm install --frozen-lockfile`), `make web-check`, `make web-build`, or `make ci-web` for all three in order.
 
 Search (Pagefind) only works in a production build, so use `web:build` followed by `web:preview` to try it.
 
-Astro starts `dev` and `preview` as a background process when it detects that an AI coding agent launched it. In that case the command returns immediately; stop the server with `pnpm --filter @forgeplay/web exec astro dev stop` or `... astro preview stop`.
+Astro starts `dev` and `preview` as a background process when it detects that an AI coding agent launched it. In that case the command returns immediately; stop the server with `pnpm --filter @classic-games/web exec astro dev stop` or `... astro preview stop`.
 
 ## Configuration
 
