@@ -1,0 +1,79 @@
+---
+title: CLI
+description: forgeplay 命令行工具：查看游戏和 Mod、调用 AI 生成补丁，离线校验、打补丁和迁移 DSL。
+sidebar:
+  order: 2
+---
+
+import { repoDir, repoFile } from '../../../config/site.ts';
+
+`forgeplay` 是 ForgePlay 的命令行工具，源码在 <a href={repoDir('apps/cli')}>apps/cli</a>（Go 模块 `forgeplay/cli`）。它基于 [Go SDK](/developers/sdk/) 访问后端，并复用 `packages/dsl` 里的补丁、迁移与校验代码，所以和后端对同一份 DSL 得出同样的结论。
+
+:::note
+本页列出命令结构。每个命令的全部参数、输出格式和完整示例以 <a href={repoFile('apps/cli/README.md')}>apps/cli/README.md</a> 和 `forgeplay <命令组> <命令> --help` 为准。
+:::
+
+## 构建
+
+CLI 需要在仓库检出内从源码构建，目前没有发布的二进制。
+
+```bash
+make cli-build          # 产物在 apps/cli/bin/forgeplay
+apps/cli/bin/forgeplay version
+```
+
+## 命令
+
+| 命令组 | 命令 | 需要后端 |
+|---|---|---|
+| `forgeplay version` | 打印版本、commit、构建时间、Go 版本和 SDK 版本 | 否 |
+| `forgeplay config` | `get`、`set`、`unset`、`path`。可配置项：`server`、`language`、`schema-dir` | 否 |
+| `forgeplay auth` | `login`、`logout`、`status`、`refresh`、`set-password`、`token` | 是 |
+| `forgeplay server` | `health`、`info` | 是 |
+| `forgeplay games` | `list`、`show`、`dsl`、`ranking`、`fork`、`mine`、`delist`、`resubmit` | 是 |
+| `forgeplay mods` | `list`、`create`、`fork`、`save`、`show`、`dsl`、`lineage`、`publish` | 是 |
+| `forgeplay ai` | `generate`、`quota` | 是 |
+| `forgeplay dsl` | `validate`、`patch`、`migrate` | 否 |
+
+`dsl` 下的命令完全离线运行，只需要能读到 Schema 目录；在仓库检出内会自动找到它。
+
+## 第一次使用
+
+```bash
+forgeplay dsl validate apps/client/runtime/shooter/baseline.dsl.json
+forgeplay server health
+forgeplay auth login
+forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+forgeplay mods list
+forgeplay mods publish <mod-id> --title "Cat Shooter"
+```
+
+`auth login` 默认创建游客会话，token 按后端地址分别保存；短信和密码登录用 `--method` 选择。发布后的游戏状态是 `reviewing`，审核通过后才公开。
+
+`ai generate --save` 把补丁存成草稿 Mod。草稿只有在后端设置了 `FORGEPLAY_SECRET` 时才带 AI 生成标识；`make dev` 默认启动的后端没有设置它，草稿保存时不带标识。命令输出里的 `AI generated mark` 一行会写明是哪一种。
+
+:::caution
+开发环境的后端会预置一批展示用的游戏，它们背后没有 mod。对这些游戏执行 `games dsl`、`games fork` 或 `ai generate --game` 会得到 `GAME_HAS_NO_MOD`。请改从 Runtime 基线开始（`--runtime shooter@1.0.0`），或者用自己发布的游戏。
+:::
+
+## 全局选项
+
+| 选项 | 说明 |
+|---|---|
+| `--server <url>` | 后端根地址，例如 `http://localhost:8080`；覆盖 `FORGEPLAY_SERVER_URL` 和配置文件 |
+| `--output table` 或 `--output json` | 输出格式，默认 `table`。`json` 适合交给脚本处理 |
+
+错误写到标准错误，格式是 `Error: <信息>`，退出码为 1；后端返回的错误显示为 `CODE: message`。被中断时退出码为 130。
+
+## 环境变量
+
+| 变量 | 说明 |
+|---|---|
+| `FORGEPLAY_SERVER_URL` | 后端根地址。本地用 `make dev` 启动的后端是 `http://localhost:8080`，这也是默认值 |
+| `FORGEPLAY_SCHEMA_DIR` | `dsl` 命令使用的 Mod DSL Schema 目录，即仓库里的 `packages/schemas` |
+| `FORGEPLAY_LANG` | 后端消息的语言：`zh`、`en` 或 `ja`。不设置时后端用中文回答 |
+| `FORGEPLAY_CONFIG_DIR` | 存放 `config.json` 和 `credentials.json` 的目录，替代每个用户的默认位置。适合在 CI 里使用 |
+
+## 和 AI 的关系
+
+`forgeplay ai generate` 不会在本机调用模型。它把请求交给后端，由后端调用模型、应用补丁、按 Schema 校验，再把补丁和新的 DSL 一起返回。这与客户端走的是同一条链路，见 [AI Prompt 工程](/docs/12-ai-prompt/)。每次调用都计入每日配额，用 `forgeplay ai quota` 查看。

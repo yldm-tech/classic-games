@@ -1,0 +1,18 @@
+ForgePlay
+Copyright 2026 The ForgePlay Authors
+
+This product is licensed under the Apache License, Version 2.0. See the LICENSE file for the full text.
+
+This repository includes the following third-party works, which remain under their own licences.
+
+QR code generator (apps/client/vendor/qrcode)
+  Vendored from https://github.com/Greaby/godot-qrcode-generator with the local modifications listed in apps/client/vendor/qrcode/README.md.
+  Copyright (c) 2022 Greaby
+  Licensed under the MIT License. The full licence text is in apps/client/vendor/qrcode/LICENSE.
+
+Godot Engine logo (apps/client/icon.svg)
+  The default Godot project icon, unmodified.
+  Copyright (c) 2017 Andrea Calabró
+  Licensed under the Creative Commons Attribution 4.0 International licence (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
+
+Binaries built from this repository additionally contain Godot Engine (MIT) and the Go modules listed in each go.mod file. Their licences are indexed in docs/legal/licenses.md.

@@ -1,0 +1,22 @@
+{
+  "skins": [
+    {"id": "skin_ember", "name": {"zh": "熔岩骑士", "en": "Lava Knight", "ja": "溶岩の騎士"}, "price": 680, "tone": "ember"},
+    {"id": "skin_volt", "name": {"zh": "电光幽灵", "en": "Volt Ghost", "ja": "電光ゴースト"}, "price": 520, "tone": "volt"},
+    {"id": "skin_ocean", "name": {"zh": "深海信使", "en": "Deep Sea Courier", "ja": "深海の使者"}, "price": 460, "tone": "ocean"},
+    {"id": "skin_plum", "name": {"zh": "紫晶法师", "en": "Amethyst Mage", "ja": "紫晶の魔導士"}, "price": 600, "tone": "plum"}
+  ],
+  "items": [
+    {"id": "item_2x_points", "name": {"zh": "双倍创作点卡 ×3", "en": "2× points card ×3", "ja": "ポイント2倍カード ×3"}, "price": 200},
+    {"id": "item_rename", "name": {"zh": "改名卡", "en": "Rename card", "ja": "改名カード"}, "price": 150},
+    {"id": "item_replay_slots", "name": {"zh": "回放存档位 +5", "en": "Replay slots +5", "ja": "リプレイ枠 +5"}, "price": 120},
+    {"id": "item_badge_frame", "name": {"zh": "专属徽章框", "en": "Badge frame", "ja": "限定バッジ枠"}, "price": 300}
+  ],
+  "recharge": [
+    {"id": "tier_60", "points": 60, "price": {"zh": "6", "en": "0.99", "ja": "120"}},
+    {"id": "tier_300", "points": 300, "price": {"zh": "30", "en": "4.99", "ja": "600"}},
+    {"id": "tier_680", "points": 680, "price": {"zh": "68", "en": "9.99", "ja": "1200"}},
+    {"id": "tier_1280", "points": 1280, "price": {"zh": "128", "en": "19.99", "ja": "2400"}}
+  ],
+  "currency_unit": {"zh": "¥", "en": "$", "ja": "¥"},
+  "recharge_unit": {"zh": "创作点", "en": "points", "ja": "ポイント"}
+}

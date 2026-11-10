@@ -1,0 +1,16 @@
+{
+  "badge": "PLUS",
+  "tagline": {"zh": "解锁专属外观、双倍创作点与置顶曝光。", "en": "Unlock exclusive looks, 2× forge points, and featured slots.", "ja": "限定外観・創作ポイント2倍・注目枠を解放。"},
+  "note": {"zh": "到期自动续费,可随时在设置中关闭。", "en": "Renews automatically — cancel anytime in Settings.", "ja": "自動更新。設定でいつでも解約できます。"},
+  "perks": [
+    {"zh": "专属熔岩头像框与特效", "en": "Exclusive lava frame & effects", "ja": "限定の溶岩フレームとエフェクト"},
+    {"zh": "每月赠 300 创作点", "en": "300 forge points monthly", "ja": "毎月 300 創作ポイント"},
+    {"zh": "作品置顶曝光 ×2", "en": "2× featured exposure", "ja": "注目枠の露出 ×2"},
+    {"zh": "会员作品优先进入发现页", "en": "Priority placement in Explore", "ja": "発見ページで優先表示"},
+    {"zh": "抢先体验新模板", "en": "Early access to new templates", "ja": "新テンプレに先行アクセス"}
+  ],
+  "plans": [
+    {"id": "plan_monthly", "name": {"zh": "月卡", "en": "Monthly", "ja": "月額"}, "price": {"zh": "¥18", "en": "$1.99", "ja": "¥240"}, "period": {"zh": "/月", "en": "/mo", "ja": "/月"}, "badge": {"zh": "", "en": "", "ja": ""}},
+    {"id": "plan_yearly", "name": {"zh": "年卡", "en": "Yearly", "ja": "年額"}, "price": {"zh": "¥168", "en": "$17.99", "ja": "¥2400"}, "period": {"zh": "/年", "en": "/yr", "ja": "/年"}, "badge": {"zh": "省 ¥48", "en": "Save $6", "ja": "¥480 お得"}}
+  ]
+}

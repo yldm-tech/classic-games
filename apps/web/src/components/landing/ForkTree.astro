@@ -1,0 +1,180 @@
+---
+import { Image } from 'astro:assets';
+import ashfall from '../../assets/covers/ashfall.png';
+import ember from '../../assets/covers/ember.png';
+import foundry from '../../assets/covers/foundry.png';
+import volt from '../../assets/covers/volt.png';
+import { type Locale, landing } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].forkTree;
+
+// Titles are the fork tree example from docs/01-vision.md and are product names, so they are not translated.
+const root = { title: 'Official Shooter', cover: foundry, alt: t.coverAlt.foundry };
+const branches = [
+	{
+		title: 'Cat Shooter',
+		cover: volt,
+		alt: t.coverAlt.volt,
+		children: [{ title: 'Cat Shooter EX', cover: ember, alt: t.coverAlt.ember }],
+	},
+	{ title: 'Zombie Shooter', cover: ashfall, alt: t.coverAlt.ashfall, children: [] },
+];
+---
+
+<figure class="tree" aria-label={t.ariaLabel}>
+	<ul class="level root">
+		<li>
+			<div class="node">
+				<Image class="cover" src={root.cover} alt={root.alt} width={144} height={90} />
+				<span class="title" translate="no">{root.title}</span>
+				<span class="tag tag-root">{t.rootTag}</span>
+			</div>
+			<ul class="level">
+				{
+					branches.map((branch) => (
+						<li>
+							<div class="node">
+								<Image class="cover" src={branch.cover} alt={branch.alt} width={144} height={90} />
+								<span class="title" translate="no">
+									{branch.title}
+								</span>
+								<span class="tag">{t.forkTag}</span>
+							</div>
+							{branch.children.length > 0 && (
+								<ul class="level">
+									{branch.children.map((child) => (
+										<li>
+											<div class="node">
+												<Image class="cover" src={child.cover} alt={child.alt} width={144} height={90} />
+												<span class="title" translate="no">
+													{child.title}
+												</span>
+												<span class="tag">{t.forkTag}</span>
+											</div>
+										</li>
+									))}
+								</ul>
+							)}
+						</li>
+					))
+				}
+			</ul>
+		</li>
+	</ul>
+	<figcaption>{t.caption}</figcaption>
+</figure>
+
+<style>
+	.tree {
+		padding: 1.25rem;
+		border: 1px solid var(--fp-border);
+		border-radius: var(--fp-radius-lg);
+		background: var(--fp-surface);
+	}
+
+	.level {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	/* Nested levels hang off a vertical rail; each item draws its own elbow so the last one can stop the rail short. */
+	.level .level {
+		margin-block-start: 0.75rem;
+		margin-inline-start: 1.25rem;
+	}
+
+	.level .level > li {
+		position: relative;
+		padding-inline-start: 1.5rem;
+	}
+
+	.level .level > li::before {
+		content: '';
+		position: absolute;
+		inset-block: -0.75rem 0;
+		inset-inline-start: 0;
+		border-inline-start: 1px solid var(--fp-border-strong);
+	}
+
+	.level .level > li:last-child::before {
+		inset-block-end: auto;
+		height: calc(0.75rem + 1.75rem);
+	}
+
+	.level .level > li::after {
+		content: '';
+		position: absolute;
+		inset-block-start: 1.75rem;
+		inset-inline-start: 0;
+		width: 1.5rem;
+		border-block-start: 1px solid var(--fp-border-strong);
+	}
+
+	.node {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 3.5rem;
+		padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+		border: 1px solid var(--fp-border-subtle);
+		border-radius: var(--fp-radius-sm);
+		background: var(--fp-surface-input);
+	}
+
+	.cover {
+		width: 4.5rem;
+		height: 2.8125rem;
+		border-radius: var(--fp-radius-xs);
+		object-fit: cover;
+	}
+
+	.title {
+		font-weight: 600;
+		font-size: 0.9375rem;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+	}
+
+	.tag {
+		padding: 0.1rem 0.5rem;
+		border-radius: var(--fp-radius-xs);
+		background: var(--fp-tint-ember);
+		color: var(--fp-accent-text);
+		font-family: var(--fp-font-mono);
+		font-size: 0.75rem;
+		white-space: nowrap;
+	}
+
+	.tag-root {
+		background: var(--fp-tint-volt);
+		color: var(--fp-ai-text);
+	}
+
+	figcaption {
+		margin-block-start: 1rem;
+		color: var(--fp-text-muted);
+		font-size: 0.8125rem;
+		line-height: 1.6;
+	}
+
+	@media (max-width: 26rem) {
+		.node {
+			grid-template-columns: auto minmax(0, 1fr);
+		}
+
+		.tag {
+			grid-column: 2;
+			justify-self: start;
+		}
+
+		.cover {
+			grid-row: span 2;
+		}
+	}
+</style>

@@ -1,0 +1,69 @@
+{
+  "note": {
+    "zh": "控制谁能看到你的信息、与你互动。",
+    "en": "Control who can see and interact with you.",
+    "ja": "誰が閲覧・交流できるかを管理します。"
+  },
+  "items": [
+    {
+      "key": "who_sees_games",
+      "kind": "segment",
+      "default_index": 0,
+      "label": {
+        "zh": "谁可以看我的作品",
+        "en": "Who can see my games",
+        "ja": "作品を見れる人"
+      },
+      "options": {
+        "zh": ["所有人", "仅好友", "仅自己"],
+        "en": ["Everyone", "Friends", "Only me"],
+        "ja": ["全員", "フレンド", "自分のみ"]
+      }
+    },
+    {
+      "key": "who_messages_me",
+      "kind": "segment",
+      "default_index": 0,
+      "label": {
+        "zh": "谁可以给我发消息",
+        "en": "Who can message me",
+        "ja": "メッセージを送れる人"
+      },
+      "options": {
+        "zh": ["所有人", "仅好友"],
+        "en": ["Everyone", "Friends"],
+        "ja": ["全員", "フレンド"]
+      }
+    },
+    {
+      "key": "show_online_status",
+      "kind": "toggle",
+      "default": true,
+      "label": {
+        "zh": "展示在线状态",
+        "en": "Show online status",
+        "ja": "オンライン状態を表示"
+      }
+    },
+    {
+      "key": "allow_remix",
+      "kind": "toggle",
+      "default": true,
+      "label": {
+        "zh": "允许我的作品被二创",
+        "en": "Allow remixing my games",
+        "ja": "作品のリミックスを許可"
+      }
+    },
+    {
+      "key": "personalized_recommendations",
+      "kind": "toggle",
+      "default": true,
+      "label": {
+        "zh": "个性化内容推荐",
+        "en": "Personalized recommendations",
+        "ja": "パーソナライズおすすめ"
+      }
+    }
+  ]
+}

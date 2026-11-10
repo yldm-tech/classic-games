@@ -1,0 +1,71 @@
+---
+import '../styles/tokens.css';
+import '../styles/landing.css';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { SITE_NAME } from '../config/site.ts';
+import { LOCALES, type Locale, landing, localizePath } from '../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+	/** Page title. Defaults to the landing page's title. */
+	title?: string;
+	/** Meta description. Defaults to the landing page's description. */
+	description?: string;
+	/** Set on pages that have no address of their own, such as the 404 page: asks search engines not to index the page and leaves out the canonical URL, the hreflang alternates and og:url, which would otherwise present it as the landing page. */
+	noindex?: boolean;
+}
+
+const { locale, noindex = false } = Astro.props;
+const t = landing[locale];
+const title = Astro.props.title ?? t.meta.title;
+const description = Astro.props.description ?? t.meta.description;
+const absolute = (target: Locale) => new URL(localizePath(target, '/'), Astro.site).href;
+---
+
+<!doctype html>
+<html lang={locale} dir="ltr" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		{
+			noindex ? (
+				<meta name="robots" content="noindex" />
+			) : (
+				<>
+					<link rel="canonical" href={absolute(locale)} />
+					{LOCALES.map((target) => (
+						<link rel="alternate" hreflang={target} href={absolute(target)} />
+					))}
+					<link rel="alternate" hreflang="x-default" href={absolute('zh-CN')} />
+				</>
+			)
+		}
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		{!noindex && <meta property="og:url" content={absolute(locale)} />}
+		<meta property="og:locale" content={locale.replace('-', '_')} />
+		{/* Inlined so the stored theme is applied before first paint. Uses the same storage key and fallback as Starlight's ThemeProvider. */}
+		<script is:inline>
+			(() => {
+				const stored = typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+				const theme = stored || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+				document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+			})();
+		</script>
+	</head>
+	<body>
+		<a class="fp-skip" href="#main">{t.nav.skip}</a>
+		<SiteHeader locale={locale} />
+		<main id="main">
+			<slot />
+		</main>
+		<SiteFooter locale={locale} />
+	</body>
+</html>

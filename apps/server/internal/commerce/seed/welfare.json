@@ -1,0 +1,16 @@
+{
+  "checkin": {
+    "streak": 3,
+    "rewards": [10, 20, 30, 50, 80, 120, 200]
+  },
+  "quests": [
+    {"id": "quest_play_3", "title": {"zh": "玩 3 款游戏", "en": "Play 3 games", "ja": "3本プレイする"}, "progress": 3, "target": 3, "reward": 30},
+    {"id": "quest_comment_1", "title": {"zh": "发表 1 条评论", "en": "Leave 1 comment", "ja": "コメントを1件投稿"}, "progress": 1, "target": 1, "reward": 20},
+    {"id": "quest_remix_1", "title": {"zh": "二创 1 款游戏", "en": "Remix 1 game", "ja": "1本リミックスする"}, "progress": 0, "target": 1, "reward": 50}
+  ],
+  "invite": {
+    "code": "KORU-2380",
+    "title": {"zh": "邀请好友", "en": "Invite friends", "ja": "友達を招待"},
+    "desc": {"zh": "好友通过你的邀请码注册,你们各得 200 创作点", "en": "You both get 200 forge points when they join with your code", "ja": "招待コードで登録すると、ふたりとも 200 創作ポイント"}
+  }
+}

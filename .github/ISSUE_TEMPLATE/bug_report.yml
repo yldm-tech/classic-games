@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in ForgePlay does not behave as documented or expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug. Please do not report security vulnerabilities here; follow [SECURITY.md](https://github.com/yldm-tech/classic-games/security/policy) instead.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: The part of the repository where the problem shows up. Pick the closest match if you are unsure.
+      options:
+        - client (apps/client)
+        - server (apps/server)
+        - web (apps/web)
+        - cli (apps/cli)
+        - mcp (apps/mcp)
+        - sdk (packages/sdk)
+        - dsl (packages/dsl)
+        - schemas (packages/schemas)
+        - docs
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence of steps, requests or commands that triggers the problem. For DSL or AI problems include the runtime reference (for example shooter@1.0.0), the prompt, and the patch or DSL document.
+      placeholder: |
+        1. Start the backend with `make dev`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include the exact error message or response body. Add screenshots for visual problems.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: Output of `git rev-parse --short HEAD`, or the release you are using.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system and version, the client platform (iOS, Android, macOS, Windows, Web and browser), and the output of `go version` and `godot --version` where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log output. Remove tokens, API keys, phone numbers and other personal data before pasting.
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and did not find this problem.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

@@ -1,0 +1,78 @@
+{
+  "following": [
+    {
+      "handle": "@mei",
+      "mutual": true,
+      "note": {
+        "zh": "二创了你的 3 款游戏",
+        "en": "Remixed 3 of your games",
+        "ja": "あなたの3作品をリミックス"
+      }
+    },
+    {
+      "handle": "@bo",
+      "mutual": true,
+      "note": {
+        "zh": "街机区常驻",
+        "en": "Arcade regular",
+        "ja": "アーケード常連"
+      }
+    },
+    {
+      "handle": "@talia",
+      "mutual": false,
+      "note": {
+        "zh": "灰烬王国作者",
+        "en": "Made Ashfall Kingdom",
+        "ja": "灰の王国の作者"
+      }
+    },
+    {
+      "handle": "@ana",
+      "mutual": false,
+      "note": {
+        "zh": "音效大佬",
+        "en": "Sound wizard",
+        "ja": "サウンドの達人"
+      }
+    }
+  ],
+  "followers": [
+    {
+      "handle": "@yuna",
+      "mutual": false,
+      "note": {
+        "zh": "刚刚关注了你",
+        "en": "Just followed you",
+        "ja": "フォローされました"
+      }
+    },
+    {
+      "handle": "@jin",
+      "mutual": true,
+      "note": {
+        "zh": "玩过你的全部作品",
+        "en": "Played everything you made",
+        "ja": "全作品プレイ済み"
+      }
+    },
+    {
+      "handle": "@rin",
+      "mutual": false,
+      "note": {
+        "zh": "二创了《屋顶高尔夫》",
+        "en": "Remixed Cinder Golf",
+        "ja": "屋上ゴルフをリミックス"
+      }
+    },
+    {
+      "handle": "@sol",
+      "mutual": false,
+      "note": {
+        "zh": "新粉丝",
+        "en": "New follower",
+        "ja": "新しいフォロワー"
+      }
+    }
+  ]
+}

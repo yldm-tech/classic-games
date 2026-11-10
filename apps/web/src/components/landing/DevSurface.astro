@@ -1,0 +1,116 @@
+---
+import Phrases from '../Phrases.astro';
+import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].developers;
+
+// Command and flag names are identifiers, so they stay untranslated.
+const entries = [
+	{ ...t.cli, path: 'apps/cli', href: '/developers/cli/', hints: ['games list', 'ai generate', 'dsl validate', 'dsl patch'] },
+	{ ...t.mcp, path: 'apps/mcp', href: '/developers/mcp/', hints: ['stdio', '--transport http', '--read-only'] },
+	{ ...t.sdk, path: 'packages/sdk', href: '/developers/sdk/', hints: ['sdk.New', 'ListGames', 'GenerateMod'] },
+];
+---
+
+<section class="fp-section" id="developers" aria-labelledby="developers-title">
+	<div class="fp-container">
+		<div class="fp-section-head">
+			<p class="fp-eyebrow">{t.eyebrow}</p>
+			<h2 class="fp-h2" id="developers-title"><Phrases text={t.title} /></h2>
+			<p class="fp-lead">{t.lead}</p>
+		</div>
+
+		<ul class="grid">
+			{
+				entries.map((entry) => (
+					<li class="entry">
+						<p class="fp-path">{entry.path}</p>
+						<h3 class="name" translate="no">
+							{entry.title}
+						</h3>
+						<p class="body">{entry.body}</p>
+						<ul class="hints">
+							{entry.hints.map((hint) => (
+								<li class="fp-chip" translate="no">
+									{hint}
+								</li>
+							))}
+						</ul>
+						<p class="more">
+							<a class="fp-link" href={localizePath(locale, entry.href)}>
+								{entry.link}
+							</a>
+						</p>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.grid {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.entry {
+		display: flex;
+		flex-direction: column;
+		padding: 1.4rem 1.4rem 1.3rem;
+		border: 1px solid var(--fp-border);
+		border-radius: var(--fp-radius-lg);
+		background: var(--fp-surface);
+	}
+
+	.name {
+		margin-block-start: 0.35rem;
+		font-family: var(--fp-font-mono);
+		font-size: 1.25rem;
+		font-weight: 650;
+		line-height: 1.35;
+		letter-spacing: -0.01em;
+	}
+
+	.name::before {
+		content: '$ ';
+		color: var(--fp-accent-text);
+	}
+
+	.entry:last-child .name::before {
+		content: 'import ';
+		font-weight: 400;
+		color: var(--fp-text-muted);
+	}
+
+	.body {
+		margin-block-start: 0.7rem;
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	.hints {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-block: 1.1rem 1.2rem;
+	}
+
+	.more {
+		margin-block-start: auto;
+		padding-block-start: 1rem;
+		border-block-start: 1px solid var(--fp-border-subtle);
+		font-size: 0.9375rem;
+	}
+
+	@media (min-width: 52rem) {
+		.grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+</style>

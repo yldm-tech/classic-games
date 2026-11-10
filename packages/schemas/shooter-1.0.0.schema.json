@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forgeplay/schemas/shooter-1.0.0.schema.json",
+  "title": "ForgePlay Shooter Runtime DSL",
+  "description": "shooter@1.0.0 的生效 DSL 契约。AI structured output 约束、后端校验、RuntimeLoader 解析三方共用此 schema。枚举值须与 11-runtime-content.md 内容清单逐一对齐。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "player", "enemies", "stage"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "runtime_version"],
+      "properties": {
+        "runtime": { "const": "shooter" },
+        "runtime_version": { "type": "string", "pattern": "^1\\.\\d+\\.\\d+$", "description": "本 schema 是 shooter@1.x;跨 major 由新版本 schema 承接" },
+        "fork_of": { "type": ["string", "null"], "description": "Fork 来源 mod id,可空" }
+      }
+    },
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sprite", "hp", "speed", "weapon"],
+      "properties": {
+        "sprite": { "enum": ["plane", "cat", "ufo", "dragon", "tank", "ghost"] },
+        "hp": { "type": "integer", "minimum": 1, "maximum": 999 },
+        "speed": { "type": "number", "minimum": 1, "maximum": 30 },
+        "size": { "type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0 },
+        "weapon": { "$ref": "#/$defs/weapon" }
+      }
+    },
+    "enemies": {
+      "type": "object",
+      "description": "以稳定 id 为 key 的 map(非数组)。RFC 6902 路径 /enemies/<id>/... 因此稳定,头部插入不错位,AI 可按 id 精确引用。",
+      "propertyNames": { "pattern": "^[a-z0-9_]{1,32}$" },
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/enemy" }
+    },
+    "boss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "sprite": { "enum": ["godzilla", "kraken", "mecha", "demon", "worm"] },
+        "skill": { "enum": ["fireball", "laser_sweep", "summon_minions", "bullet_hell", "charge"] },
+        "hp": { "type": "integer", "minimum": 100, "maximum": 9999 },
+        "phase_count": { "type": "integer", "minimum": 1, "maximum": 3, "default": 1 }
+      },
+      "if": { "properties": { "enabled": { "const": true } } },
+      "then": { "required": ["enabled", "sprite", "skill", "hp"], "comment": "开了 Boss 就必须给形象/技能/血量,否则 RuntimeLoader 取到空" }
+    },
+    "drops": {
+      "type": "object",
+      "description": "以稳定 id 为 key 的 map,同 enemies。",
+      "propertyNames": { "pattern": "^[a-z0-9_]{1,32}$" },
+      "additionalProperties": { "$ref": "#/$defs/drop" }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["background", "difficulty", "duration"],
+      "properties": {
+        "background": { "enum": ["space", "city", "ocean", "lava", "forest"] },
+        "bgm": { "type": "string", "description": "预埋 BGM key" },
+        "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "duration": { "type": "integer", "minimum": 30, "maximum": 300, "description": "单局时长(秒)" }
+      }
+    }
+  },
+  "$defs": {
+    "weapon": {
+      "description": "按 type 分支的条件 schema(discriminator = type)。共享字段 damage/fire_rate,各 type 另有专属字段。各分支已展开为完整属性集 + additionalProperties:false。",
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "fire_rate"],
+          "properties": {
+            "type": { "const": "straight" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "fire_rate": { "type": "integer", "minimum": 1, "maximum": 20 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "fire_rate", "bullet_count"],
+          "properties": {
+            "type": { "const": "spread" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "fire_rate": { "type": "integer", "minimum": 1, "maximum": 20 },
+            "bullet_count": { "type": "integer", "minimum": 1, "maximum": 12 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "width"],
+          "properties": {
+            "type": { "const": "laser" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "width": { "type": "number", "minimum": 0.5, "maximum": 5 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "fire_rate", "turn_rate"],
+          "properties": {
+            "type": { "const": "missile" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "fire_rate": { "type": "integer", "minimum": 1, "maximum": 20 },
+            "turn_rate": { "type": "number", "minimum": 0.1, "maximum": 10 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "range"],
+          "properties": {
+            "type": { "const": "boomerang" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "range": { "type": "number", "minimum": 1, "maximum": 20 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "damage", "orbit_count"],
+          "properties": {
+            "type": { "const": "orbit" },
+            "damage": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "orbit_count": { "type": "integer", "minimum": 1, "maximum": 8 }
+          }
+        }
+      ]
+    },
+    "enemy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "behavior", "count", "hp"],
+      "properties": {
+        "type": { "enum": ["dog", "bird", "turret", "bomber", "swarm"] },
+        "behavior": { "enum": ["chase", "sine", "static", "dive", "flock"] },
+        "count": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "hp": { "type": "integer", "minimum": 1, "maximum": 999 },
+        "speed": { "type": "number", "minimum": 1, "maximum": 30, "description": "移动型敌人用;static/turret 可省" },
+        "fire_rate": { "type": "integer", "minimum": 1, "maximum": 20, "description": "turret 等射击型用" }
+      }
+    },
+    "drop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "rate"],
+      "properties": {
+        "type": { "enum": ["heal", "shield", "power", "coin", "bomb"] },
+        "rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

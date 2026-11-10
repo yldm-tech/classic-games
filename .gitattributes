@@ -1,0 +1,52 @@
+# Normalise line endings: text files are stored and checked out with LF on every platform.
+* text=auto eol=lf
+
+# ---- Godot ----
+# Godot resource and scene formats are line-oriented text and are written with LF by the editor.
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.cfg text eol=lf
+*.import text eol=lf
+*.uid text eol=lf
+
+# ---- Go, shell and build files ----
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+
+# ---- Binary assets ----
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.pck binary
+*.wasm binary
+*.zip binary
+*.pdf binary
+
+# ---- GitHub Linguist ----
+# Third-party code kept in the tree does not count towards language statistics.
+apps/client/vendor/** linguist-vendored
+# Output of `swag init`; regenerate it, never edit it by hand.
+apps/server/docs/docs.go linguist-generated
+apps/server/docs/swagger.json linguist-generated
+apps/server/docs/swagger.yaml linguist-generated
+# Sidecar files that the Godot editor writes next to scripts and imported assets.
+*.uid linguist-generated
+*.import linguist-generated
+pnpm-lock.yaml linguist-generated

@@ -1,0 +1,21 @@
+{
+  "invite_code": "KORU-2380",
+  "suggestions": [
+    {
+      "handle": "@rex",
+      "reason": {
+        "zh": "和你一样喜欢竞速",
+        "en": "Also into racing",
+        "ja": "レース好き仲間"
+      }
+    },
+    {
+      "handle": "@nova",
+      "reason": {
+        "zh": "@mei 的好友",
+        "en": "Friend of @mei",
+        "ja": "@mei のフレンド"
+      }
+    }
+  ]
+}

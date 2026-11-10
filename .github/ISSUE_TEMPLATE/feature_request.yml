@@ -1,0 +1,64 @@
+name: Feature request
+description: Propose a new capability or an improvement to an existing one.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposals for a new runtime, new runtime content or a schema version change the Mod DSL contract shared by the client, the server and the AI pipeline. Please read the "Extending the DSL" section of [CONTRIBUTING.md](https://github.com/yldm-tech/classic-games/blob/main/CONTRIBUTING.md) before filing one.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: The part of the repository the proposal mainly affects.
+      options:
+        - client (apps/client)
+        - server (apps/server)
+        - web (apps/web)
+        - cli (apps/cli)
+        - mcp (apps/mcp)
+        - sdk (packages/sdk)
+        - dsl (packages/dsl)
+        - schemas (packages/schemas)
+        - docs
+        - several components
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what stops you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should change. For DSL proposals, include an example document or patch.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: contract
+    attributes:
+      label: Does this change a schema or another shared contract?
+      description: Schemas in packages/schemas, RFC 6902 patch semantics, DSL migration or the HTTP API.
+      options:
+        - "No"
+        - "Yes"
+        - Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this.
+          required: false

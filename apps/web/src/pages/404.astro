@@ -1,0 +1,74 @@
+---
+// A static host serves this one file for every unknown path, so it cannot know the reader's locale. It carries both languages instead of guessing.
+import { LOCALES, landing, localizePath } from '../i18n/landing.ts';
+import { SITE_NAME } from '../config/site.ts';
+import LandingLayout from '../layouts/LandingLayout.astro';
+
+const title = `${LOCALES.map((locale) => landing[locale].notFound.title).join(' / ')} · ${SITE_NAME}`;
+const description = LOCALES.map((locale) => landing[locale].notFound.body).join(' ');
+---
+
+<LandingLayout locale="zh-CN" title={title} description={description} noindex>
+	<section class="fp-container not-found" aria-labelledby="not-found-title">
+		<p class="code" aria-hidden="true">404</p>
+		{
+			LOCALES.map((locale, index) => {
+				const t = landing[locale].notFound;
+				return (
+					<div class="block" lang={locale}>
+						{index === 0 ? <h1 id="not-found-title">{t.title}</h1> : <p class="title">{t.title}</p>}
+						<p class="body">{t.body}</p>
+						<p class="actions">
+							<a class="fp-button fp-button-primary" href={localizePath(locale, '/')}>
+								{t.home}
+							</a>
+							<a class="fp-button fp-button-secondary" href={localizePath(locale, '/docs/')}>
+								{t.docs}
+							</a>
+						</p>
+					</div>
+				);
+			})
+		}
+	</section>
+</LandingLayout>
+
+<style>
+	.not-found {
+		display: grid;
+		gap: 2.5rem;
+		padding-block: clamp(4rem, 12vw, 8rem);
+	}
+
+	.code {
+		font-family: var(--fp-font-mono);
+		font-size: 0.875rem;
+		letter-spacing: 0.08em;
+		color: var(--fp-accent-text);
+	}
+
+	h1,
+	.title {
+		font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.75rem);
+		font-weight: 800;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
+	}
+
+	.body {
+		margin-block-start: 0.6rem;
+		color: var(--fp-text-secondary);
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-block-start: 1.5rem;
+	}
+
+	.block + .block {
+		padding-block-start: 2.5rem;
+		border-block-start: 1px solid var(--fp-border-subtle);
+	}
+</style>

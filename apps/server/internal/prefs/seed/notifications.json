@@ -1,0 +1,99 @@
+{
+  "master_key": "push_master",
+  "master_default": true,
+  "master_label": {
+    "zh": "接收推送通知",
+    "en": "Push notifications",
+    "ja": "プッシュ通知を受け取る"
+  },
+  "master_sub": {
+    "zh": "关闭后将不再收到任何推送",
+    "en": "Turn off to stop all pushes",
+    "ja": "オフですべての通知を停止"
+  },
+  "groups": [
+    {
+      "key": "social",
+      "label": {
+        "zh": "互动消息",
+        "en": "Social",
+        "ja": "交流"
+      },
+      "items": [
+        {
+          "key": "friend_releases",
+          "default": true,
+          "label": {
+            "zh": "好友上新",
+            "en": "Friend releases",
+            "ja": "フレンドの新作"
+          }
+        },
+        {
+          "key": "remixes",
+          "default": true,
+          "label": {
+            "zh": "作品被二创",
+            "en": "Remixes of my work",
+            "ja": "作品のリミックス"
+          }
+        },
+        {
+          "key": "comments_replies",
+          "default": true,
+          "label": {
+            "zh": "评论与回复",
+            "en": "Comments & replies",
+            "ja": "コメントと返信"
+          }
+        },
+        {
+          "key": "party_invites",
+          "default": true,
+          "label": {
+            "zh": "组队邀请",
+            "en": "Party invites",
+            "ja": "パーティー招待"
+          }
+        }
+      ]
+    },
+    {
+      "key": "system",
+      "label": {
+        "zh": "系统消息",
+        "en": "System",
+        "ja": "システム"
+      },
+      "items": [
+        {
+          "key": "events_contests",
+          "default": false,
+          "label": {
+            "zh": "活动与赛事",
+            "en": "Events & contests",
+            "ja": "イベント・大会"
+          }
+        },
+        {
+          "key": "earnings",
+          "default": true,
+          "label": {
+            "zh": "收益到账",
+            "en": "Earnings received",
+            "ja": "収益の入金"
+          }
+        },
+        {
+          "key": "announcements",
+          "default": false,
+          "label": {
+            "zh": "官方公告",
+            "en": "Announcements",
+            "ja": "お知らせ"
+          }
+        }
+      ]
+    }
+  ]
+}

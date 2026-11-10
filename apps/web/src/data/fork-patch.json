@@ -1,0 +1,6 @@
+[
+	{ "op": "replace", "path": "/player/sprite", "value": "cat" },
+	{ "op": "add", "path": "/enemies/bird_1", "value": { "type": "bird", "behavior": "sine", "count": 10, "hp": 15, "speed": 12 } },
+	{ "op": "replace", "path": "/enemies/dog_1/count", "value": 30 },
+	{ "op": "remove", "path": "/enemies/turret_1" }
+]

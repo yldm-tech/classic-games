@@ -1,0 +1,39 @@
+{
+  "default_enabled": false,
+  "pin_length": 4,
+  "title": {
+    "zh": "青少年模式",
+    "en": "Teen mode",
+    "ja": "ペアレンタルモード"
+  },
+  "description": {
+    "zh": "开启后每日可玩 40 分钟,22:00–8:00 不可游玩,并自动过滤不适内容。",
+    "en": "Limits play to 40 min/day, blocks 22:00–8:00, and filters mature content.",
+    "ja": "1日40分まで、22:00〜8:00はプレイ不可、不適切な内容を自動フィルタ。"
+  },
+  "state_on": {
+    "zh": "已开启",
+    "en": "On",
+    "ja": "オン"
+  },
+  "state_off": {
+    "zh": "未开启",
+    "en": "Off",
+    "ja": "オフ"
+  },
+  "pin_label": {
+    "zh": "独立密码",
+    "en": "Separate PIN",
+    "ja": "専用PIN"
+  },
+  "pin_placeholder": {
+    "zh": "设置 4 位数字密码",
+    "en": "Set a 4-digit PIN",
+    "ja": "4桁のPINを設定"
+  },
+  "rules": {
+    "zh": ["每日 40 分钟", "宵禁 22:00–8:00", "内容过滤"],
+    "en": ["40 min daily", "Curfew 22:00–8:00", "Content filter"],
+    "ja": ["1日40分", "22:00〜8:00 制限", "コンテンツフィルタ"]
+  }
+}

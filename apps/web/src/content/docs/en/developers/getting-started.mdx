@@ -1,0 +1,117 @@
+---
+title: Getting started
+description: Run the ForgePlay backend, the Godot client and this site from source, and reproduce the CI gates locally.
+sidebar:
+  order: 1
+---
+
+import { Code } from '@astrojs/starlight/components';
+import { REPO_URL, repoFile } from '../../../../config/site.ts';
+
+ForgePlay is pre-release: there are no public builds and no app store releases. Everything below starts from source, and every `make` target used here is defined in the <a href={repoFile('Makefile')}>Makefile</a> at the repository root.
+
+## Prerequisites
+
+| Tool | Version | Used for |
+|---|---|---|
+| Go | 1.26 | Backend, CLI, MCP server and SDK. Each module's `go.mod` declares `go 1.26`, and a recent Go toolchain downloads the matching version on demand |
+| Godot | 4.6.3, exactly | Client. The version is pinned in `apps/client/.godot-version` and the test scripts check it |
+| GNU Make | Any recent version | Single entry point |
+| Node.js and pnpm | Node 22.23.4 or newer, pnpm 12 | Only needed to build this site |
+
+## Get the source
+
+<Code code={`git clone ${REPO_URL}.git\ncd classic-games`} lang="bash" />
+
+## Start the backend
+
+```bash
+make dev
+```
+
+The backend listens on `:8080` by default; use `PORT=9090 make dev` to change the port. The default database is a SQLite file in the working directory, so there is no database to install.
+
+Without `ANTHROPIC_API_KEY` the backend uses a deterministic local provider, so the whole "plain language → patch → validation" path works with no keys at all. With the key set it calls the real model. Every environment variable is listed in <a href={repoFile('.env.example')}>.env.example</a> at the repository root.
+
+Check that the backend is up:
+
+```bash
+curl http://localhost:8080/healthz
+```
+
+The API reference is served at `http://localhost:8080/swagger/index.html`.
+
+## Run the client
+
+Let Godot import the project's resources first:
+
+```bash
+make import GODOT=/path/to/godot
+```
+
+Then start the project. The client reads the backend address from the `FORGEPLAY_API` environment variable:
+
+```bash
+FORGEPLAY_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
+```
+
+You can also open `apps/client` in the Godot 4.6.3 editor.
+
+## Build the CLI and the MCP server
+
+```bash
+make cli-build    # apps/cli/bin/forgeplay
+make mcp-build    # apps/mcp/bin/forgeplay-mcp
+```
+
+With the backend running, a first session looks like this:
+
+```bash
+export PATH="$PWD/apps/cli/bin:$PATH"
+forgeplay server health
+forgeplay auth login
+forgeplay ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
+forgeplay mods list
+```
+
+The [CLI](/en/developers/cli/) and [MCP server](/en/developers/mcp/) pages go on from here.
+
+## Tests and gates
+
+| Command | What it does |
+|---|---|
+| `make test` | Backend `go test` |
+| `make vet` | `go vet` for every Go module |
+| `make dsl-test`, `make sdk-test` | Tests of the shared Go packages |
+| `make cli-test`, `make mcp-test` | Tests of the CLI and the MCP server |
+| `make go-standalone` | `go vet` and `go test` for every Go module with `GOWORK=off` |
+| `make boundary-test` | Client dependency-direction check, plus the checker's own tests |
+| `make architecture-test` | Repository-level architecture boundary check |
+| `make spike GODOT=/path/to/godot` | Headless Godot tests for the runtimes and the DSL |
+| `make ui-test GODOT=/path/to/godot` | Shell UI assertions |
+| `make ci GODOT=/path/to/godot` | Runs every Go and Godot gate in order |
+| `make ci-web` | Installs, type checks and builds this site |
+
+`make help` lists all targets. The real client-server integration test is a separate script. It starts the backend on port 8099 and has the Godot client call the real endpoints:
+
+```bash
+GODOT=/path/to/godot scripts/spike-integration.sh
+```
+
+## Build this site
+
+This site is `apps/web` in the repository, built with Astro and Starlight. From the repository root:
+
+```bash
+pnpm install
+pnpm web:dev      # local development
+pnpm web:check    # type check
+pnpm web:build    # static output in apps/web/dist
+```
+
+## Next steps
+
+- Work from a terminal: [CLI](/en/developers/cli/)
+- Connect ForgePlay to an AI assistant: [MCP server](/en/developers/mcp/)
+- Call the backend from Go: [Go SDK](/en/developers/sdk/)
+- Understand the design: [Architecture](/en/docs/04-architecture/) and [Mod DSL design](/en/docs/05-dsl-design/), both in Chinese

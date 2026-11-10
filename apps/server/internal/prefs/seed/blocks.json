@@ -1,0 +1,20 @@
+{
+  "blocked": [
+    {
+      "user_id": "@grif",
+      "blocked_at": {
+        "zh": "3 天前屏蔽",
+        "en": "Blocked 3d ago",
+        "ja": "3日前にブロック"
+      }
+    },
+    {
+      "user_id": "@zed",
+      "blocked_at": {
+        "zh": "上周屏蔽",
+        "en": "Blocked last week",
+        "ja": "先週ブロック"
+      }
+    }
+  ]
+}

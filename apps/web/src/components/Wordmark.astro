@@ -1,0 +1,46 @@
+---
+// Two-tone wordmark matching the client's brand_logo widget ("Forge" in the primary text colour, "Play" in ember), with the fork mark that is also the favicon. Used by the landing header and footer and as Starlight's site title, so every page carries the same brand element.
+interface Props {
+	href: string;
+	label: string;
+}
+
+const { href, label } = Astro.props;
+---
+
+<a class="fp-wordmark" href={href} aria-label={label}>
+	<svg class="fp-wordmark-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false">
+		<rect width="32" height="32" rx="8" fill="#ff4d1a"></rect>
+		<path d="M16 24.5V18m0 0c0-4.2-6-4.3-6-9m6 9c0-4.2 6-4.3 6-9" fill="none" stroke="#1a0803" stroke-width="2.6" stroke-linecap="round"></path>
+		<circle cx="10" cy="8.5" r="2.8" fill="#1a0803"></circle>
+		<circle cx="22" cy="8.5" r="2.8" fill="#1a0803"></circle>
+		<circle cx="16" cy="24.5" r="2.8" fill="#1a0803"></circle>
+	</svg>
+	<span class="fp-wordmark-text" translate="no">Forge<span class="fp-wordmark-play">Play</span></span>
+</a>
+
+<style>
+	.fp-wordmark {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		color: var(--fp-text);
+		font-family: var(--fp-font-sans);
+		font-size: 1.1875rem;
+		font-weight: 750;
+		letter-spacing: -0.02em;
+		line-height: 1;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.fp-wordmark-mark {
+		flex: none;
+		width: 1.75rem;
+		height: 1.75rem;
+	}
+
+	.fp-wordmark-play {
+		color: var(--fp-accent-text);
+	}
+</style>

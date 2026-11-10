@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "runtime": "shooter",
+    "runtime_version": "1.0.0",
+    "fork_of": null
+  },
+  "player": {
+    "sprite": "cat",
+    "hp": 100,
+    "speed": 10,
+    "size": 1.0,
+    "weapon": {
+      "type": "straight",
+      "damage": 20,
+      "fire_rate": 5
+    }
+  },
+  "enemies": {
+    "dog_1": {
+      "type": "dog",
+      "behavior": "chase",
+      "count": 30,
+      "hp": 30,
+      "speed": 8
+    },
+    "bird_1": {
+      "type": "bird",
+      "behavior": "sine",
+      "count": 10,
+      "hp": 15,
+      "speed": 12
+    }
+  },
+  "boss": {
+    "enabled": true,
+    "sprite": "mecha",
+    "skill": "bullet_hell",
+    "hp": 2000,
+    "phase_count": 2
+  },
+  "drops": {
+    "heal_1": { "type": "heal", "rate": 0.1 },
+    "shield_1": { "type": "shield", "rate": 0.05 }
+  },
+  "stage": {
+    "background": "space",
+    "bgm": "ignition",
+    "difficulty": 2,
+    "duration": 90
+  }
+}

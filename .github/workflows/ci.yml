@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# The workflow only reads the repository. Nothing here publishes, deploys or writes back.
+permissions:
+  contents: read
+
+# A newer push to the same pull request supersedes the run in progress. Runs on main are never cancelled, so every commit there keeps its own result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every job runs on a GitHub-hosted runner: a fresh virtual machine per job that is discarded afterwards. That is what makes it safe to build pull requests from forks. For a pull_request event GitHub takes the workflow file from the pull request itself, so a condition written in this file cannot keep outside code off a machine; only the choice of runner can. Do not move these jobs to a persistent self-hosted runner.
+jobs:
+  server:
+    name: server (go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: apps/server/go.mod
+          cache: false
+      - run: go vet ./...
+      - run: go test ./... -count=1
+
+  go-modules:
+    name: go modules (dsl, sdk, cli, mcp)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: go.work
+          cache: false
+      - name: Check formatting
+        run: make fmt-check
+      - name: Check go.mod and go.sum are tidy
+        run: make tidy-check
+      - name: Vet every module (workspace)
+        run: make vet
+      - name: Test shared packages (workspace)
+        run: make dsl-test sdk-test
+      - name: Test CLI (workspace)
+        run: make cli-test
+      - name: Test MCP server (workspace)
+        run: make mcp-test
+      - name: Vet and test every module on its own (GOWORK=off)
+        run: make go-standalone
+      - name: Build CLI and MCP server
+        run: make cli-build mcp-build
+
+  web:
+    name: web (astro)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      # Installs the pnpm version named by "packageManager" in the root package.json.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      # apps/web declares node >=22.23.4 in "engines"; 24 is the release line the site is built and checked with.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install dependencies
+        run: make web-install
+      - name: Type check
+        run: make web-check
+      - name: Build site and check links
+        run: make web-build
+
+  client-spike:
+    name: client spike (godot headless)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+      - uses: chickensoft-games/setup-godot@ac93246ea68518a384c1c280a496e5989341f2f6 # v2.4.3
+        with:
+          version: 4.6.3
+          use-dotnet: false
+      - name: Verify test runner contract
+        run: make script-test
+      - name: Verify client architecture boundaries
+        run: make boundary-test
+      - name: Verify completed modular architecture
+        run: make architecture-test
+      # Publishing a repository publishes its history, so a public repository must never have held the internal notes on any ref. The job checks out the full history (fetch-depth: 0) for this step. It is skipped while the repository is private, where the notes are part of the existing history.
+      - name: Verify no internal documentation in public history
+        if: ${{ !github.event.repository.private }}
+        run: make publish-check
+      - name: Run HTTP boundary tests
+        run: make http-test GODOT=godot
+      - name: Run identity slice tests
+        run: make identity-test GODOT=godot
+      - name: Run catalog slice tests
+        run: make catalog-test GODOT=godot
+      - name: Run creation slice tests
+        run: make creation-test GODOT=godot
+      - name: Run community slice tests
+        run: make community-test GODOT=godot
+      - name: Run engagement slice tests
+        run: make engagement-test GODOT=godot
+      - name: Run commerce slice tests
+        run: make commerce-test GODOT=godot
+      - name: Run operations slice tests
+        run: make operations-test GODOT=godot
+      - name: Run shared pattern tests
+        run: make patterns-test GODOT=godot
+      - name: Run application root tests
+        run: make app-test GODOT=godot
+      - name: Run Phase 0 spike
+        run: make spike GODOT=godot
+      - name: Run shell UI tests
+        run: make ui-test GODOT=godot
+      - name: Launch main scene
+        run: make launch-test GODOT=godot

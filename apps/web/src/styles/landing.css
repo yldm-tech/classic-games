@@ -1,0 +1,275 @@
+/* Global styles for the hand-written landing pages. Docs pages are styled by Starlight plus starlight.css; this file is only imported by LandingLayout. */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	scroll-padding-top: 5rem;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background-color: var(--fp-bg);
+	color: var(--fp-text);
+	font-family: var(--fp-font-sans);
+	font-size: 1rem;
+	line-height: 1.7;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure,
+pre {
+	margin: 0;
+}
+
+ul,
+ol {
+	padding: 0;
+	list-style: none;
+}
+
+img,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+a {
+	color: inherit;
+}
+
+code,
+pre,
+kbd {
+	font-family: var(--fp-font-mono);
+}
+
+:focus-visible {
+	outline: 2px solid var(--fp-focus);
+	outline-offset: 3px;
+	border-radius: var(--fp-radius-xs);
+}
+
+::selection {
+	background: var(--fp-ember-500);
+	color: var(--fp-on-accent);
+}
+
+.fp-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.fp-skip {
+	position: absolute;
+	inset-block-start: 0.75rem;
+	inset-inline-start: 0.75rem;
+	z-index: 30;
+	padding: 0.5rem 0.9rem;
+	border-radius: var(--fp-radius-sm);
+	background: var(--fp-accent);
+	color: var(--fp-on-accent);
+	font-weight: 600;
+	text-decoration: none;
+	transform: translateY(-200%);
+}
+
+.fp-skip:focus-visible {
+	transform: none;
+}
+
+.fp-container {
+	width: 100%;
+	max-width: 72rem;
+	margin-inline: auto;
+	padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Section scaffolding: a mono index label, a heading and a lead, then the section's own content. */
+.fp-section {
+	padding-block: clamp(3.5rem, 8vw, 6.5rem);
+	border-block-start: 1px solid var(--fp-border-subtle);
+}
+
+.fp-section-head {
+	max-width: 46rem;
+	margin-block-end: clamp(2rem, 4vw, 3rem);
+}
+
+.fp-eyebrow {
+	display: inline-block;
+	margin-block-end: 0.9rem;
+	font-family: var(--fp-font-mono);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--fp-accent-text);
+}
+
+.fp-h2 {
+	font-size: clamp(1.625rem, 1.1rem + 2vw, 2.5rem);
+	font-weight: 700;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	text-wrap: balance;
+}
+
+.fp-phrase {
+	display: inline-block;
+}
+
+.fp-lead {
+	margin-block-start: 1rem;
+	font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+	color: var(--fp-text-secondary);
+	text-wrap: pretty;
+}
+
+.fp-h3 {
+	font-size: 1.125rem;
+	font-weight: 650;
+	line-height: 1.35;
+	letter-spacing: -0.005em;
+}
+
+.fp-card {
+	border: 1px solid var(--fp-border);
+	border-radius: var(--fp-radius-lg);
+	background: var(--fp-surface);
+}
+
+.fp-path {
+	font-family: var(--fp-font-mono);
+	font-size: 0.8125rem;
+	color: var(--fp-text-muted);
+	overflow-wrap: anywhere;
+}
+
+.fp-chip {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.625rem;
+	padding: 0.1rem 0.6rem;
+	border: 1px solid var(--fp-border);
+	border-radius: var(--fp-radius-xs);
+	background: var(--fp-surface-input);
+	font-family: var(--fp-font-mono);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+	color: var(--fp-text-secondary);
+	white-space: nowrap;
+}
+
+/* Buttons keep the client's 44px minimum hit target. */
+.fp-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 2.75rem;
+	padding: 0.55rem 1.25rem;
+	border: 1px solid transparent;
+	border-radius: var(--fp-radius-md);
+	font-size: 1rem;
+	font-weight: 650;
+	line-height: 1.3;
+	text-decoration: none;
+	transition:
+		background-color var(--fp-dur-fast) ease,
+		border-color var(--fp-dur-fast) ease,
+		transform var(--fp-dur-fast) var(--fp-ease-snap);
+}
+
+.fp-button-primary {
+	background: var(--fp-accent);
+	color: var(--fp-on-accent);
+}
+
+.fp-button-primary:hover {
+	background: var(--fp-accent-hover);
+}
+
+.fp-button-secondary {
+	border-color: var(--fp-border-strong);
+	background: transparent;
+	color: var(--fp-text);
+}
+
+.fp-button-secondary:hover {
+	border-color: var(--fp-text-muted);
+	background: var(--fp-surface);
+}
+
+.fp-button:active {
+	transform: translateY(1px);
+}
+
+.fp-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: var(--fp-accent-text);
+	font-weight: 600;
+	text-decoration: underline;
+	text-decoration-color: transparent;
+	text-underline-offset: 0.25em;
+	transition: text-decoration-color var(--fp-dur-fast) ease;
+}
+
+.fp-link:hover {
+	text-decoration-color: currentColor;
+}
+
+.fp-link::after {
+	content: '→';
+	font-family: var(--fp-font-mono);
+}
+
+.fp-link[data-external]::after {
+	content: '↗';
+}
+
+.fp-section-foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 2rem;
+	margin-block-start: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}

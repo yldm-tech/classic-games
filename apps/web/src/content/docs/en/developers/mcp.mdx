@@ -1,0 +1,99 @@
+---
+title: MCP server
+description: forgeplay-mcp exposes ForgePlay's DSL tools and backend API to AI assistants as Model Context Protocol tools.
+sidebar:
+  order: 3
+---
+
+import { repoDir, repoFile } from '../../../../config/site.ts';
+
+`forgeplay-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Its source is in <a href={repoDir('apps/mcp')}>apps/mcp</a> (Go module `forgeplay/mcp`), built on the official MCP Go SDK. It lets an MCP-capable AI assistant read schemas, validate and patch DSL, and fork, edit and publish mods through the backend.
+
+:::note
+For client configuration files, the behaviour of each tool and the security notes, see <a href={repoFile('apps/mcp/README.md')}>apps/mcp/README.md</a>.
+:::
+
+## Build
+
+```bash
+make mcp-build          # writes apps/mcp/bin/forgeplay-mcp
+```
+
+Built there, the binary finds the schemas in `packages/schemas` of the repository by itself, whatever directory a client starts it from: the directory of the binary is searched before the working directory, so a project with its own `packages/schemas` directory cannot replace them.
+
+## Tools
+
+| Tool | Group | Needs a token | What it does |
+|---|---|---|---|
+| `list_runtimes` | Offline | No | Lists the runtimes and versions that have a schema |
+| `get_dsl_schema` | Offline | No | Returns the JSON Schema of a runtime ref such as `shooter@1.0.0` |
+| `validate_dsl` | Offline | No | Validates a DSL document and lists each violation with its JSON Pointer |
+| `apply_dsl_patch` | Offline | No | Applies an RFC 6902 patch and validates the result |
+| `list_games` | Backend, read | No | Searches and pages through published games |
+| `get_game` | Backend, read | No | Details of one game |
+| `get_game_dsl` | Backend, read | No | The effective DSL of a game |
+| `get_mod_dsl` | Backend, read | For drafts | The effective DSL of a mod |
+| `list_my_drafts` | Backend, read | Yes | The signed-in user's draft mods |
+| `fork_game` | Backend, write | Yes | Copies a published game into a new draft mod |
+| `create_mod` | Backend, write | Yes | Creates a draft on a runtime baseline |
+| `update_mod` | Backend, write | Yes | Saves a patch on top of a draft and returns the new mod id |
+| `generate_mod` | Backend, write | No | Has the backend AI turn a request into a validated patch; spends AI quota, stores nothing |
+| `publish_mod` | Backend, write | Yes | Submits a draft as a game; it enters moderation |
+
+The offline tools run the same `packages/dsl` code as the backend. `create_mod` and `update_mod` apply the patch and validate the result locally before anything is sent, so content that breaks the schema is never stored.
+
+The server also offers the schemas as resources (`forgeplay://schemas/<runtime>-<version>`) and a resource template for the effective DSL of a game (`forgeplay://games/{game_id}/dsl`).
+
+## How to run it
+
+| Flag | Meaning |
+|---|---|
+| `--transport stdio` | Speaks over stdio. This is the default and suits MCP clients that start the server as a child process |
+| `--transport http` | Serves streamable HTTP at `http://<addr>/mcp` |
+| `--addr host:port` | Listen address for `--transport http`; the default is `127.0.0.1:8765` |
+| `--allowed-host <name>` | Host name clients may use to reach a non-loopback `--addr`, such as `mcp.example.com`; repeatable |
+| `--read-only` | Does not register `fork_game`, `create_mod`, `update_mod`, `generate_mod` and `publish_mod` |
+| `--version` | Prints the version and exits |
+
+The HTTP transport has no authentication of its own: anyone who can reach the listener uses the configured token. Keep it on the loopback address or put an authenticating proxy in front of it. A listener on a non-loopback address only serves requests whose `Host` header is the IP address they arrive on or a name given with `--allowed-host`; that stops DNS rebinding and is not authentication.
+
+## Environment variables
+
+| Variable | Meaning |
+|---|---|
+| `FORGEPLAY_SERVER_URL` | Backend root URL; the default is `http://localhost:8080` |
+| `FORGEPLAY_TOKEN` | Bearer token of the account the server acts as. Without it the server is anonymous and the tools that need a token return an error |
+| `FORGEPLAY_SCHEMA_DIR` | Directory with the Mod DSL schemas. When unset, `packages/schemas` is looked up above the binary, then above the working directory; a `packages/schemas` directory without `<runtime>-<version>.schema.json` files is skipped |
+| `FORGEPLAY_LANG` | Language of backend messages and titles: `zh`, `en` or `ja` |
+
+The token comes from the CLI:
+
+```bash
+forgeplay auth login
+export FORGEPLAY_TOKEN="$(forgeplay auth token)"
+```
+
+## Connect an MCP client
+
+Most MCP clients start a stdio server from a configuration of this shape. Which file it goes in depends on the client you use:
+
+```json
+{
+  "mcpServers": {
+    "forgeplay": {
+      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+      "args": [],
+      "env": {
+        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
+        "FORGEPLAY_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+A project-level configuration file is usually committed, so keep the token in a user-level file. To let an assistant explore without being able to change anything, pass `"args": ["--read-only"]` and leave the token out.
+
+## The boundary does not move
+
+An assistant connected through MCP is under the same constraints as the platform's built-in AI: all it can produce is DSL and RFC 6902 patches, the result has to pass JSON Schema validation, and there is no path that carries executable code into a game. The reasoning is ADR-004 in the [decision log](/en/docs/decisions/) (Chinese).

@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "cat_character",
+      "name": {"zh": "角色", "en": "Character", "ja": "キャラ"},
+      "items": [
+        {"id": "av_ember_knight", "name": {"zh": "余烬骑士", "en": "Ember Knight", "ja": "エンバー騎士"}, "tone": "ember", "owned": true},
+        {"id": "av_volt_ghost", "name": {"zh": "电光幽灵", "en": "Volt Ghost", "ja": "電光ゴースト"}, "tone": "volt", "owned": true},
+        {"id": "av_deep_courier", "name": {"zh": "深海信使", "en": "Deep Courier", "ja": "深海の使者"}, "tone": "ocean", "owned": false},
+        {"id": "av_amethyst_mage", "name": {"zh": "紫晶法师", "en": "Amethyst Mage", "ja": "紫晶の魔導士"}, "tone": "plum", "owned": false}
+      ]
+    },
+    {
+      "id": "cat_ride",
+      "name": {"zh": "座驾", "en": "Ride", "ja": "乗り物"},
+      "items": [
+        {"id": "av_lava_board", "name": {"zh": "熔岩滑板", "en": "Lava Board", "ja": "溶岩ボード"}, "tone": "rust", "owned": true},
+        {"id": "av_neon_bike", "name": {"zh": "霓虹机车", "en": "Neon Bike", "ja": "ネオンバイク"}, "tone": "volt", "owned": false},
+        {"id": "av_tide_speeder", "name": {"zh": "潮汐快艇", "en": "Tide Speeder", "ja": "潮汐艇"}, "tone": "ocean", "owned": true},
+        {"id": "av_ash_rover", "name": {"zh": "灰烬战车", "en": "Ash Rover", "ja": "灰のローバー"}, "tone": "steel", "owned": false}
+      ]
+    },
+    {
+      "id": "cat_effect",
+      "name": {"zh": "特效", "en": "Effect", "ja": "エフェクト"},
+      "items": [
+        {"id": "av_ember_trail", "name": {"zh": "拖尾火星", "en": "Ember Trail", "ja": "残火トレイル"}, "tone": "ember", "owned": true},
+        {"id": "av_arc_sparks", "name": {"zh": "电弧粒子", "en": "Arc Sparks", "ja": "アーク粒子"}, "tone": "volt", "owned": false},
+        {"id": "av_ripple", "name": {"zh": "水波涟漪", "en": "Ripple", "ja": "波紋"}, "tone": "ocean", "owned": true},
+        {"id": "av_ash_drift", "name": {"zh": "落灰飘屑", "en": "Ash Drift", "ja": "灰の舞い"}, "tone": "steel", "owned": true}
+      ]
+    }
+  ]
+}

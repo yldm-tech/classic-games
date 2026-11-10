@@ -1,0 +1,322 @@
+---
+import Phrases from '../Phrases.astro';
+import { repoFile } from '../../config/site.ts';
+import { EXAMPLE_SOURCES, enemyTotals, patchLines } from '../../data/dsl-example.ts';
+import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].bet;
+
+const sources = [
+	{ label: t.sources.prompt, path: EXAMPLE_SOURCES.prompt },
+	{ label: t.sources.baseline, path: EXAMPLE_SOURCES.baseline },
+	{ label: t.sources.golden, path: EXAMPLE_SOURCES.golden },
+	{ label: t.sources.goTest, path: EXAMPLE_SOURCES.goTest },
+	{ label: t.sources.godotTest, path: EXAMPLE_SOURCES.godotTest },
+];
+---
+
+<section class="fp-section" id="dsl" aria-labelledby="dsl-title">
+	<div class="fp-container">
+		<div class="fp-section-head">
+			<p class="fp-eyebrow">{t.eyebrow}</p>
+			<h2 class="fp-h2" id="dsl-title"><Phrases text={t.title} /></h2>
+			<p class="fp-lead">{t.lead}</p>
+		</div>
+
+		<ul class="pillars">
+			{
+				t.pillars.map((pillar) => (
+					<li class="pillar">
+						<h3 class="fp-h3">{pillar.title}</h3>
+						<p>{pillar.body}</p>
+					</li>
+				))
+			}
+		</ul>
+
+		<p class="tradeoff">
+			<span>{t.tradeoff}</span>
+			<a class="fp-link" href={localizePath(locale, '/docs/decisions/')}>{t.tradeoffLink}</a>
+		</p>
+
+		<div class="example fp-card">
+			<div class="example-head">
+				<h3 class="fp-h3">{t.exampleTitle}</h3>
+				<p>{t.exampleLead}</p>
+			</div>
+			<div class="table-wrap">
+				<table>
+					<caption class="fp-sr-only">{t.tableCaption}</caption>
+					<thead>
+						<tr>
+							<th scope="col">{t.columns.op}</th>
+							<th scope="col">{t.columns.path}</th>
+							<th scope="col">{t.columns.before}</th>
+							<th scope="col">{t.columns.after}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							patchLines.map((line) => (
+								<tr data-op={line.op}>
+									<td data-label={t.columns.op}>
+										<span class="kind">{line.op}</span>
+									</td>
+									<th scope="row" data-label={t.columns.path}>
+										<code>{line.path}</code>
+									</th>
+									<td data-label={t.columns.before}>{line.before ? <code>{line.before}</code> : <span class="none">{t.absent}</span>}</td>
+									<td data-label={t.columns.after}>{line.after ? <code class="after">{line.after}</code> : <span class="none">{t.removed}</span>}</td>
+								</tr>
+							))
+						}
+					</tbody>
+				</table>
+			</div>
+			<p class="total">{t.total(enemyTotals.before, enemyTotals.after)}</p>
+			<div class="sources">
+				<span class="sources-label">{t.sourcesLabel}</span>
+				<ul>
+					{
+						sources.map((source) => (
+							<li>
+								<a href={repoFile(source.path)} title={source.path}>
+									{source.label}
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+
+		<div class="fp-section-foot">
+			<a class="fp-link" href={localizePath(locale, '/docs/05-dsl-design/')}>{t.readMore}</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.pillars {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.pillar {
+		padding: 1.4rem 1.4rem 1.5rem;
+		border: 1px solid var(--fp-border);
+		border-radius: var(--fp-radius-lg);
+		background: var(--fp-surface);
+	}
+
+	.pillar p {
+		margin-block-start: 0.6rem;
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+		overflow-wrap: anywhere;
+	}
+
+	.tradeoff {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem 1.25rem;
+		margin-block: 1.5rem clamp(2rem, 4vw, 3rem);
+		padding-inline-start: 1rem;
+		border-inline-start: 2px solid var(--fp-accent);
+		color: var(--fp-text-secondary);
+	}
+
+	.example {
+		overflow: hidden;
+	}
+
+	.example-head {
+		padding: 1.4rem 1.4rem 1.1rem;
+	}
+
+	.example-head p {
+		margin-block-start: 0.5rem;
+		max-width: 46rem;
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	.table-wrap {
+		border-block: 1px solid var(--fp-border-subtle);
+		background: var(--fp-bg-sunken);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.8125rem;
+		line-height: 1.6;
+	}
+
+	th,
+	td {
+		padding: 0.7rem 1.4rem 0.7rem 0;
+		text-align: start;
+		vertical-align: top;
+		font-weight: 400;
+	}
+
+	th:first-child,
+	td:first-child {
+		padding-inline-start: 1.4rem;
+	}
+
+	thead th {
+		font-family: var(--fp-font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--fp-text-muted);
+		white-space: nowrap;
+	}
+
+	tbody tr {
+		border-block-start: 1px solid var(--fp-border-subtle);
+	}
+
+	code {
+		color: var(--fp-text-secondary);
+		overflow-wrap: anywhere;
+	}
+
+	tbody th code {
+		color: var(--fp-text);
+		white-space: nowrap;
+	}
+
+	code.after {
+		color: var(--fp-ai-text);
+	}
+
+	.none {
+		color: var(--fp-text-muted);
+		font-style: italic;
+	}
+
+	.kind {
+		display: inline-block;
+		min-width: 4.4rem;
+		padding: 0.05rem 0.45rem;
+		border-radius: var(--fp-radius-xs);
+		background: var(--fp-tint-ember);
+		color: var(--fp-accent-text-on-tint);
+		font-family: var(--fp-font-mono);
+		text-align: center;
+	}
+
+	tr[data-op='add'] .kind {
+		background: var(--fp-tint-volt);
+		color: var(--fp-ai-text);
+	}
+
+	tr[data-op='remove'] .kind {
+		background: var(--fp-tint-danger);
+		color: var(--fp-danger-text);
+	}
+
+	.total {
+		padding: 1rem 1.4rem 0;
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	.sources {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.4rem 1rem;
+		padding: 0.75rem 1.4rem 1.3rem;
+		font-size: 0.875rem;
+	}
+
+	.sources-label {
+		font-family: var(--fp-font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--fp-text-muted);
+	}
+
+	.sources ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem 1.1rem;
+	}
+
+	.sources a {
+		color: var(--fp-text-secondary);
+		text-underline-offset: 0.25em;
+	}
+
+	.sources a:hover {
+		color: var(--fp-accent-text);
+	}
+
+	@media (min-width: 52rem) {
+		.pillars {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	/* Below this width the four columns no longer fit, so each operation becomes a small labelled block. */
+	@media (max-width: 47.99rem) {
+		thead {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+		}
+
+		table,
+		tbody,
+		tr,
+		th,
+		td {
+			display: block;
+		}
+
+		tbody tr {
+			padding: 0.9rem 1.4rem;
+		}
+
+		tbody tr:first-child {
+			border-block-start: 0;
+		}
+
+		tbody th,
+		tbody td,
+		tbody td:first-child {
+			display: grid;
+			grid-template-columns: 3.75rem minmax(0, 1fr);
+			gap: 0.75rem;
+			padding: 0.2rem 0;
+		}
+
+		tbody th code {
+			white-space: normal;
+		}
+
+		tbody th::before,
+		tbody td::before {
+			content: attr(data-label);
+			font-family: var(--fp-font-mono);
+			font-size: 0.75rem;
+			color: var(--fp-text-muted);
+		}
+
+		.kind {
+			justify-self: start;
+		}
+	}
+</style>

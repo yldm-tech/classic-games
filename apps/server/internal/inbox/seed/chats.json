@@ -1,0 +1,62 @@
+[
+  {
+    "handle": "@mei",
+    "online": true,
+    "unread": 2,
+    "time": {
+      "zh": "14:02",
+      "en": "14:02",
+      "ja": "14:02"
+    },
+    "last_message": {
+      "zh": "夜间地图我又改了一版,来试试",
+      "en": "Tweaked the night map again — try it",
+      "ja": "夜マップまた直した、試して"
+    }
+  },
+  {
+    "handle": "@bo",
+    "online": true,
+    "unread": 1,
+    "time": {
+      "zh": "昨天",
+      "en": "Yesterday",
+      "ja": "昨日"
+    },
+    "last_message": {
+      "zh": "明晚组队冲周榜?",
+      "en": "Squad up for weekly tomorrow?",
+      "ja": "明日の夜、週間ランキング行く?"
+    }
+  },
+  {
+    "handle": "@yuna",
+    "online": false,
+    "unread": 0,
+    "time": {
+      "zh": "周二",
+      "en": "Tue",
+      "ja": "火曜"
+    },
+    "last_message": {
+      "zh": "花园的 BGM 选好了",
+      "en": "Picked the garden BGM",
+      "ja": "庭のBGM決めた"
+    }
+  },
+  {
+    "handle": "@jin",
+    "online": false,
+    "unread": 0,
+    "time": {
+      "zh": "上周",
+      "en": "Last week",
+      "ja": "先週"
+    },
+    "last_message": {
+      "zh": "[图片] 新关卡草图",
+      "en": "[image] new level sketch",
+      "ja": "[画像] 新レベルのラフ"
+    }
+  }
+]

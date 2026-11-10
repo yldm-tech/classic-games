@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "id": "event_weekend_cup",
+      "title": {"zh": "周末杯 · 竞速赛", "en": "Weekend Cup · Racing", "ja": "週末杯 · レース"},
+      "desc": {"zh": "总奖池 50 000 创作点,前 100 名有奖", "en": "50 000-point prize pool, top 100 win", "ja": "賞金総額 50 000 ポイント、上位100名に賞"},
+      "ends_in": {"zh": "2天", "en": "2d", "ja": "2日"},
+      "tone": "ember"
+    },
+    {
+      "id": "event_ai_coforge",
+      "title": {"zh": "AI 共创周", "en": "AI Co-forge Week", "ja": "AI 共創ウィーク"},
+      "desc": {"zh": "用 AI 做一款解谜游戏,官方推荐位等你", "en": "Make a puzzle game with AI, get featured", "ja": "AI でパズルを作って公式紹介枠へ"},
+      "ends_in": {"zh": "5天", "en": "5d", "ja": "5日"},
+      "tone": "moss"
+    },
+    {
+      "id": "event_first_launch",
+      "title": {"zh": "新人首发月", "en": "First Launch Month", "ja": "デビュー月間"},
+      "desc": {"zh": "首次发布作品,曝光与收益翻倍", "en": "Double exposure & earnings on your debut", "ja": "初公開作品の露出と収益が2倍"},
+      "ends_in": {"zh": "12天", "en": "12d", "ja": "12日"},
+      "tone": "plum"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "achievements": [
+    {"id": "ach_first_launch", "name": {"zh": "首发上线", "en": "First launch", "ja": "初リリース"}, "desc": {"zh": "发布你的第一款游戏", "en": "Publish your first game", "ja": "最初のゲームを公開"}, "progress": 1, "target": 1, "reward": 50},
+    {"id": "ach_remix_pro", "name": {"zh": "二创达人", "en": "Remix pro", "ja": "リミックス職人"}, "desc": {"zh": "二创 10 款游戏", "en": "Remix 10 games", "ja": "10本リミックス"}, "progress": 7, "target": 10, "reward": 100},
+    {"id": "ach_weekly_top10", "name": {"zh": "周榜前十", "en": "Weekly top 10", "ja": "週間トップ10"}, "desc": {"zh": "任意作品进入周榜前 10", "en": "Any game reaches weekly top 10", "ja": "いずれかの作品が週間10位以内"}, "progress": 1, "target": 1, "reward": 200},
+    {"id": "ach_crowd_puller", "name": {"zh": "万人空巷", "en": "Crowd puller", "ja": "大入り"}, "desc": {"zh": "单款作品 10 万次游玩", "en": "100k plays on one game", "ja": "1作品で10万プレイ"}, "progress": 48200, "target": 100000, "reward": 500},
+    {"id": "ach_social_butterfly", "name": {"zh": "社交蝴蝶", "en": "Social butterfly", "ja": "社交家"}, "desc": {"zh": "添加 10 位好友", "en": "Add 10 friends", "ja": "フレンド10人"}, "progress": 4, "target": 10, "reward": 80},
+    {"id": "ach_touch_master", "name": {"zh": "手感大师", "en": "Touch master", "ja": "神操作"}, "desc": {"zh": "单局得分突破 50 000", "en": "Score 50 000 in one run", "ja": "1プレイで50 000点"}, "progress": 32000, "target": 50000, "reward": 150}
+  ]
+}

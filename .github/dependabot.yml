@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # The Go modules reference each other through relative replace directives, so they are updated together to keep shared dependencies on the same version.
+  - package-ecosystem: gomod
+    directories:
+      - /apps/server
+      - /apps/cli
+      - /apps/mcp
+      - /packages/dsl
+      - /packages/sdk
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      go-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # pnpm workspace rooted at the repository root; it covers apps/web.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

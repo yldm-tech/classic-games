@@ -1,0 +1,222 @@
+---
+import { exampleRuntime, patchLines } from '../../data/dsl-example.ts';
+import { type Locale, landing } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].console;
+---
+
+<figure class="console" aria-label={t.ariaLabel}>
+	<div class="block">
+		<p class="label">{t.promptLabel}</p>
+		<p class="prompt" lang="zh-CN">「{t.prompt}」</p>
+		{t.promptTranslation && <p class="translation">“{t.promptTranslation}”</p>}
+	</div>
+	<div class="block">
+		<p class="label label-ai">
+			<span class="pulse" aria-hidden="true"></span>
+			<span>{t.patchLabel}</span>
+			<span class="runtime">{exampleRuntime}</span>
+		</p>
+		<ol class="ops">
+			{
+				patchLines.map((line) => (
+					<li class="op" data-op={line.op}>
+						<span class="kind">{line.op}</span>
+						<span class="target">
+							<code class="path">{line.path}</code>
+							{line.value && <code class="value">{line.value}</code>}
+						</span>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+	<div class="block">
+		<p class="label">{t.checksLabel}</p>
+		<ul class="checks">
+			<li><span class="tick" aria-hidden="true">✓</span>{t.checkSchema}</li>
+			<li><span class="tick" aria-hidden="true">✓</span>{t.checkParity}</li>
+		</ul>
+	</div>
+	<figcaption>{t.source}</figcaption>
+</figure>
+
+<style>
+	.console {
+		border: 1px solid var(--fp-border);
+		border-radius: var(--fp-radius-xl);
+		background: var(--fp-surface);
+		box-shadow: 0 1.5rem 4rem -2rem var(--fp-glow);
+		overflow: hidden;
+	}
+
+	.block {
+		padding: 1.1rem 1.25rem 1.2rem;
+		border-block-end: 1px solid var(--fp-border-subtle);
+	}
+
+	.label {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin-block-end: 0.6rem;
+		font-family: var(--fp-font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--fp-text-muted);
+	}
+
+	.label-ai {
+		color: var(--fp-ai-text);
+	}
+
+	.pulse {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--fp-ai-text);
+	}
+
+	.runtime {
+		margin-inline-start: auto;
+		color: var(--fp-text-muted);
+		letter-spacing: 0;
+		text-transform: none;
+	}
+
+	.prompt {
+		font-size: 1.1875rem;
+		font-weight: 600;
+		line-height: 1.5;
+	}
+
+	.translation {
+		margin-block-start: 0.3rem;
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	.ops {
+		display: grid;
+		gap: 0.45rem;
+	}
+
+	.op {
+		display: grid;
+		grid-template-columns: 4.6rem minmax(0, 1fr);
+		align-items: start;
+		gap: 0.75rem;
+		font-family: var(--fp-font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.6;
+	}
+
+	.kind {
+		padding: 0.05rem 0.45rem;
+		border-radius: var(--fp-radius-xs);
+		background: var(--fp-tint-ember);
+		color: var(--fp-accent-text);
+		text-align: center;
+	}
+
+	.op[data-op='add'] .kind {
+		background: var(--fp-tint-volt);
+		color: var(--fp-ai-text);
+	}
+
+	.op[data-op='remove'] .kind {
+		background: var(--fp-tint-danger);
+		color: var(--fp-danger-text);
+	}
+
+	.target {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 0.75rem;
+		min-width: 0;
+	}
+
+	.path {
+		color: var(--fp-text);
+		overflow-wrap: anywhere;
+	}
+
+	.value {
+		color: var(--fp-text-secondary);
+		overflow-wrap: anywhere;
+	}
+
+	.checks {
+		display: grid;
+		gap: 0.35rem;
+		font-size: 0.9375rem;
+		color: var(--fp-text-secondary);
+	}
+
+	.checks li {
+		display: flex;
+		gap: 0.6rem;
+	}
+
+	.tick {
+		flex: none;
+		font-family: var(--fp-font-mono);
+		font-weight: 700;
+		color: var(--fp-success-text);
+	}
+
+	figcaption {
+		padding: 0.8rem 1.25rem 0.9rem;
+		background: var(--fp-bg-sunken);
+		color: var(--fp-text-muted);
+		font-size: 0.8125rem;
+		line-height: 1.6;
+	}
+
+	/* The patch arrives one operation at a time. Purely decorative, so it is skipped entirely when the reader asks for reduced motion. */
+	@media (prefers-reduced-motion: no-preference) {
+		.op {
+			animation: op-in var(--fp-dur-slow) var(--fp-ease-snap) both;
+		}
+
+		.op:nth-child(1) {
+			animation-delay: 240ms;
+		}
+
+		.op:nth-child(2) {
+			animation-delay: 420ms;
+		}
+
+		.op:nth-child(3) {
+			animation-delay: 600ms;
+		}
+
+		.op:nth-child(4) {
+			animation-delay: 780ms;
+		}
+
+		.pulse {
+			animation: pulse 1.8s ease-in-out 3;
+		}
+	}
+
+	@keyframes op-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+	}
+
+	@keyframes pulse {
+		50% {
+			opacity: 0.35;
+		}
+	}
+</style>

@@ -1,0 +1,92 @@
+[
+  {
+    "icon": "fork",
+    "title": {
+      "zh": "@mei 二创了《余烬漂移》",
+      "en": "@mei forked Ember Drift",
+      "ja": "@mei が『エンバー・ドリフト』をリミックス"
+    },
+    "body": {
+      "zh": "你的作品链上又多了一代:《电光狂奔》",
+      "en": "Volt Runner is now 3 levels deep in your lineage",
+      "ja": "『ボルト・ランナー』は系譜の 3 世代目になりました"
+    },
+    "time": {
+      "zh": "2分钟前",
+      "en": "2m",
+      "ja": "2分前"
+    }
+  },
+  {
+    "icon": "heart",
+    "title": {
+      "zh": "@ana 等 42 人喜欢了《屋顶高尔夫》",
+      "en": "@ana and 41 others liked Cinder Golf",
+      "ja": "@ana ほか 41 人が『シンダー・ゴルフ』にいいね"
+    },
+    "body": {
+      "zh": "你的屋顶球场在街机区火了",
+      "en": "Your rooftop course is trending in Arcade",
+      "ja": "屋上コースがアーケードで人気上昇中"
+    },
+    "time": {
+      "zh": "1小时前",
+      "en": "1h",
+      "ja": "1時間前"
+    }
+  },
+  {
+    "icon": "trophy",
+    "title": {
+      "zh": "《余烬漂移》冲到竞速榜第 4",
+      "en": "Ember Drift hit #4 in Racing",
+      "ja": "『エンバー・ドリフト』がレース 4 位に"
+    },
+    "body": {
+      "zh": "比上周升了 3 位",
+      "en": "Up 3 places this week",
+      "ja": "今週 3 ランクアップ"
+    },
+    "time": {
+      "zh": "3小时前",
+      "en": "3h",
+      "ja": "3時間前"
+    }
+  },
+  {
+    "icon": "sparkle",
+    "title": {
+      "zh": "AI 帮你想了个新改法",
+      "en": "AI remix suggestion ready",
+      "ja": "AI リミックス案が完成"
+    },
+    "body": {
+      "zh": "「夜间地图 + 镜像赛道」,点开试试",
+      "en": "\"Ember Drift — night biome, mirrored track\"",
+      "ja": "「エンバー・ドリフト — 夜バイオーム・ミラートラック」"
+    },
+    "time": {
+      "zh": "5小时前",
+      "en": "5h",
+      "ja": "5時間前"
+    }
+  },
+  {
+    "icon": "fork",
+    "title": {
+      "zh": "@bo 二创了《熔岩迷宫》",
+      "en": "@bo forked Magma Maze",
+      "ja": "@bo が『マグマ・メイズ』をリミックス"
+    },
+    "body": {
+      "zh": "这是它的第一个二创",
+      "en": "First fork on this game",
+      "ja": "このゲーム初のリミックス"
+    },
+    "time": {
+      "zh": "昨天",
+      "en": "1d",
+      "ja": "1日前"
+    }
+  }
+]

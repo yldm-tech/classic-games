@@ -1,0 +1,20 @@
+{
+  "balance": 1280,
+  "ledger": [
+    {"label": {"zh": "每日签到", "en": "Daily check-in", "ja": "デイリーログイン"}, "amount": 10, "when": {"zh": "今天", "en": "Today", "ja": "今日"}},
+    {"label": {"zh": "任务奖励", "en": "Quest reward", "ja": "クエスト報酬"}, "amount": 30, "when": {"zh": "今天", "en": "Today", "ja": "今日"}},
+    {"label": {"zh": "《余烬漂移》被二创", "en": "Ember Drift got remixed", "ja": "『エンバー・ドリフト』がリミックスされた"}, "amount": 200, "when": {"zh": "昨天", "en": "Yesterday", "ja": "昨日"}},
+    {"label": {"zh": "兑换封面模板", "en": "Cover template", "ja": "カバーテンプレート"}, "amount": -150, "when": {"zh": "周一", "en": "Mon", "ja": "月曜"}},
+    {"label": {"zh": "邀请好友注册", "en": "Friend joined via invite", "ja": "招待で友達が登録"}, "amount": 200, "when": {"zh": "上周", "en": "Last week", "ja": "先週"}}
+  ],
+  "earnings": {
+    "total": 12480,
+    "weekly": [120, 80, 160, 90, 210, 140, 320],
+    "ledger": [
+      {"label": {"zh": "《余烬漂移》游玩分成", "en": "Ember Drift play share", "ja": "『エンバー・ドリフト』プレイ分配"}, "amount": 320, "when": {"zh": "今天", "en": "Today", "ja": "今日"}},
+      {"label": {"zh": "《电光狂奔》二创分成", "en": "Volt Runner remix share", "ja": "『ボルト・ランナー』リミックス分配"}, "amount": 96, "when": {"zh": "昨天", "en": "Yesterday", "ja": "昨日"}},
+      {"label": {"zh": "玩家打赏 ×4", "en": "Player tips ×4", "ja": "プレイヤーからのチップ ×4"}, "amount": 48, "when": {"zh": "周一", "en": "Mon", "ja": "月曜"}},
+      {"label": {"zh": "《屋顶高尔夫》游玩分成", "en": "Cinder Golf play share", "ja": "『シンダー・ゴルフ』プレイ分配"}, "amount": 210, "when": {"zh": "上周", "en": "Last week", "ja": "先週"}}
+    ]
+  }
+}

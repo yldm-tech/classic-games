@@ -1,0 +1,5477 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "AI 驱动的小游戏创作社区后端(详见 docs/09-api-design.md)。",
+        "title": "ForgePlay API",
+        "contact": {},
+        "version": "0.1"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/achievements": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "成就列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/achievements/{id}/claim": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "领取成就奖励",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "成就 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "balance + reward + claimed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "COMMERCE_INVALID(未达成 / 已领取)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "COMMERCE_INVALID(成就不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/activity": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "通知动态列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh|en|ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/ai/balance": {
+            "post": {
+                "description": "按目标难度联动调整玩家与敌人/波次参数，返回 JSON Patch、合法新 DSL 和前后压力指标",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "自动平衡 Runtime DSL",
+                "parameters": [
+                    {
+                        "description": "runtime / current_dsl / target_difficulty",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.BalanceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.BalanceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/ai/mod": {
+            "post": {
+                "description": "自然语言 + 当前 DSL → 6902 补丁 → apply → schema 校验 → 新 DSL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "AI 改 DSL(核心接口)",
+                "parameters": [
+                    {
+                        "description": "runtime / current_dsl / prompt",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.ModRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.ModResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "422": {
+                        "description": "DSL_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "429": {
+                        "description": "QUOTA_EXCEEDED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/ai/structure": {
+            "post": {
+                "description": "按提示词、数量和难度向 Runtime map 追加不覆盖的结构节点，并经过 Schema 校验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "生成敌人或波次结构",
+                "parameters": [
+                    {
+                        "description": "runtime / current_dsl / prompt / count / difficulty",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.StructureRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_ai.StructureResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/ai/validate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "校验 DSL 是否合法",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/events": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "上报埋点事件(game_viewed/fork_started/ai_edit_started/mod_published 等)",
+                "parameters": [
+                    {
+                        "description": "事件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_analytics.Event"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "no content"
+                    },
+                    "400": {
+                        "description": "EVENT_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/summary": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "埋点汇总(admin:Fork 转化率 / AI 改完发布率 / 最大 Fork 深度)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_analytics.Summary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/guest": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "游客登录(签发临时 token)",
+                "responses": {
+                    "200": {
+                        "description": "token + user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "注销(作废当前 token,幂等)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oauth/exchange": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "第三方登录(通用 provider+code 交换接口)",
+                "responses": {
+                    "200": {
+                        "description": "token + user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "OAUTH_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "503": {
+                        "description": "OAUTH_INVALID(第三方服务不可用)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oauth/{provider}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "第三方登录(wechat/apple/google...)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth 提供方,如 wechat/apple/google",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token + user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "OAUTH_FAILED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "503": {
+                        "description": "OAUTH_FAILED(第三方服务不可用)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/password/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "账号密码登录",
+                "responses": {
+                    "200": {
+                        "description": "token + user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "429": {
+                        "description": "AUTH_INVALID(登录尝试过于频繁)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "续期(旧 token 换新 token)",
+                "responses": {
+                    "200": {
+                        "description": "token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sms/send": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "发送手机验证码",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sms/verify": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "验证码登录(未注册自动建号)",
+                "responses": {
+                    "200": {
+                        "description": "token + user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/avatar": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "形象装扮目录(角色 / 座驾 / 特效)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/avatar/equip": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "装扮换装(角色 / 座驾 / 特效)",
+                "responses": {
+                    "200": {
+                        "description": "equipped",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / COMMERCE_INVALID(未拥有该道具)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/block/{userId}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "屏蔽用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "被屏蔽用户 id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "取消屏蔽",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "被屏蔽用户 id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/blocks": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "我的黑名单(已屏蔽用户)",
+                "responses": {
+                    "200": {
+                        "description": "items: [{user_id}]",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/chats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "私信会话列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh|en|ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/chats/{idx}/messages": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "会话气泡(对方种子消息 + 自动回复模板)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "会话索引",
+                        "name": "idx",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "zh|en|ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(idx 非整数)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND(idx 越界)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "发私信(按会话索引)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "会话索引",
+                        "name": "idx",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(idx 非整数或消息格式错误) / MESSAGE_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations/{handle}/messages": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "会话消息(按对方 handle)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对方 handle",
+                        "name": "handle",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "NOT_FRIEND(非好友关系不能查看)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "发私信(按对方 handle)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对方 handle",
+                        "name": "handle",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "MESSAGE_INVALID(消息格式错误)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "NOT_FRIEND(非好友关系不能私信)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/downloads": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "我的下载(已下游戏 + 大小 + 是否有更新)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "展示语言 zh/en/ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/downloads/{gameId}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "删除下载记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏 id",
+                        "name": "gameId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/downloads/{gameId}/update": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "标记下载已更新到最新版本",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏 id",
+                        "name": "gameId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/drafts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "我的草稿(未发布的 Mod)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/drafts/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "以当前草稿为父保存不可变新版本(RFC 6902 patch)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "草稿 mod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "RFC 6902 补丁",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "patch": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/dsl.Op"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_mods.Mod"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/earnings/withdrawals": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participation"
+                ],
+                "summary": "当前用户的提现记录",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "PARTICIPATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participation"
+                ],
+                "summary": "申请收益提现",
+                "parameters": [
+                    {
+                        "description": "提现金额",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_participation.Withdrawal"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "409": {
+                        "description": "WITHDRAWAL_INVALID(超额/重复提现)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/events": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "限时活动列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/events/joined": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participation"
+                ],
+                "summary": "我已参加的活动 id 列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "PARTICIPATION_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{id}/join": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "participation"
+                ],
+                "summary": "参加活动",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "event id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_participation.EventJoin"
+                        }
+                    },
+                    "400": {
+                        "description": "EVENT_JOIN_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/favorites": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "我的收藏列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/feedback": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "feedback"
+                ],
+                "summary": "提交用户反馈",
+                "parameters": [
+                    {
+                        "description": "反馈内容,1-2000 字符",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "content": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_feedback.Item"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / FEEDBACK_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "422": {
+                        "description": "CONTENT_REJECTED(内容审核不通过)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "503": {
+                        "description": "MODERATION_UNAVAILABLE(审核服务不可用)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/follow": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "关注 / 粉丝列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "following|followers(默认 following)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "zh|en|ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(type 非法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/follow/{handle}": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "关注 / 取关(按 handle)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "目标用户 handle",
+                        "name": "handle",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "following",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/friends/suggestions": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "加好友推荐 + 邀请码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh|en|ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/friends/{handle}": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "加好友",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "目标用户 handle",
+                        "name": "handle",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "friend",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "已发布游戏列表(游标分页)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游标",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "发布游戏(进审核)",
+                "parameters": [
+                    {
+                        "description": "mod_id / title / ...",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.PublishRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.Game"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/mine": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "我的作品(各审核状态:published/reviewing/rejected/delisted)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "展示语言 zh/en/ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "游戏详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.Game"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/comments": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "评论列表(分页)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "发评论",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_social.Comment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/community": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "community"
+                ],
+                "summary": "游戏社区面板(评分摘要 + 帖子列表)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_community.Summary"
+                        }
+                    },
+                    "500": {
+                        "description": "COMMUNITY_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/community/posts": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "community"
+                ],
+                "summary": "发社区帖子",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "帖子内容,1-1000 字符",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "content": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_community.Post"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / POST_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "422": {
+                        "description": "CONTENT_REJECTED(内容审核不通过)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/community/rating": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "community"
+                ],
+                "summary": "给游戏打分(1-5,覆盖式更新)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "评分,1-5",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_community.Summary"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / RATING_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/decision": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "审核裁决(admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.Game"
+                        }
+                    },
+                    "409": {
+                        "description": "INVALID_STATE",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/delist": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "作者下架自己已发布的作品",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.Game"
+                        }
+                    },
+                    "403": {
+                        "description": "FORBIDDEN",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "409": {
+                        "description": "INVALID_STATE",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/favorite": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "收藏 / 取消收藏",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "favorite: true/false",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "收藏 / 取消收藏",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "favorite: true/false",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/like": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "点赞",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户(将由鉴权注入)",
+                        "name": "user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "count + liked",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "social"
+                ],
+                "summary": "取消点赞",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户(将由鉴权注入)",
+                        "name": "user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "count + liked",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/not-interested": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "对某游戏标记\"不感兴趣\"(从列表隐藏)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/played": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "记录一次游玩(时长上报)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "recorded",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(duration_ms 非法)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/replays": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "replays"
+                ],
+                "summary": "上传对局回放(逐帧轨迹,服务端复核分数)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "回放时长(ms)+逐帧数据",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "duration_ms": {
+                                    "type": "integer"
+                                },
+                                "frames": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/internal_replays.Frame"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_replays.Replay"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / REPLAY_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/replays/leaderboard": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "replays"
+                ],
+                "summary": "游戏回放排行榜(前 20)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/replays/{user}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "replays"
+                ],
+                "summary": "取某用户在某游戏的最新回放",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "user",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_replays.Replay"
+                        }
+                    },
+                    "404": {
+                        "description": "REPLAY_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/resubmit": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "作者将被拒作品重新提交(回到审核中)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "game id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_games.Game"
+                        }
+                    },
+                    "403": {
+                        "description": "FORBIDDEN",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "409": {
+                        "description": "INVALID_STATE",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/history": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "最近玩过(按今天/昨天/更早分组)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "展示语言 zh/en/ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "清空最近玩过记录",
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "500": {
+                        "description": "INTERNAL",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/live": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "library"
+                ],
+                "summary": "正在直播(游戏 + 主播 + 在看人数 + 标语)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "展示语言 zh/en/ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/live/{id}/gift": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "直播间刷礼物(扣创作点)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "直播 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "balance + cost + sent",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "COMMERCE_INVALID(余额不足)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/membership": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "会员 ForgePlay+(权益 + 套餐)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_commerce.MembershipView"
+                        }
+                    }
+                }
+            }
+        },
+        "/moderation/queue": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "审核队列(仅 reviewing,admin,游标分页)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游标",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "建 mod(parent_id 空=根,否则子 mod)",
+                "parameters": [
+                    {
+                        "description": "runtime / parent_id / patch",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_mods.createModReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_mods.Mod"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods/mine": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "我创建的 mod(全部,含草稿与已用于发布的)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods/{id}/dsl": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "取生效 DSL(基线 + 补丁链)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "mod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods/{id}/fork": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "Fork 出新草稿",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "mod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_mods.Mod"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods/{id}/fork-tree": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "Fork Tree(祖先链 + 自身 + 直接子)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "mod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_mods.ForkTreeView"
+                        }
+                    }
+                }
+            }
+        },
+        "/mods/{id}/lineage": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mods"
+                ],
+                "summary": "创作链(根 → 当前)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "mod id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/orders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "当前用户的支付订单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "PAYMENT_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "创建支付订单",
+                "parameters": [
+                    {
+                        "description": "商品 id",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_payments.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / PAYMENT_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/orders/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "查询支付订单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "order id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_payments.Order"
+                        }
+                    },
+                    "404": {
+                        "description": "PAYMENT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/webhook": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "支付渠道回调(确认订单支付结果)",
+                "parameters": [
+                    {
+                        "description": "回调载荷,需带 X-ForgePlay-Signature 签名头",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "amount": {
+                                    "type": "integer"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "order_id": {
+                                    "type": "string"
+                                },
+                                "transaction_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_payments.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / PAYMENT_REJECTED(签名或状态不合法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/points": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "创作点(余额 + 流水 + 收益中心)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_commerce.PointsView"
+                        }
+                    }
+                }
+            }
+        },
+        "/prefs/notifications": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "通知设置元数据(总开关 + 互动/系统分组)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "语言:zh(默认)/ en / ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_prefs.NotifPrefs"
+                        }
+                    }
+                }
+            }
+        },
+        "/prefs/notifications/{key}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "设置通知开关",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "通知项 key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/prefs/privacy": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "隐私设置元数据(段控 + 开关)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "语言:zh(默认)/ en / ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_prefs.PrivacyPrefs"
+                        }
+                    }
+                }
+            }
+        },
+        "/prefs/privacy/{key}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "设置隐私选项",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "隐私项 key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在或取值非法)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/prefs/teen": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "青少年模式元数据(规则说明 + 默认态)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "语言:zh(默认)/ en / ja",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_prefs.TeenPrefs"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prefs"
+                ],
+                "summary": "开关青少年模式(校验 PIN)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / PIN_INVALID(PIN 校验失败)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/ranking": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ranking"
+                ],
+                "summary": "榜单(热门/新作/飙升)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "hot|new|rising",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "条数",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/report": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "moderation"
+                ],
+                "summary": "举报(游戏/评论/用户)",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_moderation.Report"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "创建房间(创建者自动加入并成为房主)",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "ROOM_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/join": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "按房间码加入房间",
+                "parameters": [
+                    {
+                        "description": "房间码",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / ROOM_INVALID(已满/已开始/不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "查询房间详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "room id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.Room"
+                        }
+                    },
+                    "403": {
+                        "description": "ROOM_INVALID(非房间成员)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "ROOM_INVALID(房间不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{id}/input": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "提交一帧权威对局输入(移动/开火)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "room id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "本帧输入,seq 需单调递增",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.PlayerInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.MatchSnapshot"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / MATCH_INVALID(非法输入/过期序号/对局未开始或已结束)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{id}/ready": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "设置本人在房间内的准备状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "room id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "准备状态",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "ready": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST / ROOM_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{id}/snapshot": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "取当前对局快照(用于轮询)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "room id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.MatchSnapshot"
+                        }
+                    },
+                    "400": {
+                        "description": "MATCH_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{id}/start": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "开始对局(仅房主,需全员准备且 \u003e=2 人)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "room id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_rooms.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "ROOM_INVALID(未全员准备)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "ROOM_INVALID(非房主)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/runtimes/{name}/{version}/baseline": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runtimes"
+                ],
+                "summary": "取 Runtime 基线 DSL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "runtime 名,如 shooter",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "版本,如 1.0.0",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/runtimes/{name}/{version}/schema": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runtimes"
+                ],
+                "summary": "取 Runtime 的 DSL JSON Schema(客户端校验 / AI 约束用)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "runtime 名,如 shooter",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "版本,如 1.0.0",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/shop": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "商城(皮肤 / 道具 / 充值档)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_commerce.ShopView"
+                        }
+                    }
+                }
+            }
+        },
+        "/shop/purchase/{id}": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "购买商城商品(皮肤 / 道具,扣创作点)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "商品 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "balance + owned",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "COMMERCE_INVALID(余额不足)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "COMMERCE_INVALID(商品不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "当前用户(需登录)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_auth.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "注销账号(删除当前用户,登录态)",
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "500": {
+                        "description": "DELETE_FAILED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "编辑资料(局部更新,仅传字段生效)",
+                "parameters": [
+                    {
+                        "description": "待更新字段(昵称/简介/性别/语气/地区)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.ProfilePatch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.Profile"
+                        }
+                    },
+                    "400": {
+                        "description": "PROFILE_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL(持久化失败)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/oauth/bind": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "绑定第三方账号(登录态)",
+                "responses": {
+                    "200": {
+                        "description": "SecurityInfo",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / OAUTH_BIND_FAILED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "409": {
+                        "description": "OAUTH_BIND_FAILED(该第三方身份已被绑定)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/password": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "设置 / 修改登录密码(登录态)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / PASSWORD_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/phone": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "更换绑定手机号(需短信验证码,登录态)",
+                "responses": {
+                    "200": {
+                        "description": "SecurityInfo",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST(请求体非法) / PHONE_CHANGE_FAILED",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/profile": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "编辑资料(整份覆盖更新:昵称/简介/头像/地区)",
+                "parameters": [
+                    {
+                        "description": "完整资料",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.ProfileUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.Profile"
+                        }
+                    },
+                    "400": {
+                        "description": "PROFILE_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL(持久化失败)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/security": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "账号安全信息(手机 / 密码 / 已绑定第三方账号,登录态)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/verification": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "实名认证状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.VerificationStatus"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "实名认证(合规):提交姓名+证件号,进入待审核",
+                "parameters": [
+                    {
+                        "description": "姓名 + 证件号(不落库原文)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id_number": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.VerificationStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "VERIFICATION_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "公开主页(用户资料)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.Profile"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/follow": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "关注 / 取关(按用户 id)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "目标用户 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "following",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/followers": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "某用户的粉丝列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/following": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inbox"
+                ],
+                "summary": "某用户的关注列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/games": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "某用户的作品(works/forks/liked)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "works|forks|liked(默认 works)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "展示语言 zh/en/ja(默认 zh)",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/verification/decision": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "实名审核裁决(admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "是否通过",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "approve": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_users.VerificationStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/verifications/queue": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "待审核实名队列(admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/welfare": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "福利中心(签到 + 任务 + 邀请)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "zh/en/ja,默认 zh",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_commerce.WelfareView"
+                        }
+                    }
+                }
+            }
+        },
+        "/welfare/checkin": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "每日签到(领取创作点奖励)",
+                "responses": {
+                    "200": {
+                        "description": "balance + reward + checked",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "COMMERCE_INVALID(今日已签到)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/welfare/quests/{id}/claim": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commerce"
+                ],
+                "summary": "领取福利任务奖励",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "balance + reward + claimed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "COMMERCE_INVALID(未达成 / 已领取)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "COMMERCE_INVALID(任务不存在)",
+                        "schema": {
+                            "$ref": "#/definitions/forgeplay_server_pkg_httpx.Envelope"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dsl.Op": {
+            "type": "object",
+            "properties": {
+                "op": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "forgeplay_server_pkg_httpx.Body": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "forgeplay_server_pkg_httpx.Envelope": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/forgeplay_server_pkg_httpx.Body"
+                }
+            }
+        },
+        "internal_ai.BalanceMetrics": {
+            "type": "object",
+            "properties": {
+                "after": {
+                    "type": "number"
+                },
+                "before": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_ai.BalanceRequest": {
+            "type": "object",
+            "properties": {
+                "current_dsl": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "runtime": {
+                    "type": "string"
+                },
+                "target_difficulty": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_ai.BalanceResponse": {
+            "type": "object",
+            "properties": {
+                "balance_hint": {
+                    "type": "string"
+                },
+                "dsl_patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dsl.Op"
+                    }
+                },
+                "metrics": {
+                    "$ref": "#/definitions/internal_ai.BalanceMetrics"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "new_dsl": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "provenance": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_ai.ModRequest": {
+            "type": "object",
+            "properties": {
+                "current_dsl": {
+                    "description": "当前生效 DSL",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "prompt": {
+                    "description": "自然语言意图",
+                    "type": "string"
+                },
+                "runtime": {
+                    "description": "\"shooter@1.0.0\"",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_ai.ModResponse": {
+            "type": "object",
+            "properties": {
+                "balance_hint": {
+                    "type": "string"
+                },
+                "dsl_patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dsl.Op"
+                    }
+                },
+                "model": {
+                    "type": "string"
+                },
+                "new_dsl": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "provenance": {
+                    "description": "Provenance 是「AI 生成」溯源令牌(服务端 HMAC 签名)。客户端在 POST /mods 时回带,\n服务端校验通过即把该 mod 标记为 AI 生成,且发布时不可被改成非 AI(防漏标)。未配置密钥时为空。",
+                    "type": "string"
+                },
+                "retries": {
+                    "type": "integer"
+                },
+                "tokens": {
+                    "$ref": "#/definitions/internal_ai.TokenUsage"
+                }
+            }
+        },
+        "internal_ai.StructureRequest": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "current_dsl": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "difficulty": {
+                    "type": "integer"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_ai.StructureResponse": {
+            "type": "object",
+            "properties": {
+                "balance_hint": {
+                    "type": "string"
+                },
+                "dsl_patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dsl.Op"
+                    }
+                },
+                "generated_keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "model": {
+                    "type": "string"
+                },
+                "new_dsl": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "provenance": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_ai.TokenUsage": {
+            "type": "object",
+            "properties": {
+                "completion": {
+                    "type": "integer"
+                },
+                "prompt": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_analytics.Event": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "depth": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "$ref": "#/definitions/internal_analytics.EventName"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "target_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_analytics.EventName": {
+            "type": "string",
+            "enum": [
+                "game_viewed",
+                "fork_started",
+                "ai_edit_started",
+                "mod_published"
+            ],
+            "x-enum-varnames": [
+                "GameViewed",
+                "ForkStarted",
+                "AIEditStarted",
+                "ModPublished"
+            ]
+        },
+        "internal_analytics.Summary": {
+            "type": "object",
+            "properties": {
+                "ai_editors": {
+                    "type": "integer"
+                },
+                "ai_publish_rate": {
+                    "type": "number"
+                },
+                "ai_publishers": {
+                    "type": "integer"
+                },
+                "fork_conversion": {
+                    "type": "number"
+                },
+                "fork_starters": {
+                    "type": "integer"
+                },
+                "game_viewers": {
+                    "type": "integer"
+                },
+                "max_fork_depth": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_auth.User": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.Checkin": {
+            "type": "object",
+            "properties": {
+                "checked": {
+                    "type": "boolean"
+                },
+                "rewards": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "streak": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_commerce.EarningsDetailView": {
+            "type": "object",
+            "properties": {
+                "ledger": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.LedgerEntryView"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "weekly": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "internal_commerce.InviteView": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.LedgerEntryView": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "when": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.MembershipPlanView": {
+            "type": "object",
+            "properties": {
+                "badge": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.MembershipView": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "badge": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "perks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "plans": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.MembershipPlanView"
+                    }
+                },
+                "tagline": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.PointsView": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer"
+                },
+                "earnings": {
+                    "$ref": "#/definitions/internal_commerce.EarningsDetailView"
+                },
+                "ledger": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.LedgerEntryView"
+                    }
+                }
+            }
+        },
+        "internal_commerce.QuestView": {
+            "type": "object",
+            "properties": {
+                "claimed": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "target": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.RechargeTierView": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.ShopItemView": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owned": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_commerce.ShopSkinView": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owned": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "tone": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_commerce.ShopView": {
+            "type": "object",
+            "properties": {
+                "currency_unit": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.ShopItemView"
+                    }
+                },
+                "recharge": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.RechargeTierView"
+                    }
+                },
+                "recharge_unit": {
+                    "type": "string"
+                },
+                "skins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.ShopSkinView"
+                    }
+                }
+            }
+        },
+        "internal_commerce.WelfareView": {
+            "type": "object",
+            "properties": {
+                "checkin": {
+                    "$ref": "#/definitions/internal_commerce.Checkin"
+                },
+                "invite": {
+                    "$ref": "#/definitions/internal_commerce.InviteView"
+                },
+                "quests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_commerce.QuestView"
+                    }
+                }
+            }
+        },
+        "internal_community.Post": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "game_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_community.Summary": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "my_rating": {
+                    "type": "integer"
+                },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_community.Post"
+                    }
+                }
+            }
+        },
+        "internal_feedback.Item": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_games.Game": {
+            "type": "object",
+            "properties": {
+                "ai_generated": {
+                    "type": "boolean"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "by": {
+                    "description": "作者展示名(@handle),供客户端卡片直显",
+                    "type": "string"
+                },
+                "cat": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "排序/榜单按时间,而非字典序 ID",
+                    "type": "string"
+                },
+                "forked_from": {
+                    "type": "string"
+                },
+                "forks": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "likes": {
+                    "type": "integer"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "plays": {
+                    "type": "integer"
+                },
+                "runtime": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/internal_games.Status"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tone": {
+                    "description": "客户端卡片展示字段(发布时由 mod/统计填充;种子直接给值)",
+                    "type": "string"
+                },
+                "ver": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_games.PublishRequest": {
+            "type": "object",
+            "properties": {
+                "ai_generated": {
+                    "type": "boolean"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "forked_from": {
+                    "type": "string"
+                },
+                "mod_id": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "string"
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_games.Status": {
+            "type": "string",
+            "enum": [
+                "reviewing",
+                "published",
+                "rejected",
+                "delisted"
+            ],
+            "x-enum-varnames": [
+                "StatusReviewing",
+                "StatusPublished",
+                "StatusRejected",
+                "StatusDelisted"
+            ]
+        },
+        "internal_moderation.Report": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "reporter_id": {
+                    "type": "string"
+                },
+                "target_id": {
+                    "type": "string"
+                },
+                "target_type": {
+                    "$ref": "#/definitions/internal_moderation.TargetType"
+                }
+            }
+        },
+        "internal_moderation.TargetType": {
+            "type": "string",
+            "enum": [
+                "game",
+                "comment",
+                "user"
+            ],
+            "x-enum-varnames": [
+                "TargetGame",
+                "TargetComment",
+                "TargetUser"
+            ]
+        },
+        "internal_mods.ForkTreeView": {
+            "type": "object",
+            "properties": {
+                "ancestors": {
+                    "description": "根 → 父",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_mods.Mod"
+                    }
+                },
+                "children": {
+                    "description": "直接子节点",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_mods.Mod"
+                    }
+                },
+                "node": {
+                    "$ref": "#/definitions/internal_mods.Mod"
+                }
+            }
+        },
+        "internal_mods.Mod": {
+            "type": "object",
+            "properties": {
+                "ai_generated": {
+                    "description": "AIGenerated 标记该创作是否 AI 生成。仅在建 mod 时携带服务端签发的有效溯源令牌才会置 true,\n客户端无法凭空伪造;发布时据此强制标识,不可被改成非 AI(防漏标,docs/14)。",
+                    "type": "boolean"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "draft": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "type": "string"
+                },
+                "patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dsl.Op"
+                    }
+                },
+                "runtime": {
+                    "description": "\"shooter@1.0.0\"",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_mods.createModReq": {
+            "type": "object",
+            "properties": {
+                "ai_provenance": {
+                    "description": "AIProvenance 是 /ai/mod 返回的溯源令牌;校验通过则该 mod 被标记为 AI 生成(防漏标)。",
+                    "type": "string"
+                },
+                "draft": {
+                    "type": "boolean"
+                },
+                "parent_id": {
+                    "type": "string"
+                },
+                "patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dsl.Op"
+                    }
+                },
+                "runtime": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_participation.EventJoin": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "joined_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_participation.Withdrawal": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_payments.Order": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_prefs.NotifGroup": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_prefs.NotifItem"
+                    }
+                },
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_prefs.NotifItem": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_prefs.NotifPrefs": {
+            "type": "object",
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_prefs.NotifGroup"
+                    }
+                },
+                "master_default": {
+                    "type": "boolean"
+                },
+                "master_key": {
+                    "type": "string"
+                },
+                "master_label": {
+                    "type": "string"
+                },
+                "master_sub": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_prefs.PrivacyItem": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "default_index": {
+                    "description": "不能用 omitempty:段控默认下标 0(第一项)、开关默认 false 都是有意义的零值;\n省略会让客户端读不到 key 而出错(privacy_screen 按 kind 取 default_index/default)。",
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_prefs.PrivacyPrefs": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_prefs.PrivacyItem"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_prefs.TeenPrefs": {
+            "type": "object",
+            "properties": {
+                "default_enabled": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "pin_label": {
+                    "type": "string"
+                },
+                "pin_length": {
+                    "type": "integer"
+                },
+                "pin_placeholder": {
+                    "type": "string"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "state_off": {
+                    "type": "string"
+                },
+                "state_on": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_replays.Frame": {
+            "type": "object",
+            "properties": {
+                "at_ms": {
+                    "type": "integer"
+                },
+                "hp": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_replays.Replay": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "frames": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_replays.Frame"
+                    }
+                },
+                "game_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_rooms.MatchSnapshot": {
+            "type": "object",
+            "properties": {
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_rooms.PlayerState"
+                    }
+                },
+                "room_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tick": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "winner_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_rooms.Member": {
+            "type": "object",
+            "properties": {
+                "joined_at": {
+                    "type": "string"
+                },
+                "ready": {
+                    "type": "boolean"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_rooms.PlayerInput": {
+            "type": "object",
+            "properties": {
+                "fire": {
+                    "type": "boolean"
+                },
+                "move_x": {
+                    "type": "number"
+                },
+                "move_y": {
+                    "type": "number"
+                },
+                "seq": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_rooms.PlayerState": {
+            "type": "object",
+            "properties": {
+                "health": {
+                    "type": "integer"
+                },
+                "last_seq": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_rooms.Room": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "host_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_rooms.Member"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_social.Comment": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "评论按时间排序,而非字典序 ID",
+                    "type": "string"
+                },
+                "game_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_users.Profile": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "description": "用户自述;空时客户端回退本地化占位",
+                    "type": "string"
+                },
+                "follows": {
+                    "type": "integer"
+                },
+                "forks": {
+                    "type": "integer"
+                },
+                "gender": {
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "@handle",
+                    "type": "string"
+                },
+                "joined": {
+                    "type": "integer"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "likes": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plays": {
+                    "type": "integer"
+                },
+                "points": {
+                    "type": "integer"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "tone": {
+                    "type": "string"
+                },
+                "works": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_users.ProfilePatch": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "tone": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_users.ProfileUpdate": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "tone": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_users.VerificationStatus": {
+            "type": "object",
+            "properties": {
+                "id_masked": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "meta": {"runtime":"survivor","runtime_version":"1.0.0","fork_of":null},
+  "hero": {"sprite":"knight","hp":100,"speed":240,"pickup_radius":90},
+  "weapon": {"type":"magic_bolt","damage":20,"cooldown":0.6,"projectiles":1},
+  "waves": {
+    "slimes": {"enemy":"slime","start":0,"interval":1.2,"count":12,"hp":20,"speed":70,"xp":5},
+    "bats": {"enemy":"bat","start":15,"interval":0.8,"count":20,"hp":15,"speed":105,"xp":4}
+  },
+  "progression": {"xp_base":20,"xp_growth":1.5,"upgrades":["damage","haste","projectiles","speed"]},
+  "stage": {"background":"meadow","duration":180}
+}

@@ -1,0 +1,99 @@
+---
+title: MCP 服务
+description: forgeplay-mcp 把 ForgePlay 的 DSL 工具和后端接口以 Model Context Protocol 工具的形式交给 AI 助手。
+sidebar:
+  order: 3
+---
+
+import { repoDir, repoFile } from '../../../config/site.ts';
+
+`forgeplay-mcp` 是一个 [Model Context Protocol](https://modelcontextprotocol.io) 服务，源码在 <a href={repoDir('apps/mcp')}>apps/mcp</a>（Go 模块 `forgeplay/mcp`），基于官方的 MCP Go SDK 构建。它让支持 MCP 的 AI 助手可以读取 Schema、校验和修改 DSL，并经后端 Fork、修改和发布 Mod。
+
+:::note
+各客户端的配置文件写法、每个工具的行为细节和安全说明，以 <a href={repoFile('apps/mcp/README.md')}>apps/mcp/README.md</a> 为准。
+:::
+
+## 构建
+
+```bash
+make mcp-build          # 产物在 apps/mcp/bin/forgeplay-mcp
+```
+
+放在这个位置的二进制会自己找到仓库里的 `packages/schemas`，不管客户端从哪个目录启动它：查找时先看二进制所在目录，再看工作目录，所以一个自带 `packages/schemas` 目录的项目替换不了它们。
+
+## 工具
+
+| 工具 | 分组 | 需要 token | 作用 |
+|---|---|---|---|
+| `list_runtimes` | 离线 | 否 | 列出有 Schema 的 Runtime 及版本 |
+| `get_dsl_schema` | 离线 | 否 | 返回某个 runtime ref（如 `shooter@1.0.0`）的 JSON Schema |
+| `validate_dsl` | 离线 | 否 | 校验 DSL，逐条列出违规及其 JSON Pointer |
+| `apply_dsl_patch` | 离线 | 否 | 应用 RFC 6902 补丁并校验结果 |
+| `list_games` | 后端，只读 | 否 | 搜索并分页列出已发布的游戏 |
+| `get_game` | 后端，只读 | 否 | 单个游戏的详情 |
+| `get_game_dsl` | 后端，只读 | 否 | 游戏的生效 DSL |
+| `get_mod_dsl` | 后端，只读 | 读草稿时需要 | Mod 的生效 DSL |
+| `list_my_drafts` | 后端，只读 | 是 | 当前用户的草稿 |
+| `fork_game` | 后端，写入 | 是 | 把已发布的游戏复制成自己的草稿 |
+| `create_mod` | 后端，写入 | 是 | 在 Runtime 基线上新建草稿 |
+| `update_mod` | 后端，写入 | 是 | 在草稿上保存补丁，返回新的 mod id |
+| `generate_mod` | 后端，写入 | 否 | 让后端的 AI 把一句话变成已校验的补丁；消耗 AI 配额，不落库 |
+| `publish_mod` | 后端，写入 | 是 | 把草稿提交为游戏，进入审核 |
+
+离线工具运行的是与后端相同的 `packages/dsl` 代码。`create_mod` 和 `update_mod` 在发出请求之前先在本地应用补丁并校验，不合 Schema 的内容不会落库。
+
+服务还把 Schema 作为资源提供（`forgeplay://schemas/<runtime>-<version>`），并提供一个读取游戏生效 DSL 的资源模板（`forgeplay://games/{game_id}/dsl`）。
+
+## 运行方式
+
+| 选项 | 说明 |
+|---|---|
+| `--transport stdio` | 通过 stdio 通信。这是默认方式，适合由 MCP 客户端作为子进程启动 |
+| `--transport http` | 改用 streamable HTTP，端点是 `http://<addr>/mcp` |
+| `--addr host:port` | `--transport http` 的监听地址，默认 `127.0.0.1:8765` |
+| `--allowed-host <name>` | 允许客户端访问非回环 `--addr` 时使用的主机名，例如 `mcp.example.com`，可重复传入 |
+| `--read-only` | 不注册 `fork_game`、`create_mod`、`update_mod`、`generate_mod`、`publish_mod` |
+| `--version` | 打印版本后退出 |
+
+HTTP 传输本身没有鉴权：能连上监听地址的人都在使用配置的那个 token。请只绑定回环地址，或在前面放一个带鉴权的代理。监听在非回环地址时，只有 `Host` 头是连接到达的那个 IP 地址、或是用 `--allowed-host` 给出的主机名的请求才会被处理，这挡的是 DNS rebinding，不是鉴权。
+
+## 环境变量
+
+| 变量 | 说明 |
+|---|---|
+| `FORGEPLAY_SERVER_URL` | 后端根地址，默认 `http://localhost:8080` |
+| `FORGEPLAY_TOKEN` | 服务所代表账号的 Bearer token。不设置时服务以匿名身份运行，需要 token 的工具会返回错误 |
+| `FORGEPLAY_SCHEMA_DIR` | Mod DSL 的 Schema 目录。不设置时依次从二进制所在目录、工作目录向上查找 `packages/schemas`，其中没有 `<runtime>-<version>.schema.json` 文件的目录会被跳过 |
+| `FORGEPLAY_LANG` | 后端消息和标题的语言：`zh`、`en` 或 `ja` |
+
+token 由 CLI 取得：
+
+```bash
+forgeplay auth login
+export FORGEPLAY_TOKEN="$(forgeplay auth token)"
+```
+
+## 接入 MCP 客户端
+
+多数 MCP 客户端用下面这种结构的配置启动一个 stdio 服务，配置文件的位置取决于你用的客户端：
+
+```json
+{
+  "mcpServers": {
+    "forgeplay": {
+      "command": "/absolute/path/to/forgeplay/apps/mcp/bin/forgeplay-mcp",
+      "args": [],
+      "env": {
+        "FORGEPLAY_SERVER_URL": "http://localhost:8080",
+        "FORGEPLAY_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+项目级的配置文件通常会提交进仓库，token 请放在用户级的配置里。如果只想让助手浏览而不能修改任何东西，传 `"args": ["--read-only"]` 并且不要设置 token。
+
+## 边界不变
+
+通过 MCP 接入的助手和平台内置的 AI 受同样的约束：能产出的只有 DSL 和 RFC 6902 补丁，结果必须通过 JSON Schema 校验，没有任何路径能把可执行代码带进游戏。理由见 [决策记录](/docs/decisions/) 的 ADR-004。

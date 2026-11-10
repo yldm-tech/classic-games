@@ -1,0 +1,3583 @@
+basePath: /api/v1
+definitions:
+  dsl.Op:
+    properties:
+      op:
+        type: string
+      path:
+        type: string
+      value:
+        items:
+          type: integer
+        type: array
+    type: object
+  forgeplay_server_pkg_httpx.Body:
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties: {}
+        type: object
+      message:
+        type: string
+    type: object
+  forgeplay_server_pkg_httpx.Envelope:
+    properties:
+      error:
+        $ref: '#/definitions/forgeplay_server_pkg_httpx.Body'
+    type: object
+  internal_ai.BalanceMetrics:
+    properties:
+      after:
+        type: number
+      before:
+        type: number
+    type: object
+  internal_ai.BalanceRequest:
+    properties:
+      current_dsl:
+        additionalProperties: {}
+        type: object
+      runtime:
+        type: string
+      target_difficulty:
+        type: integer
+    type: object
+  internal_ai.BalanceResponse:
+    properties:
+      balance_hint:
+        type: string
+      dsl_patch:
+        items:
+          $ref: '#/definitions/dsl.Op'
+        type: array
+      metrics:
+        $ref: '#/definitions/internal_ai.BalanceMetrics'
+      model:
+        type: string
+      new_dsl:
+        additionalProperties: {}
+        type: object
+      provenance:
+        type: string
+    type: object
+  internal_ai.ModRequest:
+    properties:
+      current_dsl:
+        additionalProperties: {}
+        description: 当前生效 DSL
+        type: object
+      prompt:
+        description: 自然语言意图
+        type: string
+      runtime:
+        description: '"shooter@1.0.0"'
+        type: string
+    type: object
+  internal_ai.ModResponse:
+    properties:
+      balance_hint:
+        type: string
+      dsl_patch:
+        items:
+          $ref: '#/definitions/dsl.Op'
+        type: array
+      model:
+        type: string
+      new_dsl:
+        additionalProperties: {}
+        type: object
+      provenance:
+        description: |-
+          Provenance 是「AI 生成」溯源令牌(服务端 HMAC 签名)。客户端在 POST /mods 时回带,
+          服务端校验通过即把该 mod 标记为 AI 生成,且发布时不可被改成非 AI(防漏标)。未配置密钥时为空。
+        type: string
+      retries:
+        type: integer
+      tokens:
+        $ref: '#/definitions/internal_ai.TokenUsage'
+    type: object
+  internal_ai.StructureRequest:
+    properties:
+      count:
+        type: integer
+      current_dsl:
+        additionalProperties: {}
+        type: object
+      difficulty:
+        type: integer
+      prompt:
+        type: string
+      runtime:
+        type: string
+    type: object
+  internal_ai.StructureResponse:
+    properties:
+      balance_hint:
+        type: string
+      dsl_patch:
+        items:
+          $ref: '#/definitions/dsl.Op'
+        type: array
+      generated_keys:
+        items:
+          type: string
+        type: array
+      model:
+        type: string
+      new_dsl:
+        additionalProperties: {}
+        type: object
+      provenance:
+        type: string
+    type: object
+  internal_ai.TokenUsage:
+    properties:
+      completion:
+        type: integer
+      prompt:
+        type: integer
+    type: object
+  internal_analytics.Event:
+    properties:
+      created_at:
+        type: string
+      depth:
+        type: integer
+      id:
+        type: string
+      name:
+        $ref: '#/definitions/internal_analytics.EventName'
+      session_id:
+        type: string
+      target_id:
+        type: string
+    type: object
+  internal_analytics.EventName:
+    enum:
+    - game_viewed
+    - fork_started
+    - ai_edit_started
+    - mod_published
+    type: string
+    x-enum-varnames:
+    - GameViewed
+    - ForkStarted
+    - AIEditStarted
+    - ModPublished
+  internal_analytics.Summary:
+    properties:
+      ai_editors:
+        type: integer
+      ai_publish_rate:
+        type: number
+      ai_publishers:
+        type: integer
+      fork_conversion:
+        type: number
+      fork_starters:
+        type: integer
+      game_viewers:
+        type: integer
+      max_fork_depth:
+        type: integer
+    type: object
+  internal_auth.User:
+    properties:
+      id:
+        type: string
+      nickname:
+        type: string
+    type: object
+  internal_commerce.Checkin:
+    properties:
+      checked:
+        type: boolean
+      rewards:
+        items:
+          type: integer
+        type: array
+      streak:
+        type: integer
+    type: object
+  internal_commerce.EarningsDetailView:
+    properties:
+      ledger:
+        items:
+          $ref: '#/definitions/internal_commerce.LedgerEntryView'
+        type: array
+      total:
+        type: integer
+      weekly:
+        items:
+          type: integer
+        type: array
+    type: object
+  internal_commerce.InviteView:
+    properties:
+      code:
+        type: string
+      desc:
+        type: string
+      title:
+        type: string
+    type: object
+  internal_commerce.LedgerEntryView:
+    properties:
+      amount:
+        type: integer
+      label:
+        type: string
+      when:
+        type: string
+    type: object
+  internal_commerce.MembershipPlanView:
+    properties:
+      badge:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      period:
+        type: string
+      price:
+        type: string
+    type: object
+  internal_commerce.MembershipView:
+    properties:
+      active:
+        type: boolean
+      badge:
+        type: string
+      note:
+        type: string
+      perks:
+        items:
+          type: string
+        type: array
+      plans:
+        items:
+          $ref: '#/definitions/internal_commerce.MembershipPlanView'
+        type: array
+      tagline:
+        type: string
+    type: object
+  internal_commerce.PointsView:
+    properties:
+      balance:
+        type: integer
+      earnings:
+        $ref: '#/definitions/internal_commerce.EarningsDetailView'
+      ledger:
+        items:
+          $ref: '#/definitions/internal_commerce.LedgerEntryView'
+        type: array
+    type: object
+  internal_commerce.QuestView:
+    properties:
+      claimed:
+        type: boolean
+      id:
+        type: string
+      progress:
+        type: integer
+      reward:
+        type: integer
+      target:
+        type: integer
+      title:
+        type: string
+    type: object
+  internal_commerce.RechargeTierView:
+    properties:
+      id:
+        type: string
+      points:
+        type: integer
+      price:
+        type: string
+    type: object
+  internal_commerce.ShopItemView:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      owned:
+        type: boolean
+      price:
+        type: integer
+    type: object
+  internal_commerce.ShopSkinView:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      owned:
+        type: boolean
+      price:
+        type: integer
+      tone:
+        type: string
+    type: object
+  internal_commerce.ShopView:
+    properties:
+      currency_unit:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/internal_commerce.ShopItemView'
+        type: array
+      recharge:
+        items:
+          $ref: '#/definitions/internal_commerce.RechargeTierView'
+        type: array
+      recharge_unit:
+        type: string
+      skins:
+        items:
+          $ref: '#/definitions/internal_commerce.ShopSkinView'
+        type: array
+    type: object
+  internal_commerce.WelfareView:
+    properties:
+      checkin:
+        $ref: '#/definitions/internal_commerce.Checkin'
+      invite:
+        $ref: '#/definitions/internal_commerce.InviteView'
+      quests:
+        items:
+          $ref: '#/definitions/internal_commerce.QuestView'
+        type: array
+    type: object
+  internal_community.Post:
+    properties:
+      author_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      game_id:
+        type: string
+      id:
+        type: string
+    type: object
+  internal_community.Summary:
+    properties:
+      average:
+        type: number
+      count:
+        type: integer
+      my_rating:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/internal_community.Post'
+        type: array
+    type: object
+  internal_feedback.Item:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+    type: object
+  internal_games.Game:
+    properties:
+      ai_generated:
+        type: boolean
+      author_id:
+        type: string
+      by:
+        description: 作者展示名(@handle),供客户端卡片直显
+        type: string
+      cat:
+        type: string
+      created_at:
+        description: 排序/榜单按时间,而非字典序 ID
+        type: string
+      forked_from:
+        type: string
+      forks:
+        type: integer
+      id:
+        type: string
+      likes:
+        type: integer
+      mod_id:
+        type: string
+      plays:
+        type: integer
+      runtime:
+        type: string
+      status:
+        $ref: '#/definitions/internal_games.Status'
+      summary:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      tone:
+        description: 客户端卡片展示字段(发布时由 mod/统计填充;种子直接给值)
+        type: string
+      ver:
+        type: string
+      views:
+        type: integer
+    type: object
+  internal_games.PublishRequest:
+    properties:
+      ai_generated:
+        type: boolean
+      author_id:
+        type: string
+      category:
+        type: string
+      forked_from:
+        type: string
+      mod_id:
+        type: string
+      runtime:
+        type: string
+      summary:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  internal_games.Status:
+    enum:
+    - reviewing
+    - published
+    - rejected
+    - delisted
+    type: string
+    x-enum-varnames:
+    - StatusReviewing
+    - StatusPublished
+    - StatusRejected
+    - StatusDelisted
+  internal_moderation.Report:
+    properties:
+      id:
+        type: string
+      reason:
+        type: string
+      reporter_id:
+        type: string
+      target_id:
+        type: string
+      target_type:
+        $ref: '#/definitions/internal_moderation.TargetType'
+    type: object
+  internal_moderation.TargetType:
+    enum:
+    - game
+    - comment
+    - user
+    type: string
+    x-enum-varnames:
+    - TargetGame
+    - TargetComment
+    - TargetUser
+  internal_mods.ForkTreeView:
+    properties:
+      ancestors:
+        description: 根 → 父
+        items:
+          $ref: '#/definitions/internal_mods.Mod'
+        type: array
+      children:
+        description: 直接子节点
+        items:
+          $ref: '#/definitions/internal_mods.Mod'
+        type: array
+      node:
+        $ref: '#/definitions/internal_mods.Mod'
+    type: object
+  internal_mods.Mod:
+    properties:
+      ai_generated:
+        description: |-
+          AIGenerated 标记该创作是否 AI 生成。仅在建 mod 时携带服务端签发的有效溯源令牌才会置 true,
+          客户端无法凭空伪造;发布时据此强制标识,不可被改成非 AI(防漏标,docs/14)。
+        type: boolean
+      author_id:
+        type: string
+      created_at:
+        type: string
+      draft:
+        type: boolean
+      id:
+        type: string
+      parent_id:
+        type: string
+      patch:
+        items:
+          $ref: '#/definitions/dsl.Op'
+        type: array
+      runtime:
+        description: '"shooter@1.0.0"'
+        type: string
+    type: object
+  internal_mods.createModReq:
+    properties:
+      ai_provenance:
+        description: AIProvenance 是 /ai/mod 返回的溯源令牌;校验通过则该 mod 被标记为 AI 生成(防漏标)。
+        type: string
+      draft:
+        type: boolean
+      parent_id:
+        type: string
+      patch:
+        items:
+          $ref: '#/definitions/dsl.Op'
+        type: array
+      runtime:
+        type: string
+    type: object
+  internal_participation.EventJoin:
+    properties:
+      event_id:
+        type: string
+      joined_at:
+        type: string
+    type: object
+  internal_participation.Withdrawal:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_payments.Order:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      paid_at:
+        type: string
+      product_id:
+        type: string
+      status:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  internal_prefs.NotifGroup:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_prefs.NotifItem'
+        type: array
+      key:
+        type: string
+      label:
+        type: string
+    type: object
+  internal_prefs.NotifItem:
+    properties:
+      default:
+        type: boolean
+      key:
+        type: string
+      label:
+        type: string
+    type: object
+  internal_prefs.NotifPrefs:
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/internal_prefs.NotifGroup'
+        type: array
+      master_default:
+        type: boolean
+      master_key:
+        type: string
+      master_label:
+        type: string
+      master_sub:
+        type: string
+    type: object
+  internal_prefs.PrivacyItem:
+    properties:
+      default:
+        type: boolean
+      default_index:
+        description: |-
+          不能用 omitempty:段控默认下标 0(第一项)、开关默认 false 都是有意义的零值;
+          省略会让客户端读不到 key 而出错(privacy_screen 按 kind 取 default_index/default)。
+        type: integer
+      key:
+        type: string
+      kind:
+        type: string
+      label:
+        type: string
+      options:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_prefs.PrivacyPrefs:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_prefs.PrivacyItem'
+        type: array
+      note:
+        type: string
+    type: object
+  internal_prefs.TeenPrefs:
+    properties:
+      default_enabled:
+        type: boolean
+      description:
+        type: string
+      pin_label:
+        type: string
+      pin_length:
+        type: integer
+      pin_placeholder:
+        type: string
+      rules:
+        items:
+          type: string
+        type: array
+      state_off:
+        type: string
+      state_on:
+        type: string
+      title:
+        type: string
+    type: object
+  internal_replays.Frame:
+    properties:
+      at_ms:
+        type: integer
+      hp:
+        type: integer
+      score:
+        type: integer
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  internal_replays.Replay:
+    properties:
+      created_at:
+        type: string
+      duration_ms:
+        type: integer
+      frames:
+        items:
+          $ref: '#/definitions/internal_replays.Frame'
+        type: array
+      game_id:
+        type: string
+      id:
+        type: string
+      score:
+        type: integer
+      user_id:
+        type: string
+    type: object
+  internal_rooms.MatchSnapshot:
+    properties:
+      players:
+        items:
+          $ref: '#/definitions/internal_rooms.PlayerState'
+        type: array
+      room_id:
+        type: string
+      status:
+        type: string
+      tick:
+        type: integer
+      updated_at:
+        type: string
+      winner_id:
+        type: string
+    type: object
+  internal_rooms.Member:
+    properties:
+      joined_at:
+        type: string
+      ready:
+        type: boolean
+      user_id:
+        type: string
+    type: object
+  internal_rooms.PlayerInput:
+    properties:
+      fire:
+        type: boolean
+      move_x:
+        type: number
+      move_y:
+        type: number
+      seq:
+        type: integer
+    type: object
+  internal_rooms.PlayerState:
+    properties:
+      health:
+        type: integer
+      last_seq:
+        type: integer
+      score:
+        type: integer
+      user_id:
+        type: string
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  internal_rooms.Room:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      host_id:
+        type: string
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/internal_rooms.Member'
+        type: array
+      status:
+        type: string
+    type: object
+  internal_social.Comment:
+    properties:
+      author_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        description: 评论按时间排序,而非字典序 ID
+        type: string
+      game_id:
+        type: string
+      id:
+        type: string
+    type: object
+  internal_users.Profile:
+    properties:
+      bio:
+        description: 用户自述;空时客户端回退本地化占位
+        type: string
+      follows:
+        type: integer
+      forks:
+        type: integer
+      gender:
+        type: integer
+      id:
+        description: '@handle'
+        type: string
+      joined:
+        type: integer
+      level:
+        type: integer
+      likes:
+        type: integer
+      name:
+        type: string
+      plays:
+        type: integer
+      points:
+        type: integer
+      region:
+        type: string
+      tone:
+        type: string
+      works:
+        type: integer
+    type: object
+  internal_users.ProfilePatch:
+    properties:
+      bio:
+        type: string
+      gender:
+        type: integer
+      name:
+        type: string
+      region:
+        type: string
+      tone:
+        type: string
+    type: object
+  internal_users.ProfileUpdate:
+    properties:
+      bio:
+        type: string
+      gender:
+        type: integer
+      name:
+        type: string
+      region:
+        type: string
+      tone:
+        type: string
+    type: object
+  internal_users.VerificationStatus:
+    properties:
+      id_masked:
+        type: string
+      status:
+        type: string
+      submitted_at:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: AI 驱动的小游戏创作社区后端(详见 docs/09-api-design.md)。
+  title: ForgePlay API
+  version: "0.1"
+paths:
+  /achievements:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 成就列表
+      tags:
+      - commerce
+  /achievements/{id}/claim:
+    post:
+      parameters:
+      - description: 成就 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: balance + reward + claimed
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: COMMERCE_INVALID(未达成 / 已领取)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: COMMERCE_INVALID(成就不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 领取成就奖励
+      tags:
+      - commerce
+  /activity:
+    get:
+      parameters:
+      - description: zh|en|ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 通知动态列表
+      tags:
+      - inbox
+  /ai/balance:
+    post:
+      consumes:
+      - application/json
+      description: 按目标难度联动调整玩家与敌人/波次参数，返回 JSON Patch、合法新 DSL 和前后压力指标
+      parameters:
+      - description: runtime / current_dsl / target_difficulty
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_ai.BalanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_ai.BalanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 自动平衡 Runtime DSL
+      tags:
+      - ai
+  /ai/mod:
+    post:
+      consumes:
+      - application/json
+      description: 自然语言 + 当前 DSL → 6902 补丁 → apply → schema 校验 → 新 DSL
+      parameters:
+      - description: runtime / current_dsl / prompt
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_ai.ModRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_ai.ModResponse'
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "422":
+          description: DSL_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "429":
+          description: QUOTA_EXCEEDED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: AI 改 DSL(核心接口)
+      tags:
+      - ai
+  /ai/structure:
+    post:
+      consumes:
+      - application/json
+      description: 按提示词、数量和难度向 Runtime map 追加不覆盖的结构节点，并经过 Schema 校验
+      parameters:
+      - description: runtime / current_dsl / prompt / count / difficulty
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_ai.StructureRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_ai.StructureResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 生成敌人或波次结构
+      tags:
+      - ai
+  /ai/validate:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 校验 DSL 是否合法
+      tags:
+      - ai
+  /analytics/events:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 事件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_analytics.Event'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: no content
+        "400":
+          description: EVENT_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 上报埋点事件(game_viewed/fork_started/ai_edit_started/mod_published 等)
+      tags:
+      - analytics
+  /analytics/summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_analytics.Summary'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 埋点汇总(admin:Fork 转化率 / AI 改完发布率 / 最大 Fork 深度)
+      tags:
+      - analytics
+  /auth/guest:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token + user
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 游客登录(签发临时 token)
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: 注销(作废当前 token,幂等)
+      tags:
+      - auth
+  /auth/oauth/{provider}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: OAuth 提供方,如 wechat/apple/google
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token + user
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "401":
+          description: OAUTH_FAILED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "503":
+          description: OAUTH_FAILED(第三方服务不可用)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 第三方登录(wechat/apple/google...)
+      tags:
+      - auth
+  /auth/oauth/exchange:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token + user
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "401":
+          description: OAUTH_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "503":
+          description: OAUTH_INVALID(第三方服务不可用)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 第三方登录(通用 provider+code 交换接口)
+      tags:
+      - auth
+  /auth/password/login:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token + user
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "401":
+          description: AUTH_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "429":
+          description: AUTH_INVALID(登录尝试过于频繁)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 账号密码登录
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: AUTH_REQUIRED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 续期(旧 token 换新 token)
+      tags:
+      - auth
+  /auth/sms/send:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: 发送手机验证码
+      tags:
+      - auth
+  /auth/sms/verify:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token + user
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: AUTH_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 验证码登录(未注册自动建号)
+      tags:
+      - auth
+  /avatar:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 形象装扮目录(角色 / 座驾 / 特效)
+      tags:
+      - commerce
+  /avatar/equip:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: equipped
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / COMMERCE_INVALID(未拥有该道具)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 装扮换装(角色 / 座驾 / 特效)
+      tags:
+      - commerce
+  /block/{userId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 被屏蔽用户 id
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: 取消屏蔽
+      tags:
+      - moderation
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 被屏蔽用户 id
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: 屏蔽用户
+      tags:
+      - moderation
+  /blocks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'items: [{user_id}]'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 我的黑名单(已屏蔽用户)
+      tags:
+      - moderation
+  /chats:
+    get:
+      parameters:
+      - description: zh|en|ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 私信会话列表
+      tags:
+      - inbox
+  /chats/{idx}/messages:
+    get:
+      parameters:
+      - description: 会话索引
+        in: path
+        name: idx
+        required: true
+        type: integer
+      - description: zh|en|ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(idx 非整数)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: NOT_FOUND(idx 越界)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 会话气泡(对方种子消息 + 自动回复模板)
+      tags:
+      - inbox
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 会话索引
+        in: path
+        name: idx
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(idx 非整数或消息格式错误) / MESSAGE_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 发私信(按会话索引)
+      tags:
+      - inbox
+  /conversations/{handle}/messages:
+    get:
+      parameters:
+      - description: 对方 handle
+        in: path
+        name: handle
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: NOT_FRIEND(非好友关系不能查看)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 会话消息(按对方 handle)
+      tags:
+      - inbox
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 对方 handle
+        in: path
+        name: handle
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: MESSAGE_INVALID(消息格式错误)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "403":
+          description: NOT_FRIEND(非好友关系不能私信)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 发私信(按对方 handle)
+      tags:
+      - inbox
+  /downloads:
+    get:
+      parameters:
+      - description: 展示语言 zh/en/ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 我的下载(已下游戏 + 大小 + 是否有更新)
+      tags:
+      - library
+  /downloads/{gameId}:
+    delete:
+      parameters:
+      - description: 游戏 id
+        in: path
+        name: gameId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 无内容
+        "404":
+          description: NOT_FOUND
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除下载记录
+      tags:
+      - library
+  /downloads/{gameId}/update:
+    post:
+      parameters:
+      - description: 游戏 id
+        in: path
+        name: gameId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: updated
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "404":
+          description: NOT_FOUND
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 标记下载已更新到最新版本
+      tags:
+      - library
+  /drafts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 我的草稿(未发布的 Mod)
+      tags:
+      - mods
+  /drafts/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 草稿 mod id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: RFC 6902 补丁
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            patch:
+              items:
+                $ref: '#/definitions/dsl.Op'
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_mods.Mod'
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 以当前草稿为父保存不可变新版本(RFC 6902 patch)
+      tags:
+      - mods
+  /earnings/withdrawals:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: PARTICIPATION_ERROR
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 当前用户的提现记录
+      tags:
+      - participation
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 提现金额
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            amount:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_participation.Withdrawal'
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "409":
+          description: WITHDRAWAL_INVALID(超额/重复提现)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 申请收益提现
+      tags:
+      - participation
+  /events:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 限时活动列表
+      tags:
+      - commerce
+  /events/{id}/join:
+    post:
+      parameters:
+      - description: event id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_participation.EventJoin'
+        "400":
+          description: EVENT_JOIN_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 参加活动
+      tags:
+      - participation
+  /events/joined:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: PARTICIPATION_ERROR
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 我已参加的活动 id 列表
+      tags:
+      - participation
+  /favorites:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 我的收藏列表
+      tags:
+      - social
+  /feedback:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 反馈内容,1-2000 字符
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            content:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_feedback.Item'
+        "400":
+          description: BAD_REQUEST / FEEDBACK_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "422":
+          description: CONTENT_REJECTED(内容审核不通过)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "503":
+          description: MODERATION_UNAVAILABLE(审核服务不可用)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 提交用户反馈
+      tags:
+      - feedback
+  /follow:
+    get:
+      parameters:
+      - description: following|followers(默认 following)
+        in: query
+        name: type
+        type: string
+      - description: zh|en|ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(type 非法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 关注 / 粉丝列表
+      tags:
+      - inbox
+  /follow/{handle}:
+    post:
+      parameters:
+      - description: 目标用户 handle
+        in: path
+        name: handle
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: following
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: 关注 / 取关(按 handle)
+      tags:
+      - inbox
+  /friends/{handle}:
+    post:
+      parameters:
+      - description: 目标用户 handle
+        in: path
+        name: handle
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: friend
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "500":
+          description: INTERNAL
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 加好友
+      tags:
+      - inbox
+  /friends/suggestions:
+    get:
+      parameters:
+      - description: zh|en|ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 加好友推荐 + 邀请码
+      tags:
+      - inbox
+  /games:
+    get:
+      parameters:
+      - description: 游标
+        in: query
+        name: cursor
+        type: string
+      - description: 每页
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 已发布游戏列表(游标分页)
+      tags:
+      - games
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: mod_id / title / ...
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_games.PublishRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_games.Game'
+      summary: 发布游戏(进审核)
+      tags:
+      - games
+  /games/{id}:
+    get:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_games.Game'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 游戏详情
+      tags:
+      - games
+  /games/{id}/comments:
+    get:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 评论列表(分页)
+      tags:
+      - social
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_social.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 发评论
+      tags:
+      - social
+  /games/{id}/community:
+    get:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_community.Summary'
+        "500":
+          description: COMMUNITY_ERROR
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 游戏社区面板(评分摘要 + 帖子列表)
+      tags:
+      - community
+  /games/{id}/community/posts:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 帖子内容,1-1000 字符
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            content:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_community.Post'
+        "400":
+          description: BAD_REQUEST / POST_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "422":
+          description: CONTENT_REJECTED(内容审核不通过)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 发社区帖子
+      tags:
+      - community
+  /games/{id}/community/rating:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 评分,1-5
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            value:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_community.Summary'
+        "400":
+          description: BAD_REQUEST / RATING_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 给游戏打分(1-5,覆盖式更新)
+      tags:
+      - community
+  /games/{id}/decision:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_games.Game'
+        "409":
+          description: INVALID_STATE
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 审核裁决(admin)
+      tags:
+      - games
+  /games/{id}/delist:
+    post:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_games.Game'
+        "403":
+          description: FORBIDDEN
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "409":
+          description: INVALID_STATE
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 作者下架自己已发布的作品
+      tags:
+      - games
+  /games/{id}/favorite:
+    delete:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'favorite: true/false'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 收藏 / 取消收藏
+      tags:
+      - social
+    post:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'favorite: true/false'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 收藏 / 取消收藏
+      tags:
+      - social
+  /games/{id}/like:
+    delete:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 用户(将由鉴权注入)
+        in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: count + liked
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 取消点赞
+      tags:
+      - social
+    post:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 用户(将由鉴权注入)
+        in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: count + liked
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 点赞
+      tags:
+      - social
+  /games/{id}/not-interested:
+    post:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 对某游戏标记"不感兴趣"(从列表隐藏)
+      tags:
+      - moderation
+  /games/{id}/played:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 游戏 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: recorded
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: BAD_REQUEST(duration_ms 非法)
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: NOT_FOUND
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 记录一次游玩(时长上报)
+      tags:
+      - library
+  /games/{id}/replays:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 回放时长(ms)+逐帧数据
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            duration_ms:
+              type: integer
+            frames:
+              items:
+                $ref: '#/definitions/internal_replays.Frame'
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_replays.Replay'
+        "400":
+          description: BAD_REQUEST / REPLAY_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 上传对局回放(逐帧轨迹,服务端复核分数)
+      tags:
+      - replays
+  /games/{id}/replays/{user}:
+    get:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: user id
+        in: path
+        name: user
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_replays.Replay'
+        "404":
+          description: REPLAY_NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 取某用户在某游戏的最新回放
+      tags:
+      - replays
+  /games/{id}/replays/leaderboard:
+    get:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: INTERNAL
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 游戏回放排行榜(前 20)
+      tags:
+      - replays
+  /games/{id}/resubmit:
+    post:
+      parameters:
+      - description: game id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_games.Game'
+        "403":
+          description: FORBIDDEN
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "409":
+          description: INVALID_STATE
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 作者将被拒作品重新提交(回到审核中)
+      tags:
+      - games
+  /games/mine:
+    get:
+      parameters:
+      - description: 展示语言 zh/en/ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 我的作品(各审核状态:published/reviewing/rejected/delisted)
+      tags:
+      - games
+  /history:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 无内容
+        "500":
+          description: INTERNAL
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 清空最近玩过记录
+      tags:
+      - library
+    get:
+      parameters:
+      - description: 展示语言 zh/en/ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 最近玩过(按今天/昨天/更早分组)
+      tags:
+      - library
+  /live:
+    get:
+      parameters:
+      - description: 展示语言 zh/en/ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 正在直播(游戏 + 主播 + 在看人数 + 标语)
+      tags:
+      - library
+  /live/{id}/gift:
+    post:
+      parameters:
+      - description: 直播 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: balance + cost + sent
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: COMMERCE_INVALID(余额不足)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 直播间刷礼物(扣创作点)
+      tags:
+      - commerce
+  /membership:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_commerce.MembershipView'
+      summary: 会员 ForgePlay+(权益 + 套餐)
+      tags:
+      - commerce
+  /moderation/queue:
+    get:
+      parameters:
+      - description: 游标
+        in: query
+        name: cursor
+        type: string
+      - description: 每页
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 审核队列(仅 reviewing,admin,游标分页)
+      tags:
+      - games
+  /mods:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: runtime / parent_id / patch
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_mods.createModReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_mods.Mod'
+      summary: 建 mod(parent_id 空=根,否则子 mod)
+      tags:
+      - mods
+  /mods/{id}/dsl:
+    get:
+      parameters:
+      - description: mod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 取生效 DSL(基线 + 补丁链)
+      tags:
+      - mods
+  /mods/{id}/fork:
+    post:
+      parameters:
+      - description: mod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_mods.Mod'
+      summary: Fork 出新草稿
+      tags:
+      - mods
+  /mods/{id}/fork-tree:
+    get:
+      parameters:
+      - description: mod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_mods.ForkTreeView'
+      summary: Fork Tree(祖先链 + 自身 + 直接子)
+      tags:
+      - mods
+  /mods/{id}/lineage:
+    get:
+      parameters:
+      - description: mod id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 创作链(根 → 当前)
+      tags:
+      - mods
+  /mods/mine:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 我创建的 mod(全部,含草稿与已用于发布的)
+      tags:
+      - mods
+  /payments/orders:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: PAYMENT_ERROR
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 当前用户的支付订单
+      tags:
+      - payments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品 id
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            product_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_payments.Order'
+        "400":
+          description: BAD_REQUEST / PAYMENT_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 创建支付订单
+      tags:
+      - payments
+  /payments/orders/{id}:
+    get:
+      parameters:
+      - description: order id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_payments.Order'
+        "404":
+          description: PAYMENT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 查询支付订单
+      tags:
+      - payments
+  /payments/webhook:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 回调载荷,需带 X-ForgePlay-Signature 签名头
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+            order_id:
+              type: string
+            transaction_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_payments.Order'
+        "400":
+          description: BAD_REQUEST / PAYMENT_REJECTED(签名或状态不合法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 支付渠道回调(确认订单支付结果)
+      tags:
+      - payments
+  /points:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_commerce.PointsView'
+      summary: 创作点(余额 + 流水 + 收益中心)
+      tags:
+      - commerce
+  /prefs/notifications:
+    get:
+      parameters:
+      - description: 语言:zh(默认)/ en / ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_prefs.NotifPrefs'
+      summary: 通知设置元数据(总开关 + 互动/系统分组)
+      tags:
+      - prefs
+  /prefs/notifications/{key}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 通知项 key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 设置通知开关
+      tags:
+      - prefs
+  /prefs/privacy:
+    get:
+      parameters:
+      - description: 语言:zh(默认)/ en / ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_prefs.PrivacyPrefs'
+      summary: 隐私设置元数据(段控 + 开关)
+      tags:
+      - prefs
+  /prefs/privacy/{key}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 隐私项 key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / PREF_INVALID(key 不存在或取值非法)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 设置隐私选项
+      tags:
+      - prefs
+  /prefs/teen:
+    get:
+      parameters:
+      - description: 语言:zh(默认)/ en / ja
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_prefs.TeenPrefs'
+      summary: 青少年模式元数据(规则说明 + 默认态)
+      tags:
+      - prefs
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / PIN_INVALID(PIN 校验失败)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 开关青少年模式(校验 PIN)
+      tags:
+      - prefs
+  /ranking:
+    get:
+      parameters:
+      - description: hot|new|rising
+        in: query
+        name: type
+        type: string
+      - description: 条数
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 榜单(热门/新作/飙升)
+      tags:
+      - ranking
+  /report:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_moderation.Report'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 举报(游戏/评论/用户)
+      tags:
+      - moderation
+  /rooms:
+    post:
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_rooms.Room'
+        "400":
+          description: ROOM_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 创建房间(创建者自动加入并成为房主)
+      tags:
+      - rooms
+  /rooms/{id}:
+    get:
+      parameters:
+      - description: room id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.Room'
+        "403":
+          description: ROOM_INVALID(非房间成员)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: ROOM_INVALID(房间不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 查询房间详情
+      tags:
+      - rooms
+  /rooms/{id}/input:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: room id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 本帧输入,seq 需单调递增
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_rooms.PlayerInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.MatchSnapshot'
+        "400":
+          description: BAD_REQUEST / MATCH_INVALID(非法输入/过期序号/对局未开始或已结束)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 提交一帧权威对局输入(移动/开火)
+      tags:
+      - rooms
+  /rooms/{id}/ready:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: room id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 准备状态
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ready:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.Room'
+        "400":
+          description: BAD_REQUEST / ROOM_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 设置本人在房间内的准备状态
+      tags:
+      - rooms
+  /rooms/{id}/snapshot:
+    get:
+      parameters:
+      - description: room id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.MatchSnapshot'
+        "400":
+          description: MATCH_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 取当前对局快照(用于轮询)
+      tags:
+      - rooms
+  /rooms/{id}/start:
+    post:
+      parameters:
+      - description: room id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.Room'
+        "400":
+          description: ROOM_INVALID(未全员准备)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "403":
+          description: ROOM_INVALID(非房主)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 开始对局(仅房主,需全员准备且 >=2 人)
+      tags:
+      - rooms
+  /rooms/join:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 房间码
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            code:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_rooms.Room'
+        "400":
+          description: BAD_REQUEST / ROOM_INVALID(已满/已开始/不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 按房间码加入房间
+      tags:
+      - rooms
+  /runtimes/{name}/{version}/baseline:
+    get:
+      parameters:
+      - description: runtime 名,如 shooter
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 版本,如 1.0.0
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 取 Runtime 基线 DSL
+      tags:
+      - runtimes
+  /runtimes/{name}/{version}/schema:
+    get:
+      parameters:
+      - description: runtime 名,如 shooter
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 版本,如 1.0.0
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 取 Runtime 的 DSL JSON Schema(客户端校验 / AI 约束用)
+      tags:
+      - runtimes
+  /shop:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_commerce.ShopView'
+      summary: 商城(皮肤 / 道具 / 充值档)
+      tags:
+      - commerce
+  /shop/purchase/{id}:
+    post:
+      parameters:
+      - description: 商品 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: balance + owned
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: COMMERCE_INVALID(余额不足)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: COMMERCE_INVALID(商品不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 购买商城商品(皮肤 / 道具,扣创作点)
+      tags:
+      - commerce
+  /users/{id}:
+    get:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_users.Profile'
+      summary: 公开主页(用户资料)
+      tags:
+      - users
+  /users/{id}/follow:
+    post:
+      parameters:
+      - description: 目标用户 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: following
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "500":
+          description: INTERNAL
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 关注 / 取关(按用户 id)
+      tags:
+      - inbox
+  /users/{id}/followers:
+    get:
+      parameters:
+      - description: 用户 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 某用户的粉丝列表
+      tags:
+      - inbox
+  /users/{id}/following:
+    get:
+      parameters:
+      - description: 用户 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 某用户的关注列表
+      tags:
+      - inbox
+  /users/{id}/games:
+    get:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: works|forks|liked(默认 works)
+        in: query
+        name: type
+        type: string
+      - description: 展示语言 zh/en/ja(默认 zh)
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 某用户的作品(works/forks/liked)
+      tags:
+      - users
+  /users/{id}/verification/decision:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 是否通过
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            approve:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_users.VerificationStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 实名审核裁决(admin)
+      tags:
+      - users
+  /users/me:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 无内容
+        "500":
+          description: DELETE_FAILED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 注销账号(删除当前用户,登录态)
+      tags:
+      - auth
+    get:
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_auth.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 当前用户(需登录)
+      tags:
+      - auth
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: 待更新字段(昵称/简介/性别/语气/地区)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_users.ProfilePatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_users.Profile'
+        "400":
+          description: PROFILE_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "500":
+          description: INTERNAL(持久化失败)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 编辑资料(局部更新,仅传字段生效)
+      tags:
+      - users
+  /users/me/oauth/bind:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: SecurityInfo
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / OAUTH_BIND_FAILED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "409":
+          description: OAUTH_BIND_FAILED(该第三方身份已被绑定)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 绑定第三方账号(登录态)
+      tags:
+      - auth
+  /users/me/password:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / PASSWORD_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 设置 / 修改登录密码(登录态)
+      tags:
+      - auth
+  /users/me/phone:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: SecurityInfo
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: BAD_REQUEST(请求体非法) / PHONE_CHANGE_FAILED
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 更换绑定手机号(需短信验证码,登录态)
+      tags:
+      - auth
+  /users/me/profile:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 完整资料
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_users.ProfileUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_users.Profile'
+        "400":
+          description: PROFILE_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "500":
+          description: INTERNAL(持久化失败)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 编辑资料(整份覆盖更新:昵称/简介/头像/地区)
+      tags:
+      - users
+  /users/me/security:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 账号安全信息(手机 / 密码 / 已绑定第三方账号,登录态)
+      tags:
+      - auth
+  /users/me/verification:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_users.VerificationStatus'
+      summary: 实名认证状态
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 姓名 + 证件号(不落库原文)
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            id_number:
+              type: string
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_users.VerificationStatus'
+        "400":
+          description: VERIFICATION_INVALID
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 实名认证(合规):提交姓名+证件号,进入待审核
+      tags:
+      - users
+  /verifications/queue:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 待审核实名队列(admin)
+      tags:
+      - users
+  /welfare:
+    get:
+      parameters:
+      - description: zh/en/ja,默认 zh
+        in: query
+        name: lang
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_commerce.WelfareView'
+      summary: 福利中心(签到 + 任务 + 邀请)
+      tags:
+      - commerce
+  /welfare/checkin:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: balance + reward + checked
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: COMMERCE_INVALID(今日已签到)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 每日签到(领取创作点奖励)
+      tags:
+      - commerce
+  /welfare/quests/{id}/claim:
+    post:
+      parameters:
+      - description: 任务 id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: balance + reward + claimed
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: COMMERCE_INVALID(未达成 / 已领取)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+        "404":
+          description: COMMERCE_INVALID(任务不存在)
+          schema:
+            $ref: '#/definitions/forgeplay_server_pkg_httpx.Envelope'
+      summary: 领取福利任务奖励
+      tags:
+      - commerce
+swagger: "2.0"

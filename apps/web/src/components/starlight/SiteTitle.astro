@@ -1,0 +1,8 @@
+---
+// Replaces Starlight's text site title with the shared wordmark. The link target comes from Starlight, so it points at the landing page of the reader's current locale.
+import Wordmark from '../Wordmark.astro';
+
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<Wordmark href={siteTitleHref} label={siteTitle} />

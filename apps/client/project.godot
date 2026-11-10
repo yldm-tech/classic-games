@@ -1,0 +1,41 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="forgeplay"
+config/version="0.1.0"
+run/main_scene="res://main.tscn"
+; Godot feature tags use major.minor; the exact patch is pinned in .godot-version and enforced by the test runner/CI.
+config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+AppState="*res://shell/state/app_state.gd"
+
+[display]
+
+; 移动优先设计(tokens.gd 字号是手机 px)。设基准分辨率 + canvas_items 等比缩放,
+; UI 随窗口整体放大、不再是固定小字;aspect=expand 在桌面宽屏下等比铺开不变形。
+; 同时让 5 端(手机/桌面/Web)分辨率无关,export 各端都按此基准缩放。
+window/size/viewport_width=430
+window/size/viewport_height=932
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true

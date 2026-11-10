@@ -1,0 +1,49 @@
+# Repo-wide editor defaults. apps/client/.editorconfig is written by the Godot editor and declares root = true, so files under apps/client follow that file, not this one.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# gofmt owns Go formatting: tabs, no alignment by spaces.
+[*.go]
+indent_style = tab
+
+[{go.mod,go.sum,go.work}]
+indent_style = tab
+
+# Make requires tab-indented recipes.
+[{Makefile,*.mk}]
+indent_style = tab
+
+# Godot writes GDScript with tabs.
+[*.gd]
+indent_style = tab
+
+[*.{json,yml,yaml,toml}]
+indent_style = space
+indent_size = 2
+
+# Output of swag, which uses its own indentation; never hand-edited.
+[apps/server/docs/**]
+indent_style = unset
+indent_size = unset
+
+# Two trailing spaces are a Markdown line break and are used in docs/legal.
+[*.{md,mdx}]
+trim_trailing_whitespace = false
+
+# Licence texts and upstream sources are kept byte-identical to their origin.
+[{LICENSE,NOTICE,CODE_OF_CONDUCT.md}]
+trim_trailing_whitespace = false
+insert_final_newline = unset
+
+[apps/client/vendor/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

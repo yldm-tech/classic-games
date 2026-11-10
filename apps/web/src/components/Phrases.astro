@@ -1,0 +1,10 @@
+---
+// Renders a heading as unbreakable phrases. Source strings mark phrase boundaries with "|". Chinese has no spaces, so without this a browser may break a heading in the middle of a word; with it, lines only break between phrases unless a single phrase is wider than the line.
+interface Props {
+	text: string;
+}
+
+const parts = Astro.props.text.split('|').filter((part) => part.length > 0);
+---
+
+{parts.map((part) => <><span class="fp-phrase">{part.trimEnd()}</span>{part.endsWith(' ') ? ' ' : ''}</>)}

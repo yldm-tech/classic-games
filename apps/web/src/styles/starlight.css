@@ -1,0 +1,94 @@
+/* Maps the ForgePlay tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. */
+
+:root {
+	--sl-font: var(--fp-font-sans);
+	--sl-font-mono: var(--fp-font-mono);
+
+	--sl-color-white: #f2edec;
+	--sl-color-gray-1: #e4dcdb;
+	--sl-color-gray-2: #b3a9aa;
+	--sl-color-gray-3: #948a8b;
+	--sl-color-gray-4: #5c5354;
+	--sl-color-gray-5: #332c2d;
+	--sl-color-gray-6: #1c1819;
+	--sl-color-black: #0f0d0e;
+
+	--sl-color-accent-low: #3a1508;
+	--sl-color-accent: #ff4d1a;
+	--sl-color-accent-high: #ff9670;
+
+	--sl-color-bg-nav: #0f0d0e;
+	--sl-color-bg-sidebar: #0f0d0e;
+	--sl-color-bg-inline-code: #252021;
+	--sl-color-hairline-light: rgb(242 237 236 / 0.14);
+	--sl-color-hairline: rgb(242 237 236 / 0.08);
+	--sl-color-backdrop-overlay: rgb(10 8 9 / 0.72);
+
+	--sl-content-width: 46rem;
+	--sl-line-height: 1.8;
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: #1c1819;
+	--sl-color-gray-1: #2b2526;
+	--sl-color-gray-2: #3d3536;
+	--sl-color-gray-3: #574f50;
+	--sl-color-gray-4: #6f6566;
+	--sl-color-gray-5: #cdc4c0;
+	--sl-color-gray-6: #f1ece9;
+	--sl-color-gray-7: #f6f2ef;
+	--sl-color-black: #fbf8f6;
+
+	--sl-color-accent-low: #ffe1d6;
+	--sl-color-accent: #bf2d06;
+	--sl-color-accent-high: #7a1c03;
+
+	--sl-color-bg-nav: #fbf8f6;
+	--sl-color-bg-sidebar: #fbf8f6;
+	--sl-color-bg-inline-code: #f1ece9;
+	--sl-color-hairline-light: rgb(28 24 25 / 0.12);
+	--sl-color-hairline: rgb(28 24 25 / 0.08);
+	--sl-color-hairline-shade: rgb(28 24 25 / 0.12);
+	--sl-color-backdrop-overlay: rgb(87 79 80 / 0.5);
+}
+
+/* The same faint forge glow the landing page uses, kept behind the content column. */
+body {
+	background-image: radial-gradient(60rem 22rem at 78% -8rem, var(--fp-glow), transparent 70%);
+	background-repeat: no-repeat;
+}
+
+:focus-visible {
+	outline: 2px solid var(--fp-focus);
+	outline-offset: 2px;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4) {
+	letter-spacing: -0.01em;
+}
+
+.sl-markdown-content table {
+	font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content blockquote {
+	border-inline-start-color: var(--fp-accent);
+}
+
+/* Long ASCII diagrams and wide tables scroll inside their own box instead of widening the page. */
+.sl-markdown-content :is(pre, table) {
+	max-width: 100%;
+}
+
+/* Starlight colours "note" asides with its blue ramp. Remap that ramp to the warm neutrals and ember so notes belong to the same palette as everything else. */
+:root {
+	--sl-color-blue-low: #252021;
+	--sl-color-blue: #ff6b33;
+	--sl-color-blue-high: #f2edec;
+}
+
+:root[data-theme='light'] {
+	--sl-color-blue-low: #f1ece9;
+	--sl-color-blue: #bf2d06;
+	--sl-color-blue-high: #1c1819;
+}

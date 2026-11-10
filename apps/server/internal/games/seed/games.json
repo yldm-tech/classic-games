@@ -1,0 +1,191 @@
+[
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@koru",
+    "cat": "Racing",
+    "forks": 1400,
+    "id": "ember",
+    "likes": 9300,
+    "plays": 48200,
+    "summary": {
+      "en": "Surf a melting lava track that collapses behind you. Forked from Lava Loop with a new drift system and an AI-generated night biome.",
+      "ja": "溶けて崩れていく溶岩トラックをサーフィン。『ラーヴァ・ループ』からのリミックスで、新ドリフトと AI 生成の夜バイオームを搭載。",
+      "zh": "在熔岩赛道上漂移冲浪,身后的路一路塌掉。改自《熔岩环道》,加了全新漂移手感和 AI 生成的夜间地图。"
+    },
+    "title": {
+      "en": "Ember Drift",
+      "ja": "エンバー・ドリフト",
+      "zh": "余烬漂移"
+    },
+    "tone": "ember"
+  },
+  {
+    "ai": true,
+    "badge": "ai",
+    "by": "@mei",
+    "cat": "Arcade",
+    "forks": 608,
+    "id": "volt",
+    "likes": 2100,
+    "plays": 12900,
+    "summary": {
+      "en": "An endless sprint through a neon substation. AI-remixed from Ember Drift with magnet dashes.",
+      "ja": "ネオン変電所を駆け抜けるエンドレスラン。『エンバー・ドリフト』の AI リミックス。",
+      "zh": "霓虹变电站里的无尽跑酷。AI 改自《余烬漂移》,新增磁吸冲刺。"
+    },
+    "title": {
+      "en": "Volt Runner",
+      "ja": "ボルト・ランナー",
+      "zh": "电光狂奔"
+    },
+    "tone": "moss"
+  },
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@arc",
+    "cat": "Strategy",
+    "forks": 312,
+    "id": "foundry",
+    "likes": 1800,
+    "plays": 8100,
+    "summary": {
+      "en": "Squad tactics on a cooling forge floor. Every turn, the slag hardens and the map shrinks.",
+      "ja": "冷えゆく鍛造場での分隊戦術。ターンごとにスラグが固まり、マップが縮む。",
+      "zh": "在渐渐冷却的铸造车间里排兵布阵。每过一回合,熔渣凝固,地图就缩小一圈。"
+    },
+    "title": {
+      "en": "Foundry Tactics",
+      "ja": "ファウンドリ戦術",
+      "zh": "熔炉战棋"
+    },
+    "tone": "plum"
+  },
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@jin",
+    "cat": "Puzzle",
+    "forks": 97,
+    "id": "null",
+    "likes": 940,
+    "plays": 5400,
+    "summary": {
+      "en": "Dock ghost ships by rewiring tide machines. Quiet, foggy, exact.",
+      "ja": "潮汐マシンを配線し直して幽霊船を接岸。静かで、霧深く、精密。",
+      "zh": "重新接线潮汐机器,引幽灵船进港。安静、起雾、讲究手稳。"
+    },
+    "title": {
+      "en": "Null Harbor",
+      "ja": "ヌル・ハーバー",
+      "zh": "幽灵港湾"
+    },
+    "tone": "ocean"
+  },
+  {
+    "ai": false,
+    "badge": "live",
+    "by": "@koru",
+    "cat": "Arcade",
+    "forks": 540,
+    "id": "cinder",
+    "likes": 4700,
+    "plays": 22000,
+    "summary": {
+      "en": "Mini-golf across factory rooftops. Wind comes from the furnaces below.",
+      "ja": "工場の屋上を渡るミニゴルフ。風は下の溶鉱炉から吹く。",
+      "zh": "在厂房屋顶之间打迷你高尔夫,风从楼下的熔炉里吹上来。"
+    },
+    "title": {
+      "en": "Cinder Golf",
+      "ja": "シンダー・ゴルフ",
+      "zh": "屋顶高尔夫"
+    },
+    "tone": "steel"
+  },
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@yuna",
+    "cat": "Puzzle",
+    "forks": 41,
+    "id": "ash",
+    "likes": 620,
+    "plays": 3300,
+    "summary": {
+      "en": "Grow a garden in volcanic soil. Each bloom changes the heatmap.",
+      "ja": "火山性の土に庭を育てる。咲くたびにヒートマップが変わる。",
+      "zh": "在火山灰里种花。每开一朵,地表的热度分布就变一次。"
+    },
+    "title": {
+      "en": "Ash Garden",
+      "ja": "灰の庭",
+      "zh": "灰烬花园"
+    },
+    "tone": "rust"
+  },
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@bo",
+    "cat": "Puzzle",
+    "forks": 203,
+    "id": "magma",
+    "likes": 1500,
+    "plays": 9800,
+    "summary": {
+      "en": "A maze that re-melts itself every 30 seconds.",
+      "ja": "30 秒ごとに自らを溶かし直す迷路。",
+      "zh": "一座每 30 秒就把自己重新熔一遍的迷宫。"
+    },
+    "title": {
+      "en": "Magma Maze",
+      "ja": "マグマ・メイズ",
+      "zh": "熔岩迷宫"
+    },
+    "tone": "ember"
+  },
+  {
+    "ai": true,
+    "badge": "ai",
+    "by": "@ana",
+    "cat": "Arcade",
+    "forks": 120,
+    "id": "echo",
+    "likes": 1100,
+    "plays": 6700,
+    "summary": {
+      "en": "Ride sonar waves; the level is whatever the ping reveals.",
+      "ja": "ソナー波に乗れ。ピングが映し出すものこそがレベルだ。",
+      "zh": "踩着声呐波前进 —— 雷达照到哪,关卡就长到哪。"
+    },
+    "title": {
+      "en": "Echo Tide",
+      "ja": "エコー・タイド",
+      "zh": "回声潮汐"
+    },
+    "tone": "ocean"
+  },
+  {
+    "ai": false,
+    "badge": "",
+    "by": "@talia",
+    "cat": "Strategy",
+    "forks": 2100,
+    "id": "ashfall",
+    "likes": 8800,
+    "plays": 31000,
+    "summary": {
+      "en": "Rule a kingdom built on a dormant caldera. 2.1k forks this week — the most-forged world on ForgePlay.",
+      "ja": "休火山のカルデラに築かれた王国を統治せよ。今週 2.1 万リミックス。",
+      "zh": "在休眠火山口上经营你的王国。本周 2.1万 人二创,全站最火的世界。"
+    },
+    "title": {
+      "en": "Ashfall Kingdom",
+      "ja": "アッシュフォール王国",
+      "zh": "灰烬王国"
+    },
+    "tone": "rust"
+  }
+]
