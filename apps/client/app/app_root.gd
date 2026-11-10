@@ -628,7 +628,7 @@ func _render_chrome() -> void:
 			back.pressed.connect(router.back)
 			bar.add_child(back)
 		if in_tabs and router.tab == 0:
-			# 双色品牌 logo:Forge(主文字色)+ Play(熔炉橙红)
+			# 双色品牌 logo:Classic(主文字色)+ Games(熔炉橙红)
 			var logo := Widgets.brand_logo(state.theme, Tokens.FONT_H3)
 			logo.name = "AppBarTitle"
 			bar.add_child(logo)
