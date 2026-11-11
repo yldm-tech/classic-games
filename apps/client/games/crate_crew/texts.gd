@@ -16,7 +16,7 @@ const TEXT := {
 	"boss_vacuum": {"zh": "吸尘巨兽", "en": "THE DUSTMAW"},
 	"boss_crane": {"zh": "吊臂总管", "en": "THE OVERSEER"},
 	"boss_tip_vacuum": {"zh": "趁它张嘴，把废料扔回去", "en": "Throw its scrap back into its open mouth"},
-	"boss_tip_crane": {"zh": "捡起螺母，向上砸它", "en": "Pick up the nuts and throw them up"},
+	"boss_tip_crane": {"zh": "等它睁眼出爪，再用螺母砸它", "en": "When its eye opens to strike, throw the nuts"},
 }
 
 static func of(key: String, locale: String) -> String:

@@ -7,6 +7,7 @@ const Foes := preload("res://games/crate_crew/foes.gd")
 const Levels := preload("res://games/crate_crew/levels.gd")
 const Sprites := preload("res://games/crate_crew/sprites.gd")
 const Backdrops := preload("res://games/crate_crew/backdrops.gd")
+const Bosses := preload("res://games/crate_crew/bosses.gd")
 const Texts := preload("res://games/crate_crew/texts.gd")
 const Rng := preload("res://games/shared/game_rng.gd")
 
@@ -383,6 +384,12 @@ func _draw_boss(boss: Dictionary) -> void:
 		draw_rect(Rect2(roundf(x) - 1.0, roundf(y + 27.0 + link), 3.0, 3.0), Color("7b8794") if int(link / 4.0) % 2 == 0 else Color("4a5463"))
 		link += 4.0
 	_sprite("crane_%d" % (1 if hurt else 0) + ("#w" if white else ""), x, y + 28.0, false)
+	if not Bosses.is_open(boss) and mode != "dying":
+		# The shutter over the lens.
+		draw_rect(Rect2(roundf(x) - 8.0, roundf(y) + 9.0, 16.0, 11.0), Color("4a5463"))
+		draw_rect(Rect2(roundf(x) - 8.0, roundf(y) + 9.0, 16.0, 1.0), Color("b9c0c9"))
+		draw_rect(Rect2(roundf(x) - 8.0, roundf(y) + 13.0, 16.0, 1.0), Color("222834"))
+		draw_rect(Rect2(roundf(x) - 8.0, roundf(y) + 17.0, 16.0, 1.0), Color("222834"))
 	var shut := mode == "stuck" or mode == "retract"
 	_sprite("claw_shut" if shut else "claw_open", x, y + 28.0 + chain + 22.0, false)
 

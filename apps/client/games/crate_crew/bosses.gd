@@ -3,7 +3,7 @@ extends RefCounted
 ## The two bosses. Neither can be hurt by anything the robots own: each one throws things into its room that turn into something to pick up, and those are what gets thrown back. Static functions on the world they are handed, like foes.gd.
 ##
 ##   vacuum  the Dustmaw, a canister on wheels at the top of the pipe shaft. It spits lumps of scrap, sucks the robots towards its mouth and rams across the floor. Its shell turns everything away: a throw counts only while the mouth is open, which is while it spits and while it sucks.
-##   crane   the Overseer, a trolley on the ceiling rail of the control loft. It drops heavy nuts, then slams its claw into the floor, where the claw stays stuck for a moment. Throw upwards at the trolley or sideways at the stuck claw.
+##   crane   the Overseer, a trolley on the ceiling rail of the control loft. It drops heavy nuts with its shutter down, then opens its eye, takes aim and slams its claw into the floor, where the claw stays stuck for a moment. From taking aim until the claw is back up it can be hurt: throw upwards at the trolley or sideways at the stuck claw.
 
 const MISS := 0
 const HURT := 1
@@ -184,6 +184,13 @@ static func _step_crane(world: Variant, boss: Dictionary, delta: float) -> void:
 
 # ---- being hit ----
 
+## Whether a throw can hurt the boss right now: the Dustmaw with its mouth open, the Overseer with its shutter up.
+static func is_open(boss: Dictionary) -> bool:
+	var mode := str(boss["mode"])
+	if str(boss["kind"]) == "vacuum":
+		return mode == "spit" or mode == "inhale"
+	return mode == "aim" or mode == "slam" or mode == "stuck" or mode == "retract"
+
 ## Something thrown is at (x, y), `half` wide and `half_tall` high around that point. Returns MISS, HURT or DEFLECTED.
 static func take_throw(world: Variant, x: float, y: float, half: float, half_tall: float) -> int:
 	var boss: Dictionary = world.boss
@@ -193,7 +200,7 @@ static func take_throw(world: Variant, x: float, y: float, half: float, half_tal
 	if str(boss["kind"]) == "vacuum":
 		touched = absf(x - float(boss["x"])) < 22.0 + half and y + half_tall > float(boss["y"]) - 36.0 and y - half_tall < float(boss["y"])
 		# Its shell shrugs everything off; only the open mouth is soft.
-		if touched and str(boss["mode"]) != "spit" and str(boss["mode"]) != "inhale":
+		if touched and not is_open(boss):
 			world.emit("clang", x, y)
 			return DEFLECTED
 	else:
@@ -201,6 +208,10 @@ static func take_throw(world: Variant, x: float, y: float, half: float, half_tal
 		var claw_top := body_top + 28.0 + float(boss["claw"])
 		touched = absf(x - float(boss["x"])) < 23.0 + half and y + half_tall > body_top + 4.0 and y - half_tall < body_top + 28.0
 		touched = touched or (absf(x - float(boss["x"])) < 12.0 + half and y + half_tall > claw_top and y - half_tall < claw_top + 22.0)
+		# Its shutter is down while it rides the rail; it opens only for the slam, from taking aim until the claw is back up.
+		if touched and not is_open(boss):
+			world.emit("clang", x, y)
+			return DEFLECTED
 	if not touched:
 		return MISS
 	boss["hp"] = int(boss["hp"]) - 1

@@ -369,14 +369,24 @@ func _fight_step(game: GameModule, upwards: bool) -> void:
 					want_right = dx > 0.0 and int(hero["face"]) < 0
 					want_left = dx < 0.0 and int(hero["face"]) > 0
 					press = not want_left and not want_right
-		elif upwards:
+		elif str(boss["kind"]) == "crane":
 			var dx := boss_x - x
-			if absf(dx) > 8.0:
-				want_right = dx > 0.0
-				want_left = dx < 0.0
-			else:
-				want_up = true
-				press = true
+			var mode := str(boss["mode"])
+			if mode == "stuck":
+				# The claw is in the floor: face it and throw sideways.
+				var facing_it := (dx > 0.0) == (int(hero["face"]) > 0)
+				if not facing_it or absf(dx) > 120.0:
+					want_right = dx > 0.0
+					want_left = dx < 0.0
+				else:
+					press = true
+			elif mode == "aim" and absf(dx) < 8.0:
+				want_up = upwards
+				press = upwards
+			elif absf(dx) < 44.0:
+				# Keep out from under it while it drops nuts and takes aim.
+				want_left = dx > 0.0 and x > float(boss["left"]) + 30.0
+				want_right = not want_left
 		else:
 			var dx := boss_x - x
 			var facing_it := (dx > 0.0) == (int(hero["face"]) > 0)
@@ -386,7 +396,7 @@ func _fight_step(game: GameModule, upwards: bool) -> void:
 			elif absf(dx) > 150.0:
 				want_right = dx > 0.0
 				want_left = dx < 0.0
-			elif str(boss["kind"]) != "vacuum" or str(boss["mode"]) == "spit" or str(boss["mode"]) == "inhale":
+			elif str(boss["mode"]) == "spit" or str(boss["mode"]) == "inhale":
 				press = true
 		# Hop over a ramming machine.
 		if str(boss["kind"]) == "vacuum" and str(boss["mode"]) == "charge" and absf(boss_x - x) < 60.0 and bool(hero["ground"]):
@@ -433,7 +443,7 @@ func _test_last_boss_clears_the_game() -> void:
 	while game.is_running() and steps < 60 * 300:
 		_fight_step(game, true)
 		steps += 1
-	_check("throwing its nuts up at the Overseer wins the game", results.size() == 1 and results[0]["cleared"] == true and results[0]["defeated"] == false)
+	_check("throwing its nuts at the Overseer while its shutter is up wins the game", results.size() == 1 and results[0]["cleared"] == true and results[0]["defeated"] == false)
 	if results.size() == 1:
 		var result := results[0]
 		_check("the result carries what the achievements read", result["bosses_beaten"] == 1 and result["stage"] == 4 and result["difficulty"] == 1 and result.has("continues_used") and result.has("golden_cogs") and result.has("buddy_hits") and result["player_count"] == 1 and int(result["score"]) >= 2500)
