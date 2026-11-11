@@ -41,6 +41,7 @@ func _initialize() -> void:
 	await _test_achievements_fresh()
 	await _test_achievements_played()
 	await _test_achievements_english()
+	await _test_real_menu_routes()
 	_remove_store_files()
 	print("library_test: %d passed, %d failed" % [_passed, _failed])
 	quit.call_deferred(0 if _failed == 0 else 1)
@@ -543,6 +544,43 @@ func _remove_store_files() -> void:
 	for suffix in ["", ".tmp", ".corrupt"]:
 		if FileAccess.file_exists(STORE_PATH + suffix):
 			DirAccess.remove_absolute(STORE_PATH + suffix)
+
+# ---- the real game menu ----
+
+## The routes into the game menu, against the real menu screen instead of the probe.
+func _test_real_menu_routes() -> void:
+	var store := _fresh_store()
+	var packed: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene")))
+	var shell: LauncherRoot = packed.instantiate()
+	shell.store = store
+	shell.now_provider = func() -> int: return NOW
+	root.add_child(shell)
+	await _frames(2)
+	shell.go(LIBRARY)
+	var lib := shell.current_screen() as LauncherLibraryScreen
+	shell.dispatch(In.RIGHT)
+	var focused := lib.focus_id
+	shell.dispatch(In.MENU)
+	var menu := shell.current_screen() as LauncherMenuScreen
+	_check("the library's Menu action opens the real game menu on the focused game", focused == "survivor" and menu != null and menu.game_id == focused and menu.find_child("Crumb", true, false).text == "长夜草原" and menu.row_id() == &"start" and not shell.find_child("Nav", false, false).visible and shell.backdrop_layer() == &"hero")
+	shell.dispatch(In.BACK)
+	_check("back from it returns to the library with the same game focused", shell.current_id() == LIBRARY and lib.focus_id == focused)
+	shell.dispatch(In.MENU)
+	for i in 3:
+		shell.dispatch(In.DOWN)
+	shell.dispatch(In.ACCEPT)
+	var ach := shell.current_screen() as LauncherAchievementsScreen
+	_check("the menu's achievements row opens the achievements screen on that game", menu.row_ids()[3] == &"achievements" and ach != null and ach.game == focused and ach.shown_keys().size() == 4)
+
+	ach.find_child("Game_tower_defense", true, false).activated.emit()
+	_tile(ach, "tower_defense/gate_held").pointed.emit()
+	(ach.find_child("Detail", true, false).find_child("Open", true, false) as Control).activated.emit()
+	_check("the achievements panel button opens the real game menu on that achievement's game", shell.current_id() == LauncherRoot.MENU and menu.game_id == "tower_defense" and menu.find_child("Crumb", true, false).text == "隘口守卫" and menu.row == 0)
+	shell.dispatch(In.BACK)
+	_check("and back returns to the achievements as they were", shell.current_id() == ACHIEVEMENTS and ach.game == "tower_defense" and ach.pick == "tower_defense/gate_held")
+	shell.dispatch(In.ACCEPT)
+	_check("A on an achievement opens it as well", shell.current_id() == LauncherRoot.MENU and menu.game_id == "tower_defense")
+	shell.free()
 
 ## The launcher with the game and game-menu screens replaced by probes.
 func _boot(store: LauncherStore) -> LauncherRoot:
