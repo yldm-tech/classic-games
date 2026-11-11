@@ -5,11 +5,17 @@ extends RefCounted
 const Creature := preload("res://games/ember_trail/creature.gd")
 const World := preload("res://games/ember_trail/world.gd")
 
-const ARENA_LEFT := 28.0
-const ARENA_RIGHT := 516.0
+## The arena is the whole room, wall to wall: a guardian reaches every place the hero can stand, so no corner is out of its way.
+const ARENA_LEFT := 6.0
+const ARENA_RIGHT := 538.0
 const FLOOR := 224.0
-const TOAD_HP := 36
-const OWL_HP := 24
+const TOAD_HP := 54
+const OWL_HP := 30
+## How far past a wall the owl's dive carries it, so the low point of the dive can be right at the wall.
+const SWOOP_OVERSHOOT := 46.0
+## Seconds the owl hangs at the top of a dive before it comes down, and how far down the dive goes.
+const SWOOP_HANG := 0.35
+const SWOOP_DEPTH := 84.0
 
 static func make(kind: String, hp_scale: float) -> RefCounted:
 	var boss := Creature.new()
@@ -31,7 +37,7 @@ static func make(kind: String, hp_scale: float) -> RefCounted:
 		boss.pos = Vector2(600.0, 40.0)
 	boss.hp = boss.max_hp
 	boss.state = "enter"
-	boss.data = {"attack": 0, "shots": 0, "hover": 0.0, "from": boss.pos, "to": boss.pos}
+	boss.data = {"attack": 0, "shots": 0, "hover": 0.0, "from": boss.pos, "to": boss.pos, "low": 0.0}
 	return boss
 
 static func enraged(boss: RefCounted) -> bool:
@@ -148,9 +154,10 @@ static func _owl(game: Node2D, boss: RefCounted, delta: float) -> void:
 				boss.data["shots"] = 0
 				_enter(boss, attack)
 				if attack == "swoop":
+					# It dives from the side the hero is not on, across the whole room and out past the far wall.
 					var from_right: bool = hero.pos.x < centre
 					boss.data["from"] = Vector2(ARENA_RIGHT - 30.0 if from_right else ARENA_LEFT + 30.0, 128.0)
-					boss.data["to"] = Vector2(ARENA_LEFT + 30.0 if from_right else ARENA_RIGHT - 30.0, 128.0)
+					boss.data["to"] = Vector2(ARENA_LEFT - SWOOP_OVERSHOOT if from_right else ARENA_RIGHT + SWOOP_OVERSHOOT, 128.0)
 		"icicles":
 			_fly_to(boss, Vector2(centre, 104.0), 140.0, delta)
 			if int(boss.data["shots"]) == 0 and boss.t >= 0.5:
@@ -160,6 +167,8 @@ static func _owl(game: Node2D, boss: RefCounted, delta: float) -> void:
 				var count := 7 if angry else 5
 				var spacing := (ARENA_RIGHT - ARENA_LEFT - 60.0) / float(count)
 				var skip: int = game.rng.int_range(0, count - 1)
+				# One is always for the hero, whatever the gaps in the row: standing still under the owl is never safe.
+				game.spawn_icicle(clampf(hero.pos.x, ARENA_LEFT + 4.0, ARENA_RIGHT - 4.0), 62.0, 0.75)
 				for index in count:
 					if index == skip:
 						continue
@@ -169,20 +178,24 @@ static func _owl(game: Node2D, boss: RefCounted, delta: float) -> void:
 				_enter(boss, "hover")
 				boss.data["wait"] = 1.4 if angry else 2.2
 		"swoop":
-			var wind_up := 0.75
-			var dive := 1.15 if angry else 1.5
+			var dive := 1.5 if angry else 1.9
 			var from: Vector2 = boss.data["from"]
 			var to: Vector2 = boss.data["to"]
-			if boss.t < wind_up:
-				_fly_to(boss, from, 260.0, delta)
-				boss.frame = 0
-				if int(boss.data["shots"]) == 0 and boss.t >= 0.3:
+			boss.frame = 0
+			if int(boss.data["shots"]) < 2:
+				# It flies to where the dive starts, however far that is, and hangs there for a moment: that is the warning.
+				_fly_to(boss, from, 300.0, delta)
+				if int(boss.data["shots"]) == 0 and boss.t >= 0.2:
 					boss.data["shots"] = 1
 					game.audio.play("boss_screech", 1.2)
-			else:
-				var along := clampf((boss.t - wind_up) / dive, 0.0, 1.0)
-				boss.pos = Vector2(lerpf(from.x, to.x, along), from.y + 84.0 * sin(PI * along))
-				boss.frame = 0
+				if int(boss.data["shots"]) == 1 and boss.pos.distance_to(from) < 0.5:
+					boss.data["shots"] = 2
+					boss.t = 0.0
+					# The dive is lowest where the hero stands as it begins.
+					boss.data["low"] = clampf(hero.pos.x, minf(from.x, to.x) + 50.0, maxf(from.x, to.x) - 50.0)
+			elif boss.t >= SWOOP_HANG:
+				var along := clampf((boss.t - SWOOP_HANG) / dive, 0.0, 1.0)
+				boss.pos = swoop_point(from, to, float(boss.data["low"]), along)
 				if int(boss.t * 30.0) % 2 == 0:
 					game.fx.puff(boss.pos + Vector2(0.0, -14.0), Vector2(0.0, 12.0), "g", 0.35)
 				if along >= 1.0:
@@ -195,13 +208,20 @@ static func _owl(game: Node2D, boss: RefCounted, delta: float) -> void:
 			if fired < volleys and boss.t >= 0.6 + 0.6 * float(fired):
 				boss.data["shots"] = fired + 1
 				var aim: Vector2 = (hero.centre() - (boss.pos + Vector2(0.0, -14.0))).normalized()
-				var spread := 2 if angry else 1
+				# Calm, it throws one shard at a time, straight at him. Enraged, a fan of three: wide enough apart that a short hop passes between the middle one and the one above it.
+				var spread := 1 if angry else 0
 				for index in range(-spread, spread + 1):
-					game.spawn_hazard("shard", boss.pos + Vector2(0.0, -14.0), aim.rotated(0.24 * float(index)) * 135.0, 0.0, 3.0)
+					game.spawn_hazard("shard", boss.pos + Vector2(0.0, -14.0), aim.rotated(0.4 * float(index)) * 135.0, 0.0, 3.0)
 				game.audio.play("icicle", 0.8)
 			if boss.t >= 0.6 + 0.6 * float(volleys) + 0.5:
 				_enter(boss, "hover")
 				boss.data["wait"] = 1.3 if angry else 2.0
+
+## Where the owl is `along` (0 to 1) of the way through a dive from `from` to `to` that is lowest over `low_x`: it travels evenly sideways and sinks to head height over that spot.
+static func swoop_point(from: Vector2, to: Vector2, low_x: float, along: float) -> Vector2:
+	var turn := clampf((low_x - from.x) / (to.x - from.x), 0.05, 0.95)
+	var arc := 0.5 * along / turn if along < turn else 0.5 + 0.5 * (along - turn) / (1.0 - turn)
+	return Vector2(lerpf(from.x, to.x, along), from.y + SWOOP_DEPTH * sin(PI * arc))
 
 static func _fly_to(boss: RefCounted, target: Vector2, speed: float, delta: float) -> void:
 	boss.pos = boss.pos.move_toward(target, speed * delta)

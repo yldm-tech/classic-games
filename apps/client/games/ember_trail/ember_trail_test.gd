@@ -9,6 +9,7 @@ const World := preload("res://games/ember_trail/world.gd")
 const Art := preload("res://games/ember_trail/art.gd")
 const Texts := preload("res://games/ember_trail/texts.gd")
 const Body := preload("res://games/ember_trail/body.gd")
+const Bosses := preload("res://games/ember_trail/bosses.gd")
 
 const STAGE := Vector2i(480, 270)
 const STEP := GameModule.STEP
@@ -19,6 +20,8 @@ var _failed := 0
 var _bot_jump := false
 ## The height the scripted player last stood at.
 var _bot_from := 0.0
+## Which way the scripted player decided to run from the toad's current leap, or "".
+var _bot_plan := ""
 
 func _initialize() -> void:
 	_test_levels()
@@ -31,6 +34,7 @@ func _initialize() -> void:
 	_test_pit_and_hits()
 	_test_stage_clear()
 	_test_guardians()
+	_test_guardian_rules()
 	_test_full_run()
 	_test_determinism()
 	print("ember_trail_test: %d passed, %d failed" % [_passed, _failed])
@@ -272,12 +276,12 @@ func _test_guardians() -> void:
 	var results := _results(game)
 	_hold(game, [], 2.0)
 	var fight := game.snapshot()
-	_check("the guardian's health is reported while it stands", fight.has("boss_hp") and fight["boss_hp"] == fight["boss_max_hp"] and int(fight["boss_max_hp"]) == 36)
+	_check("the guardian's health is reported while it stands", fight.has("boss_hp") and fight["boss_hp"] == fight["boss_max_hp"] and int(fight["boss_max_hp"]) == 54)
 	_check("the guardian has its own tune", game.track == "boss" and game.audio.music_playing)
 	var seconds := _play(game, 240.0, func() -> bool: return int(game.stage_i) == 3)
 	var after := game.snapshot()
 	print("  Magmaw took the scripted player %.0f s, %d deaths" % [seconds, after["deaths"]])
-	_check("beating the toad clears the first area and leads into the hollow", after["stage"] == 4 and after["areas_cleared"] == 1 and not after.has("boss_hp") and int(after["score"]) >= 2000 and results.is_empty())
+	_check("beating the toad clears the first area and leads into the hollow", after["stage"] == 4 and after["areas_cleared"] == 1 and after["toad_down"] == 1 and after["owl_down"] == 0 and not after.has("boss_hp") and int(after["score"]) >= 2000 and results.is_empty())
 	game.free()
 
 	game = _start({"start": 6})
@@ -286,6 +290,67 @@ func _test_guardians() -> void:
 	print("  Rimewing took the scripted player %.0f s" % seconds)
 	_check("beating the owl clears the run", results.size() == 1 and results[0]["cleared"] == true and results[0]["defeated"] == false and results[0]["areas_cleared"] == 1)
 	_check("a run that began past the first stage is practice", results.size() == 1 and results[0]["full_run"] == 0)
+	_check("the result says which guardian fell: beating only the owl is not beating the toad", results.size() == 1 and results[0]["owl_down"] == 1 and results[0]["toad_down"] == 0)
+	game.free()
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://games/ember_trail/game.json"))
+	var asks_for_toad := false
+	for achievement: Dictionary in manifest["achievements"]:
+		if achievement["id"] == "slag_toad":
+			asks_for_toad = (achievement["when"].get("min", {}) as Dictionary).has("toad_down")
+	_check("the toad's achievement asks for the toad itself", asks_for_toad)
+
+## The rules that keep a guardian's fight a fight: its body is the worst thing to touch, and no place in the room is safe to stand still in.
+func _test_guardian_rules() -> void:
+	var game := _start({"start": 3})
+	_hold(game, ["left"], 3.0)
+	_hold(game, ["right"], STEP * 2.0)
+	var in_corner: float = game.hero.pos.x
+	var trodden := 0
+	var heavy := 0
+	for step in 60 * 60:
+		var hits: int = game.hits_taken
+		var before: float = game.flame
+		var at_wall: bool = game.hero.pos.x < 30.0
+		_hold(game, ["b"], STEP)
+		if int(game.hits_taken) > hits and at_wall and game.boss != null and game.hero.rect().grow(8.0).intersects(game.boss.rect()):
+			trodden += 1
+			# A hit that kills leaves the flame at nothing, whatever it would have cost.
+			heavy += int(float(game.flame) > 0.0 and absf((before - float(game.flame)) - 33.0) < 0.1)
+	_check("the toad comes down on a hero who stands in the corner", in_corner < 12.0 and trodden >= 2)
+	_check("being trodden on by a guardian costs half as much again as an ordinary hit", heavy >= 1)
+	_check("standing still and throwing does not beat the toad", int(game.stage_i) == 2 and int(game.deaths) >= 1)
+	game.free()
+
+	var from := Vector2(508.0, 128.0)
+	var to := Vector2(-40.0, 128.0)
+	var lowest: Vector2 = Bosses.swoop_point(from, to, 20.0, (20.0 - from.x) / (to.x - from.x))
+	_check("the owl's dive starts high, is lowest over the place it was aimed at, and ends high past the wall", Bosses.swoop_point(from, to, 20.0, 0.0).is_equal_approx(from) and Bosses.swoop_point(from, to, 20.0, 1.0).is_equal_approx(to) and is_equal_approx(lowest.x, 20.0) and is_equal_approx(lowest.y, 128.0 + Bosses.SWOOP_DEPTH) and Bosses.swoop_point(from, to, 20.0, 0.5).y < lowest.y - 10.0)
+
+	game = _start({"start": 6})
+	_hold(game, ["left"], 3.0)
+	var aimed := false
+	var dived_on := false
+	var most_shards := 0
+	for step in 60 * 40:
+		var hits: int = game.hits_taken
+		var shards := 0
+		for hazard: Dictionary in game.hazards:
+			shards += int(hazard["kind"] == "shard")
+		_hold(game, [], STEP)
+		if game.boss == null:
+			break
+		for icicle: Dictionary in game.icicles:
+			aimed = aimed or (int(icicle["state"]) == 1 and absf(float(icicle["pos"].x) - float(game.hero.pos.x)) < 0.5)
+		var now := 0
+		for hazard: Dictionary in game.hazards:
+			now += int(hazard["kind"] == "shard")
+		if not Bosses.enraged(game.boss):
+			most_shards = maxi(most_shards, now - shards)
+		if int(game.hits_taken) > hits and game.boss.state == "swoop" and game.hero.pos.x < 30.0 and game.hero.rect().grow(8.0).intersects(game.boss.rect()):
+			dived_on = true
+	_check("one of the owl's icicles is always for the hero", aimed)
+	_check("the owl's dive reaches a hero who stands against the wall", dived_on)
+	_check("calm, the owl throws its shards one at a time", most_shards == 1)
 	game.free()
 
 func _test_full_run() -> void:
@@ -436,34 +501,54 @@ func _drive_fight(game: GameModule, keys: Dictionary) -> void:
 	var gap: float = boss.pos.x - x
 	var toward := "right" if gap > 0.0 else "left"
 	var away := "left" if gap > 0.0 else "right"
+	# How far he can still back off before the wall behind him.
+	var room: float = x - 5.0 if away == "left" else float(game.world.width * World.TILE) - 5.0 - x
 	var jump := false
-	var near := 110.0 if boss.kind == "toad" else 60.0
-	var far := 190.0 if boss.kind == "toad" else 105.0
-	if absf(gap) < near:
-		# Backed against a wall, the only way out is past the guardian.
-		var cornered := (away == "left" and x < 60.0) or (away == "right" and x > 484.0)
-		keys[toward if cornered and boss.pos.y < feet - 30.0 else away] = true
-	elif absf(gap) > far or hero.facing != (1 if gap > 0.0 else -1):
-		keys[toward] = true
+	var go := ""
 	if boss.kind == "toad":
-		if boss.state == "air" and absf(gap) < 80.0 and boss.pos.y < feet - 20.0:
-			keys["left"] = false
-			keys["right"] = false
-			keys["right" if (boss.vel.x < 0.0 and x < 470.0) or x < 70.0 else "left"] = true
+		if boss.state == "crouch" or boss.state == "air":
+			# It comes down where he stood when it leapt: back off while there is floor behind him, otherwise run through underneath it. The choice is made once per leap.
+			if boss.state == "crouch" or _bot_plan == "":
+				_bot_plan = away if room > 130.0 else toward
+			go = _bot_plan
+		else:
+			_bot_plan = ""
+			if absf(gap) < 80.0 and room > 24.0:
+				go = away
+			elif absf(gap) > 170.0 or hero.facing != (1 if gap > 0.0 else -1):
+				go = toward
 	else:
+		_bot_plan = ""
 		keys["up"] = boss.pos.y < feet - 40.0
-		if boss.state == "swoop" and absf(gap) < 76.0 and boss.pos.y > feet - 50.0:
-			jump = true
+		if boss.state == "swoop":
+			# Step out from under the low point of the dive; with the owl already on him, jump it.
+			if int(boss.data["shots"]) == 2:
+				var low: float = boss.data["low"]
+				# The dive climbs steeply once it has passed its low point, so the short way out is the way the owl is flying.
+				if absf(x - low) < 60.0:
+					go = "left" if float(boss.data["to"].x) < float(boss.data["from"].x) else "right"
+			if absf(gap) < 100.0 and boss.pos.y > feet - 70.0:
+				jump = true
+		elif absf(gap) < 50.0:
+			go = away if room > 24.0 else toward
+		elif absf(gap) > 100.0 or hero.facing != (1 if gap > 0.0 else -1):
+			go = toward
 	for hazard: Dictionary in game.hazards:
 		var at: Vector2 = hazard["pos"]
 		var velocity: Vector2 = hazard["vel"]
-		if absf(at.x - x) < 36.0 and at.y > feet - 60.0 and (velocity.x == 0.0 or (velocity.x > 0.0) == (at.x < x)):
+		var kind: String = hazard["kind"]
+		if kind == "glob":
+			# A glob coming down on his head: walk out from under it.
+			if velocity.y > 0.0 and absf(at.x + velocity.x * 0.25 - x) < 16.0 and at.y > feet - 110.0:
+				go = "left" if (at.x + velocity.x * 0.25 >= x and x > 30.0) or x > float(game.world.width * World.TILE) - 30.0 else "right"
+		elif absf(at.x - x) < 34.0 and at.y > feet - 60.0 and (velocity.x > 0.0) == (at.x < x):
 			jump = true
 	for icicle: Dictionary in game.icicles:
 		var at: Vector2 = icicle["pos"]
-		if absf(at.x - x) < 15.0:
-			keys["left"] = at.x >= x and x > 50.0
-			keys["right"] = not keys["left"]
+		if absf(at.x - x) < 16.0 and at.y < feet:
+			go = "left" if (at.x >= x and x > 30.0) or x > float(game.world.width * World.TILE) - 30.0 else "right"
+	if go != "":
+		keys[go] = true
 	if hero.on_ground:
 		keys["a"] = jump and not _bot_jump
 	else:

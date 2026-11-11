@@ -13,7 +13,7 @@
 	"art": {"motif": "road", "top": "1A1424", "bottom": "7A3B45", "primary": "F6B24A", "secondary": "6FE0C0", "image": "key_art.jpg"},
 	"achievements": [
 		{"id": "first_flame", "icon": "bolt", "name": {"zh": "提灯上路", "en": "Lantern in Hand"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
-		{"id": "slag_toad", "icon": "shield", "name": {"zh": "熔蟾退场", "en": "Toad Dethroned"}, "desc": {"zh": "击败烬原的守护者熔蟾。", "en": "Defeat Magmaw, the guardian of the highlands."}, "when": {"min": {"areas_cleared": 1}}},
+		{"id": "slag_toad", "icon": "shield", "name": {"zh": "熔蟾退场", "en": "Toad Dethroned"}, "desc": {"zh": "击败烬原的守护者熔蟾。", "en": "Defeat Magmaw, the guardian of the highlands."}, "when": {"min": {"toad_down": 1}}},
 		{"id": "both_beacons", "icon": "cup", "name": {"zh": "长夜有光", "en": "A Light in the Night"}, "desc": {"zh": "从第一幕出发，打通全部六幕。", "en": "Clear all six stages, starting from the first."}, "when": {"cleared": true, "min": {"full_run": 1}}},
 		{"id": "one_wick", "icon": "star", "name": {"zh": "一根灯芯", "en": "One Wick"}, "desc": {"zh": "从第一幕出发通关，全程不使用续关。", "en": "Clear the whole trail from the first stage without using a continue."}, "when": {"cleared": true, "min": {"full_run": 1}, "max": {"continues_used": 0}}},
 		{"id": "moth_keeper", "icon": "star", "name": {"zh": "萤蛾收藏家", "en": "Moth Keeper"}, "desc": {"zh": "单局收集 80 只萤蛾。", "en": "Collect 80 glow moths in a single run."}, "when": {"min": {"moths": 80}}},

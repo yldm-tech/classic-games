@@ -20,6 +20,8 @@ const GEYSER_PERIOD := 3.2
 const GEYSER_WARN := 1.7
 const GEYSER_ERUPT := 2.3
 const GEYSER_HEIGHT := 54.0
+## Being trodden on by a guardian costs this many times what an ordinary hit does.
+const GUARDIAN_TOUCH := 1.5
 ## Per difficulty: lives, continues, flame lost per second, flame lost per hit, boss health factor.
 const DIFFICULTY := {
 	1: {"lives": 5, "continues": 3, "drain": 1.2, "hurt": 15.0, "boss": 0.75},
@@ -59,6 +61,9 @@ var mount_stomps := 0
 var hits_taken := 0
 var areas_cleared := 0
 var stages_cleared := 0
+## Which guardians fell in this run. A run that starts past the toad never meets it, so the number of areas cleared does not say which one it was.
+var toad_down := 0
+var owl_down := 0
 var full_run := 1
 
 ## "intro", "play", "dying", "clear", "boss_down", "area_clear", "victory" or "game_over".
@@ -98,6 +103,8 @@ func _game_start(config: Dictionary) -> void:
 	hits_taken = 0
 	areas_cleared = 0
 	stages_cleared = 0
+	toad_down = 0
+	owl_down = 0
 	fx = Fx.new()
 	hero = Hero.new()
 	if _camera == null:
@@ -214,6 +221,10 @@ func _game_step(delta: float) -> void:
 		"boss_down":
 			_simulate(delta, true, false)
 			if boss != null and boss.gone:
+				if boss.kind == "toad":
+					toad_down = 1
+				else:
+					owl_down = 1
 				boss = null
 				areas_cleared += 1
 				stages_cleared += 1
@@ -319,8 +330,8 @@ func _hero_against_stage() -> void:
 			_hurt_hero(float(tx * World.TILE + 8))
 			return
 
-## Something at `from_x` hit the hero.
-func _hurt_hero(from_x: float) -> void:
+## Something at `from_x` hit the hero. `weight` scales what the hit costs.
+func _hurt_hero(from_x: float, weight: float = 1.0) -> void:
 	if phase != "play" and phase != "intro":
 		return
 	var took: String = hero.take_hit(from_x)
@@ -333,7 +344,7 @@ func _hurt_hero(from_x: float) -> void:
 		fx.burst(hero.pos + Vector2(0.0, -10.0), 12, "abc", 70.0, 200.0, 0.5)
 		return
 	hits_taken += 1
-	flame -= float(tuning["hurt"])
+	flame -= float(tuning["hurt"]) * weight
 	flash_time = 0.12
 	audio.play("hurt")
 	fx.burst(hero.centre(), 12, "678", 80.0, 200.0, 0.5)
@@ -456,7 +467,7 @@ func _step_boss(delta: float) -> void:
 	if boss.gone or boss.state == "dying":
 		return
 	if not hero.dead and boss.state != "enter" and hero.rect().grow(-1.0).intersects(boss.rect().grow(-2.0)):
-		_hurt_hero(boss.pos.x)
+		_hurt_hero(boss.pos.x, GUARDIAN_TOUCH)
 	# The fight is long; a flask drifts down now and then.
 	flask_wait -= delta
 	if flask_wait <= 0.0:
@@ -662,6 +673,8 @@ func _game_snapshot() -> Dictionary:
 		"mount_stomps": mount_stomps,
 		"hits_taken": hits_taken,
 		"areas_cleared": areas_cleared,
+		"toad_down": toad_down,
+		"owl_down": owl_down,
 		"stages_cleared": stages_cleared,
 		"full_run": full_run,
 		"difficulty": difficulty,
