@@ -1,6 +1,6 @@
 extends RefCounted
 
-## Everything the game writes on the stage itself, in both languages. Scores, lives and the clock belong to the launcher's HUD. English is written in capitals: the stage text is drawn as hard pixels, and at this size capitals stay readable where lower-case letters start to look alike.
+## Everything the game writes on the stage itself, in both languages. Scores, lives and the clock belong to the launcher's HUD. English is written in capitals: the lines are short signs on a workshop wall, and capitals keep them readable at a glance while the stage is moving.
 
 const TEXT := {
 	"hint_move": {"zh": "向右出发，跳过缺口", "en": "HEAD RIGHT AND JUMP THE GAPS"},

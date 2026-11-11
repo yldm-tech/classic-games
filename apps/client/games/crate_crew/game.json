@@ -3,7 +3,7 @@
 	"id": "crate_crew",
 	"kind": "module",
 	"entry": "main.gd",
-	"stage": {"size": [384, 216], "pixel_art": true},
+	"stage": {"size": [384, 216], "pixel_art": false},
 	"name": {"zh": "搬箱小队", "en": "CRATE CREW"},
 	"initials": "bxxd",
 	"genre": {"zh": "平台跳跃", "en": "PLATFORMER"},

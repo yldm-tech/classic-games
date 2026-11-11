@@ -1,0 +1,286 @@
+{
+ "animations": {
+  "bare": {
+   "fps": 10.0,
+   "frames": [
+    "bare_0"
+   ],
+   "loop": true
+  },
+  "bug": {
+   "fps": 10.0,
+   "frames": [
+    "bug_0",
+    "bug_1"
+   ],
+   "loop": true
+  },
+  "drone": {
+   "fps": 10.0,
+   "frames": [
+    "drone_0"
+   ],
+   "loop": true
+  },
+  "hopper": {
+   "fps": 10.0,
+   "frames": [
+    "hopper_0",
+    "hopper_1"
+   ],
+   "loop": true
+  },
+  "magnet": {
+   "fps": 10.0,
+   "frames": [
+    "magnet_0",
+    "magnet_1"
+   ],
+   "loop": true
+  },
+  "roller": {
+   "fps": 10.0,
+   "frames": [
+    "roller_0"
+   ],
+   "loop": true
+  },
+  "turret": {
+   "fps": 10.0,
+   "frames": [
+    "turret_0",
+    "turret_1"
+   ],
+   "loop": true
+  }
+ },
+ "format": 1,
+ "frames": {
+  "bare_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    81.5,
+    140.0
+   ],
+   "rect": [
+    2,
+    331,
+    163,
+    140
+   ],
+   "source": [
+    163,
+    140
+   ]
+  },
+  "bug_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    68.0,
+    120.0
+   ],
+   "rect": [
+    2,
+    473,
+    136,
+    120
+   ],
+   "source": [
+    136,
+    120
+   ]
+  },
+  "bug_1": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    75.0,
+    120.0
+   ],
+   "rect": [
+    231,
+    331,
+    150,
+    120
+   ],
+   "source": [
+    150,
+    120
+   ]
+  },
+  "drone_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    59.0,
+    115.0
+   ],
+   "rect": [
+    140,
+    473,
+    118,
+    115
+   ],
+   "source": [
+    118,
+    115
+   ]
+  },
+  "hopper_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    31.0,
+    135.0
+   ],
+   "rect": [
+    167,
+    331,
+    62,
+    135
+   ],
+   "source": [
+    62,
+    135
+   ]
+  },
+  "hopper_1": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    40.0,
+    180.0
+   ],
+   "rect": [
+    2,
+    2,
+    80,
+    180
+   ],
+   "source": [
+    80,
+    180
+   ]
+  },
+  "magnet_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    56.0,
+    145.0
+   ],
+   "rect": [
+    178,
+    184,
+    112,
+    145
+   ],
+   "source": [
+    112,
+    145
+   ]
+  },
+  "magnet_1": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    56.0,
+    145.0
+   ],
+   "rect": [
+    292,
+    184,
+    112,
+    145
+   ],
+   "source": [
+    112,
+    145
+   ]
+  },
+  "roller_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    87.0,
+    150.0
+   ],
+   "rect": [
+    84,
+    2,
+    174,
+    150
+   ],
+   "source": [
+    174,
+    150
+   ]
+  },
+  "turret_0": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    87.0,
+    145.0
+   ],
+   "rect": [
+    2,
+    184,
+    174,
+    145
+   ],
+   "source": [
+    174,
+    145
+   ]
+  },
+  "turret_1": {
+   "offset": [
+    0,
+    0
+   ],
+   "pivot": [
+    98.0,
+    145.0
+   ],
+   "rect": [
+    260,
+    2,
+    196,
+    145
+   ],
+   "source": [
+    196,
+    145
+   ]
+  }
+ },
+ "image": "foes.png",
+ "scale": 0.1,
+ "size": [
+  512,
+  596
+ ]
+}
