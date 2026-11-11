@@ -52,7 +52,7 @@
 	],
 	"site": {
 		"screenshot": "site_screenshot.png",
-		"screenshot_alt": {"zh": "《搬箱小队》局内画面：小机器人举着木箱站在工作台上，面前是发条虫。", "en": "Crate Crew in play: a small robot holding a wooden crate on the workbench, facing a wind-up bug."},
+		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：两个小机器人刚跳过工具台上的缺口，其中一个举着木箱，面前是一只弹簧跳虫。", "en": "Crate Crew with two players: two small robots just past a gap in the workbench, one holding a wooden crate, a spring hopper ahead of them."},
 		"art_alt": {"zh": "《搬箱小队》主视觉：两个小维修机器人在巨大的工坊里合力举起一只木箱。", "en": "Crate Crew key art: two small repair robots lifting a wooden crate together in an enormous workshop."}
 	}
 }
