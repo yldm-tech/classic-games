@@ -324,12 +324,18 @@ func _test_manifest_schema() -> void:
 		"options[0].values: must be a non-empty list of whole numbers": func(m: Dictionary) -> void: m["options"][0]["values"] = [1.5],
 		"options[0].path: must be a JSON pointer": func(m: Dictionary) -> void: m["options"][0].erase("path"),
 		"options[0].labels: must have one { zh, en } per value": func(m: Dictionary) -> void: m["options"][0]["labels"] = [{"zh": "一", "en": "One"}],
-		"site.screenshot: \"shot.png\" does not exist": func(m: Dictionary) -> void: m["site"] = {"screenshot": "shot.png"},
+		"site.screenshot: \"../shot.png\" must be a relative path": func(m: Dictionary) -> void: m["site"] = {"screenshot": "../shot.png"},
+		"site.caption: unknown field": func(m: Dictionary) -> void: m["site"] = {"caption": "x"},
+		"site.art_alt: must be": func(m: Dictionary) -> void: m["site"] = {"art_alt": {"zh": "只有中文"}},
 		"tuning.cooldown: must be a number": func(m: Dictionary) -> void: m["tuning"] = {"cooldown": "ten"},
 	}
 	for expected: String in cases:
 		var errors := _errors_with(cases[expected])
 		_check("a manifest with a wrong field says so: %s" % expected, errors.contains(expected))
+
+	var with_site := _valid_manifest()
+	with_site["site"] = {"screenshot": "not_shipped.png", "screenshot_alt": {"zh": "截图", "en": "A capture"}}
+	_check("the website's screenshot need not exist for the launcher: an exported game does not carry it", Manifest.validate(with_site, SAMPLE_DIR).is_empty())
 
 	var module := _valid_manifest()
 	module.erase("runtime")

@@ -88,7 +88,7 @@ static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 			errors.append("site: must be an object")
 		else:
 			if (site as Dictionary).has("screenshot"):
-				_check_file(errors, "site.screenshot", site["screenshot"], dir, IMAGE_EXTENSIONS)
+				_check_file(errors, "site.screenshot", site["screenshot"], dir, IMAGE_EXTENSIONS, false)
 			for key: Variant in site:
 				match str(key):
 					"screenshot":
@@ -148,8 +148,8 @@ static func _check_colors(errors: PackedStringArray, field: String, value: Varia
 		if not _is_hex((value as Dictionary).get(key)):
 			errors.append("%s.%s: must be a colour as RRGGBB" % [field, key])
 
-## A file the manifest names must be a plain relative path that stays inside the game's directory and exists.
-static func _check_file(errors: PackedStringArray, field: String, value: Variant, dir: String, extensions: Array) -> void:
+## A file the manifest names must be a plain relative path that stays inside the game's directory and exists. `shipped` is false for a file that is not part of the exported game (the website's screenshot): its name is still checked, its presence is not, because the launcher must accept the manifest in a build that does not carry the file. make games-check checks that it exists in the source tree.
+static func _check_file(errors: PackedStringArray, field: String, value: Variant, dir: String, extensions: Array, shipped: bool = true) -> void:
 	if not value is String or value == "":
 		errors.append("%s: must be a file name inside the game's directory" % field)
 		return
@@ -159,6 +159,8 @@ static func _check_file(errors: PackedStringArray, field: String, value: Variant
 		return
 	if not path.get_extension().to_lower() in extensions:
 		errors.append("%s: \"%s\" must end in .%s" % [field, path, " / .".join(PackedStringArray(extensions))])
+		return
+	if not shipped:
 		return
 	# An imported picture is shipped as its import, not as the file itself; ResourceLoader knows both forms.
 	if not FileAccess.file_exists(dir.path_join(path)) and not ResourceLoader.exists(dir.path_join(path)):

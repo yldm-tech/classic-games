@@ -4,6 +4,7 @@ extends SceneTree
 ##   - the manifest is valid (games/shared/game_manifest.gd);
 ##   - a module's entry script loads and extends GameModule;
 ##   - a module has at least one *_test.gd of its own;
+##   - the website screenshot a manifest names (site.screenshot) is there;
 ##   - the directory has an ASSETS.md, and every file in it that is not source is named there.
 ## Prints one line per problem and ends with "manifest_check: <n> games, <m> problems".
 
@@ -61,6 +62,10 @@ func _directory_problems(game: Dictionary) -> PackedStringArray:
 			tested = tested or file.ends_with("_test.gd")
 		if not tested:
 			out.append("tests: a game module needs at least one *_test.gd in its directory")
+	# The website's screenshot is not shipped with the game, so the manifest schema does not require it to exist; in the source tree it must.
+	var site: Dictionary = game.get("site", {})
+	if site.has("screenshot") and not files.has(str(site["screenshot"])):
+		out.append("site.screenshot: \"%s\" does not exist in %s" % [site["screenshot"], dir])
 	if not files.has(ASSETS_FILE):
 		out.append("%s: missing; it records the source and licence of every asset" % ASSETS_FILE)
 		return out

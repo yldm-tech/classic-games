@@ -152,7 +152,7 @@ audio.play_music({"bpm": 132, "voices": [
 | `controls` | 是 | `[{ "id", "name", "inputs" }]`。`inputs` 是 `"move"`（四个方向）或单个控制名 `"a"` `"b"` …。启动器据此在游戏菜单和暂停屏画出操作表（键盘键帽读自当前绑定，手柄图标固定），并自动补上「暂停」一行 |
 | `hud` | 是 | 见下 |
 | `options` | 否 | `[{ "id", "name", "note", "values": [整数…], "default", "labels": [{ "zh", "en" }…] }]`。开局选项，值经 `config.options` 传给游戏；`labels` 可选，与 `values` 一一对应 |
-| `site` | 否 | 只给官网用：`{ "screenshot", "screenshot_alt": { "zh", "en" }, "art_alt": { "zh", "en" } }` |
+| `site` | 否 | 只给官网用：`{ "screenshot", "screenshot_alt": { "zh", "en" }, "art_alt": { "zh", "en" } }`。截图文件请命名为 `site_screenshot.<扩展名>`：导出预设按这个名字把它排除在游戏包之外 |
 
 `achievements[].when` 的条件全部满足才解锁；`{}` 表示打完任意一局：
 
