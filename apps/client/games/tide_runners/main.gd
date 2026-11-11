@@ -18,6 +18,7 @@ const PACE := [1.25, 1.0, 0.8]
 const SHOT_SPEED := [0.85, 1.0, 1.15]
 const BOSS_SCALE := [0.85, 1.0, 1.15]
 const TIDE_SPEED := [4.0, 5.0, 6.5]
+const TIDE_RESPITE := 72.0
 const BOMB_GRAVITY := 300.0
 const H_WATER := 246.0
 const WEAPONS := 6
@@ -380,6 +381,9 @@ func _lose_life(h: Dictionary) -> void:
 
 func respawn(h: Dictionary) -> void:
 	var at := _find_spawn()
+	if world.vertical and not boss_started:
+		# The tide falls back under a diver who returns. Without that it stood at their feet, and the same water that took one life took the next before they could climb.
+		water_y = maxf(water_y, at.y + TIDE_RESPITE)
 	_place(h, at.x, at.y)
 	h["ground"] = true
 	h["inv"] = Heroes.RESPAWN_SAFE
@@ -392,7 +396,8 @@ func _find_spawn() -> Vector2:
 	var best_score := -INF
 	var wanted_x := cam.x + (240.0 if world.vertical else 110.0)
 	for column in range(floori((cam.x + 24.0) / World.TILE), floori((cam.x + 440.0) / World.TILE) + 1):
-		for row in range(floori((cam.y + 100.0) / World.TILE), floori((cam.y + 262.0) / World.TILE) + 1):
+		# In the tower the water may have taken the lower half of the view, so the search starts higher there (still under the HUD).
+		for row in range(floori((cam.y + (56.0 if world.vertical else 100.0)) / World.TILE), floori((cam.y + 262.0) / World.TILE) + 1):
 			if world.cell(column, row) == World.EMPTY or world.cell(column, row - 1) != World.EMPTY or world.cell(column, row - 2) != World.EMPTY:
 				continue
 			var y := float(row * World.TILE)

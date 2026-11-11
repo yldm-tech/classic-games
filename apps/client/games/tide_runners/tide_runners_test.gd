@@ -534,6 +534,22 @@ func _test_tower() -> void:
 	game.advance(60.0)
 	_check("a diver who stops climbing is caught by the tide", game.snapshot()["deaths"] >= 1)
 	game.free()
+	# The diver who was caught comes back with the tide pushed down, not with the water still at their feet.
+	game = _quiet(1)
+	game.advance(0.5)
+	var flood := float(game.heroes[0]["y"]) - 30.0
+	game.water_y = flood
+	game.advance(STEP * 2.0)
+	var caught := game.snapshot()
+	for wait in 240:
+		game.advance(STEP)
+		if game.heroes[0]["alive"]:
+			break
+	var returned := game.snapshot()
+	_check("the tide falls back under a diver who returns", caught["deaths"] == 1 and caught["players"][0]["alive"] == false and returned["players"][0]["alive"] == true and float(returned["water_y"]) - float(returned["players"][0]["y"]) >= 60.0 and float(returned["water_y"]) > flood)
+	game.advance(8.0)
+	_check("and leaves time to start climbing", game.snapshot()["deaths"] == 1)
+	game.free()
 
 func _test_full_clear() -> void:
 	var game := _start(1, 11, {"_stage": 1, "_boss": 1, "difficulty": 2})
