@@ -1,7 +1,9 @@
 # API 设计
 
-后端(Go)对客户端暴露的 HTTP 契约。契约与栈无关,栈选型见 [ADR-011](./decisions.md)。
-草案,随实现细化;原则是「客户端只发自然语言 + 当前 DSL,业务和 AI 都在后端」。
+后端(Go)对外暴露的 HTTP 契约,调用方是 `packages/sdk` 以及基于它的 CLI 与 MCP 服务。契约与栈无关,栈选型见 [ADR-011](./decisions.md)。
+草案,随实现细化;原则是「调用方只发自然语言 + 当前 DSL,业务和 AI 都在后端」。
+
+> 说明:本文描述的在线服务(认证、用户、游戏与 Mod、Fork、AI 创作、草稿与发布、社交、排行榜、审核等 API)已实现并有测试,属于可选组件;当前的主机风格启动器完全在本地运行,没有接入它。产品定位见 [01-vision](./01-vision.md),决策见 [ADR-016](./decisions.md)。
 
 > **在线 Swagger / OpenAPI**:服务已集成 swaggo,实现处当前用注解生成 47 个 operation；规范覆盖仍在补齐，未注解路由以本设计文档和实现为准。
 > 起服务后:Swagger UI 在 `GET /swagger/index.html`,机器可读规范在 `GET /swagger/doc.json`。
@@ -13,7 +15,7 @@
 - 认证:除登录类外均需 `Authorization: Bearer <token>`
 - 编码:JSON,UTF-8;时间用 ISO 8601;ID 用字符串
 - 错误:统一信封 `{ "error": { "code": "...", "message": "...", "details": {} } }`,HTTP 状态码语义化
-- 分页:游标式 `?cursor=...&limit=20`,返回 `{ items, next_cursor }`(适配虚拟列表)
+- 分页:游标式 `?cursor=...&limit=20`,返回 `{ items, next_cursor }`
 - 幂等:写接口支持 `Idempotency-Key` 头(发布、支付等)
 
 ## 认证 `auth`
@@ -46,7 +48,7 @@
 | GET | `/games/:id` | 详情:元数据 + 生效 DSL 引用 + 统计 + 创作链 |
 | GET | `/games/:id/dsl` | 取某游戏的**生效 DSL**(基线 + 补丁链 apply 后的结果) |
 | POST | `/games` | 发布:用某 Mod(生效 DSL)创建一个游戏作品,进审核 |
-| GET | `/runtimes/:name/:version/schema` | 取 Runtime 的 DSL JSON Schema(客户端校验、AI 约束用) |
+| GET | `/runtimes/:name/:version/schema` | 取 Runtime 的 DSL JSON Schema(调用方校验、AI 约束用) |
 | GET | `/runtimes/:name/:version/baseline` | 取 Runtime 基线 DSL |
 
 ## Fork `forks`
@@ -71,7 +73,7 @@
 | POST | `/ai/mod` | **核心接口**。入参 `{ runtime, current_dsl, prompt }`,出参 `{ dsl_patch, new_dsl, balance_hint?, model, tokens }`。后端调模型 → schema 约束 → 校验 → 返回 |
 | POST | `/ai/balance` | 自动平衡。入参 `{ runtime, current_dsl, target_difficulty:1..5 }`，返回多参数 `dsl_patch`、`new_dsl` 与前后压力指标 |
 | POST | `/ai/structure` | 结构生成。入参 `{ runtime, current_dsl, prompt, count:1..8, difficulty:1..5 }`，向 enemies/waves map 追加稳定且不覆盖的结构节点 |
-| POST | `/ai/validate` | 仅校验一份 DSL 是否合法(供客户端预检) |
+| POST | `/ai/validate` | 仅校验一份 DSL 是否合法(供调用方预检) |
 
 `POST /ai/mod` 行为细节见 [12-ai-prompt](./12-ai-prompt.md):structured output 强制 schema、失败有限重试、用 JSON Patch 精确定位修改以省 token。
 
