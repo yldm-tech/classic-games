@@ -18,6 +18,11 @@ updates:
         update-types:
           - minor
           - patch
+    # jsonschema v6.0.3 attaches a propertyNames error to an arbitrary sibling object (the location changes from run to run with map iteration order), which would put a wrong path in validation output. Lift this when a later release reports the right object.
+    ignore:
+      - dependency-name: github.com/santhosh-tekuri/jsonschema/v6
+        versions:
+          - 6.0.3
 
   # pnpm workspace rooted at the repository root; it covers apps/web.
   - package-ecosystem: npm
@@ -32,6 +37,11 @@ updates:
         update-types:
           - minor
           - patch
+    # astro check (@astrojs/check) refuses to run on a TypeScript major it does not support yet. Lift this once it supports the new major.
+    ignore:
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
