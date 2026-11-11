@@ -1,0 +1,57 @@
+{
+	"schema": 1,
+	"id": "tide_runners",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "潮汐奔袭", "en": "TIDE RUNNERS"},
+	"initials": "cxbx",
+	"genre": {"zh": "横版射击", "en": "RUN AND GUN"},
+	"tagline": {"zh": "两名打捞潜水员闯进被海水吞没的城市，用捡来的武器对付失控的港口机械。", "en": "Two salvage divers push through a drowned city, turning scavenged weapons on harbour machines gone rogue."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "EAFBF4", "shadow": "0F5C63", "glow": "3FD0B0"},
+	"art": {"top": "0B1020", "bottom": "1F6F66", "primary": "3FB59A", "secondary": "F8C96A", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_dive", "icon": "bolt", "name": {"zh": "初次下潜", "en": "First Dive"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "maw_silenced", "icon": "star", "name": {"zh": "巨颚哑火", "en": "Maw Silenced"}, "desc": {"zh": "击毁第一个首领。", "en": "Destroy the first boss."}, "when": {"min": {"bosses_down": 1}}},
+		{"id": "tide_turned", "icon": "cup", "name": {"zh": "逆转潮汐", "en": "Tide Turned"}, "desc": {"zh": "打通全部三个关卡。", "en": "Clear all three stages."}, "when": {"cleared": true}},
+		{"id": "one_breath", "icon": "shield", "name": {"zh": "一口气", "en": "One Breath"}, "desc": {"zh": "不使用续关通关。", "en": "Clear the game without using a continue."}, "when": {"cleared": true, "max": {"continues_used": 0}}},
+		{"id": "full_locker", "icon": "star", "name": {"zh": "装备齐全", "en": "Full Locker"}, "desc": {"zh": "在一局里用过全部五种拾取武器。", "en": "Pick up all five salvaged weapons in one run."}, "when": {"min": {"weapons_tried": 5}}},
+		{"id": "dive_buddies", "icon": "cup", "name": {"zh": "潜伴", "en": "Dive Buddies"}, "desc": {"zh": "两位玩家一起通关。", "en": "Clear the game with two players."}, "when": {"cleared": true, "players": 2}},
+		{"id": "storm_proof", "icon": "shield", "name": {"zh": "风暴不侵", "en": "Storm Proof"}, "desc": {"zh": "在困难难度下通关。", "en": "Clear the game on Hard."}, "when": {"cleared": true, "min": {"difficulty": 2}}}
+	],
+	"how": {
+		"zh": "向前奔跑、跳跃、射击，可以朝八个方向开火。按住下可以卧倒，按住下再按跳跃可以从薄平台落下。被敌人或子弹碰到一次就损失一条生命，掉进水里也一样。击落飞过的运输机，拾取它掉下的弹药罐可以换一种武器，阵亡后换回铆钉枪。每一关的尽头有一台多部件的首领，打掉外层部件才能攻击核心。打通三关即通关；生命和续关都用完则失败。",
+		"en": "Run, jump and shoot in eight directions. Hold down to go prone; hold down and press jump to drop through a thin platform. One touch from an enemy or a shot costs a life, and so does falling into the water. Shoot down the couriers that fly past and pick up the canisters they drop to change weapon; you fall back to the rivet gun when you lose a life. Each stage ends in a boss built from several parts: break the outer parts to reach the core. Clear all three stages to win; the run is lost when lives and continues are both used up."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动 / 瞄准 / 卧倒", "en": "Move / aim / go prone"}, "inputs": ["move"]},
+		{"id": "jump", "name": {"zh": "跳跃（按住下：落下平台）", "en": "Jump (with down: drop through)"}, "inputs": ["a"]},
+		{"id": "fire", "name": {"zh": "射击（可按住）", "en": "Fire (hold)"}, "inputs": ["b", "x"]},
+		{"id": "brace", "name": {"zh": "站定瞄准（按住）", "en": "Brace and aim (hold)"}, "inputs": ["r"]}
+	],
+	"hud": {
+		"clock": {"mode": "elapsed"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "生命", "en": "LIVES"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [
+			{"label": {"zh": "关卡", "en": "Stage"}, "fields": ["stage", "stages_total"]},
+			{"label": {"zh": "续关", "en": "Continues"}, "fields": ["continues"]}
+		]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "决定初始生命与续关次数、敌人子弹的速度和敌人出现的频率。", "en": "Sets starting lives and continues, the speed of enemy shots and how often enemies appear."},
+			"values": [0, 1, 2],
+			"default": 1,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "困难", "en": "Hard"}]
+		}
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《潮汐奔袭》局内画面：潜水员在被淹没的大道上向机械敌人开火。", "en": "Tide Runners in play: a diver firing at machines on the drowned boulevard."},
+		"art_alt": {"zh": "《潮汐奔袭》主视觉：两名身穿潜水服的打捞员站在被淹没城市的屋顶上，远处是巨大的港口机械。", "en": "Tide Runners key art: two salvage divers in suits on a rooftop of a flooded city, a huge harbour machine in the distance."}
+	}
+}
