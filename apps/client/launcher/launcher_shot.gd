@@ -8,6 +8,7 @@ extends SceneTree
 ##   LAUNCHER_SHOT_STATE    "played" (default) starts from a throwaway profile with a few recorded runs so the shelf, records and progress are populated; "fresh" starts from an empty profile
 ##   LAUNCHER_SHOT_ACTIONS  comma-separated LauncherInput action names without the "launcher_" prefix, dispatched in order before the capture (e.g. "down,menu")
 ##   LAUNCHER_SHOT_LOCALE   "zh" (default) or "en"
+##   LAUNCHER_SHOT_KEYS     comma-separated key names (as OS.find_keycode_from_string reads them, e.g. "J,Space") pressed as real key events after the actions, for states only a raw key reaches (the key of a rebinding)
 ##   LAUNCHER_SHOT_NAME     file name without extension, default "<screen>-<state>"
 ##
 ## The launcher is mounted in a SubViewport of the canvas size, so the PNG does not depend on the size of the window or the display. The profile lives in its own file and never touches the player's real one.
@@ -54,6 +55,12 @@ func _initialize() -> void:
 		shell.go(StringName(screen_id), {"game": "shooter"})
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
 		shell.dispatch(StringName("launcher_" + action.strip_edges()))
+		await process_frame
+	for key_name in _env("LAUNCHER_SHOT_KEYS", "").split(",", false):
+		var key := InputEventKey.new()
+		key.physical_keycode = OS.find_keycode_from_string(key_name.strip_edges())
+		key.pressed = true
+		viewport.push_input(key)
 		await process_frame
 	# Let the screen fade, the backdrop cross-fade and the card resize finish.
 	await create_timer(1.2).timeout

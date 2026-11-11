@@ -193,6 +193,10 @@ architecture-test: ## 验证仓库级架构、迁移与死代码边界
 launcher-test: ## 跑主机风格启动器测试(存档、目录、首页焦点、开局与结算)
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/launcher_test.gd '^launcher_test: [0-9]+ passed, 0 failed$$'
 
+.PHONY: settings-test
+settings-test: ## 跑启动器设置屏测试(各类设置项、启动时应用、改键与冲突、存档导入导出、手柄连发)
+	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/settings_test.gd '^settings_test: [0-9]+ passed, 0 failed$$'
+
 .PHONY: launch-test
 launch-test: ## 等待主场景(启动器)ready 后验证装配并显式释放
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/launch_test.gd '^launch_test: 1 passed, 0 failed$$'
@@ -218,7 +222,7 @@ publish-check: ## 公开前门禁:任何 ref 的历史都不得含内部文档(�
 # ---- aggregate ----
 
 .PHONY: ci
-ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test http-test identity-test catalog-test creation-test community-test engagement-test commerce-test operations-test patterns-test app-test spike ui-test launcher-test launch-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
+ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test http-test identity-test catalog-test creation-test community-test engagement-test commerce-test operations-test patterns-test app-test spike ui-test launcher-test settings-test launch-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
 
 .PHONY: ci-web
 ci-web: web-install web-check web-build ## 本地复现官网 CI 门禁(需 Node 与 pnpm)

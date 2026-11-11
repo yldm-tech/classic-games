@@ -136,6 +136,20 @@ launcher → i18n
 - 屏幕上关于玩家的一切（游玩时长、上次游玩、最高分、收藏、最近游玩、成就）都读自 `LauncherStore`，只有真实游玩和真实操作会写入；没有记录时如实显示空状态。
 - 游戏只经 `LauncherGameHost` 启动。它是外壳的一层而不是屏幕，游戏屏与暂停屏在它上面切换时舞台保持挂载。
 
+### 8.1 设置屏与设置项
+
+`settings_screen.gd`（屏幕）、`settings_controls.gd`（设置行、开关、滑块、对话框按钮、改键时读取原始按键的 `KeyCapture`）和 `launcher_settings.gd`（设置项的键、默认值、取值范围，以及把它们应用到引擎的代码）组成设置屏，测试在 `settings_test.gd`（`make settings-test`）。
+
+- 每个设置项都经 `LauncherStore.set_setting` 保存，修改时立即生效，并在下次启动时由 `LauncherRoot._ready` 调用 `LauncherSettings.apply_all` 再次应用。读取一律走 `LauncherSettings.value(store, key)`：存档文件可以被手改，不在取值范围内的值按默认值处理。
+- 设置项的键（存档 `settings` 段）：`lang`（`zh` / `en`）、`clock_24h`（布尔，外壳时钟 24 / 12 小时制）、`default_mode`（`console` / `pc`）、`window_mode`（`windowed` / `fullscreen` / `exclusive`）、`vsync`（布尔）、`max_fps`（`0` 为不限，或 30 / 60 / 120 / 144）、`volume_master` 与 `volume_music`（0 至 10 的音量档位）、`audio_mute`（布尔）。
+- `default_mode` 由设置屏写入，设置屏自己不读取：PC 模式在启动时读取它，决定是否直接进入 PC 模式。
+- 窗口模式与垂直同步只在启动器就是真实窗口的内容时才会应用（`LauncherSettings.drives_window`）；headless 测试和把启动器挂在离屏视口里的截图脚本不会改动窗口。
+- 音频总线定义在 `apps/client/default_bus_layout.tres`：`Master` 之下有一条 `Music` 总线，运行时的背景音乐播放器输出到 `Music`。目前没有任何运行时播放音效，所以没有音效总线，也没有音效音量这一项。
+- 改键只改键盘按键，保存在存档的 `bindings` 段（只保存与 `project.godot` 默认值不同的操作），由 `LauncherInput.reset_and_apply` 应用。一次改键把该操作换成单独一个新键；新键已被别的操作占用时先弹出确认，替换后对方若因此没有按键，就接过本操作原来的按键，所以任何操作都不会失去键盘按键。`LauncherInput.apply_bindings` 会跳过不含有效按键的条目。手柄按键是固定的，设置屏只按 `InputMap` 的内容把它们列出来。
+- 手柄连发：十字键或摇杆的方向保持按下时，`LauncherRoot` 在 `LauncherInput.REPEAT_DELAY` 秒后开始按 `REPEAT_INTERVAL` 的间隔重复派发该方向，每帧至多一次；松开、手柄断开或窗口失去焦点时停止。键盘方向键仍依靠系统自身的按键重复。
+- 存档页的导出把完整存档写成 `classic-games-profile-<日期>-<时间>.json`（默认在系统的「文档」文件夹）；导入从同一文件夹列出最近的导出文件，经 `LauncherStore.read_profile`（与读取存档相同的版本检查和规范化）后用 `replace_progress` 只替换进度（游玩记录、收藏、最近游玩、成就），设置和按键保持不变，并可在提示消失前撤销；清除进度前必须确认，确认框的默认焦点在「取消」。
+- 启动器目录不允许出现网址（`check-client-boundaries.sh` 的本地化约束），所以「关于」页的仓库地址只作展示，不会打开浏览器。
+
 ## 9. 完成态不变量
 
 - Godot 4.6.3 精确版本门禁和 fail-closed test runner；
