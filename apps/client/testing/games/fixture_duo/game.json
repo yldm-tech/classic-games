@@ -1,0 +1,46 @@
+{
+	"schema": 1,
+	"id": "fixture_duo",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "夹具双人", "en": "FIXTURE DUO"},
+	"initials": "jjsr",
+	"genre": {"zh": "测试夹具", "en": "TEST FIXTURE"},
+	"tagline": {"zh": "只给测试用的模块：两个方块、一个首领、一个倒计时。", "en": "A module for tests only: two squares, one boss, one countdown."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "F4F1FF", "shadow": "4B3FA8", "glow": "9D8CFF"},
+	"art": {"top": "0B0A1A", "bottom": "2A2466", "primary": "9D8CFF", "secondary": "FFD166"},
+	"achievements": [
+		{"id": "any_run", "icon": "bolt", "name": {"zh": "跑完一局", "en": "Ran Once"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "boss_down", "icon": "cup", "name": {"zh": "击倒首领", "en": "Boss Down"}, "desc": {"zh": "击倒首领。", "en": "Defeat the boss."}, "when": {"cleared": true}},
+		{"id": "flawless", "icon": "shield", "name": {"zh": "毫发无伤", "en": "Flawless"}, "desc": {"zh": "通关且没有人损失生命。", "en": "Clear without anyone losing a life."}, "when": {"cleared": true, "max": {"deaths": 0}}},
+		{"id": "together", "icon": "star", "name": {"zh": "两个人", "en": "Together"}, "desc": {"zh": "两位玩家一起通关，并拾取至少 1 枚硬币。", "en": "Clear with two players and at least 1 coin."}, "when": {"cleared": true, "players": 2, "min": {"coins": 1}}}
+	],
+	"how": {
+		"zh": "移动方块，按 A 攻击首领，按 B 损失一条生命。首领生命归零即通关；所有玩家生命耗尽则失败；倒计时结束则超时。",
+		"en": "Move your square, press A to hit the boss and B to lose a life. The run is cleared when the boss has no HP left, lost when every player is out of lives, and timed out when the countdown ends."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动", "en": "Move"}, "inputs": ["move"]},
+		{"id": "hit", "name": {"zh": "攻击", "en": "Hit"}, "inputs": ["a"]},
+		{"id": "hurt", "name": {"zh": "损失生命", "en": "Lose a life"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "countdown", "field": "time_left"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "生命", "en": "LIVES"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [{"label": {"zh": "硬币", "en": "Coins"}, "fields": ["coins", "coins_total"]}],
+		"player_stats": [{"label": {"zh": "命中", "en": "Hits"}, "fields": ["hits"]}]
+	},
+	"options": [
+		{
+			"id": "duration",
+			"name": {"zh": "时长", "en": "Duration"},
+			"note": {"zh": "倒计时的长度。", "en": "How long the countdown runs."},
+			"values": [5, 30, 60],
+			"default": 30,
+			"labels": [{"zh": "5 秒", "en": "5 s"}, {"zh": "30 秒", "en": "30 s"}, {"zh": "60 秒", "en": "60 s"}]
+		}
+	]
+}

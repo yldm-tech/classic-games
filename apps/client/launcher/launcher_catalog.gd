@@ -27,7 +27,7 @@ static var _loaded := false
 static var generation := 0
 
 ## Read the manifests again, optionally from another games directory (tests use a fixture directory).
-static func reload(root: String = GameSession.GAMES_ROOT) -> void:
+static func use_root(root: String = GameSession.GAMES_ROOT) -> void:
 	_root = root
 	GameSession.forget_catalog()
 	_loaded = false

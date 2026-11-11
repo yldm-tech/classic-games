@@ -30,7 +30,11 @@ static func forget(root: String = "") -> void:
 static func discover(root: String = GAMES_ROOT) -> Dictionary:
 	var games: Array[Dictionary] = []
 	var problems: Array[Dictionary] = []
-	var names := Array(DirAccess.get_directories_at(root))
+	# DirAccess.open reports a root that is not there through its return value; get_directories_at would log an engine error for it.
+	var access := DirAccess.open(root)
+	if access == null:
+		return {"games": games, "problems": problems}
+	var names := Array(access.get_directories())
 	names.sort()
 	for folder: String in names:
 		if folder == SHARED_DIR or folder.begins_with(".") or folder.begins_with("_"):

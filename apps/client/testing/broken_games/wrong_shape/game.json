@@ -1,0 +1,20 @@
+{
+	"schema": 2,
+	"id": "another_name",
+	"kind": "module",
+	"entry": "../shared/game_module.gd",
+	"stage": {"size": [500, 300]},
+	"name": {"zh": "形状不对"},
+	"initials": "XZ",
+	"genre": {"zh": "夹具", "en": "FIXTURE"},
+	"tagline": {"zh": "一份故意写错的清单。", "en": "A manifest that is wrong on purpose."},
+	"players": {"min": 2, "max": 4},
+	"colors": {"title": "FFFFFF", "shadow": "000000", "glow": "nothex"},
+	"art": {"top": "000000", "bottom": "000000", "primary": "FFFFFF", "secondary": "FFFFFF", "image": "missing.png"},
+	"achievements": [{"id": "a", "icon": "medal", "name": {"zh": "一", "en": "One"}, "desc": {"zh": "一", "en": "One"}, "when": {"fastest": true}}],
+	"how": {"zh": "无", "en": "None"},
+	"controls": [{"id": "jump", "name": {"zh": "跳", "en": "Jump"}, "inputs": ["z"]}],
+	"hud": {"clock": {"mode": "stopwatch"}},
+	"options": [{"id": "speed", "name": {"zh": "速度", "en": "Speed"}, "note": {"zh": "速度", "en": "Speed"}, "values": [1, 2], "default": 3}],
+	"publisher": "nobody"
+}

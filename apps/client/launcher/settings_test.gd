@@ -27,6 +27,8 @@ func _initialize() -> void:
 	await _test_applied_at_start()
 	await _test_rebinding()
 	await _test_binding_persistence_and_reset()
+	await _test_player_keys()
+	await _test_effects_volume()
 	await _test_saves()
 	await _test_about_and_english()
 	await _test_gamepad_repeat()
@@ -690,6 +692,113 @@ func _remove_files() -> void:
 			DirAccess.remove_absolute(STORE_PATH + suffix)
 
 ## Undo everything a shell applies to the engine, so each test starts from the project's own state.
+# ---- player keys ----
+
+## The second settings page of keys: the two keyboard schemes game modules are played with. They rebind like the launcher's own keys, clash only with each other, and can never share a key with pause.
+func _test_player_keys() -> void:
+	_reset_engine()
+	var store := _fresh_store()
+	var shell := _boot(store)
+	await _frames(2)
+	var p1_a := In.game_action(1, &"a")
+	var p2_a := In.game_action(2, &"a")
+	var p2_up := In.game_action(2, &"up")
+	_check("both schemes exist in the project with one key per control", In.keycodes(p1_a) == [KEY_F] and In.keycodes(p2_a) == [KEY_K] and In.keycodes(In.game_action(1, &"up")) == [KEY_W] and In.keycodes(p2_up) == [KEY_UP] and In.all_game_actions().size() == 20)
+	var unique := {}
+	for action in In.all_game_actions():
+		for code in In.keycodes(action):
+			unique[code] = true
+	_check("no two player controls share a default key", unique.size() == 20)
+	var apart := true
+	for action in In.all_game_actions():
+		for code in In.keycodes(action):
+			apart = apart and not In.keycodes(In.MENU).has(code) and not In.keycodes(In.BACK).has(code)
+	_check("and none of them is a pause key", apart)
+
+	shell.go(&"settings", {"category": "players"})
+	var screen := shell.current_screen() as LauncherSettingsScreen
+	_check("the player keys page lists player 1's ten controls, then player 2's", screen.find_child("Title", true, false).text == "玩家按键" and _row_ids(screen).size() == 20 and _row_ids(screen)[0] == "bind_game_p1_up" and _row_ids(screen)[10] == "bind_game_p2_up" and _row_ids(screen)[19] == "bind_game_p2_r")
+	_check("each row names the player and shows the key", _row(screen, "bind_game_p2_a").label_text() == "玩家 2 · A 键" and _row(screen, "bind_game_p2_a").value_text() == "K" and _row(screen, "bind_game_p1_left").value_text() == "A")
+	_check("the gamepad side is shown as fixed", screen.pad_names(p2_a) == "A" and screen.pad_names(p2_up) == "十字键 ↑ / 左摇杆 ↑" and screen.pad_names(In.game_action(1, &"l")) == "LB")
+
+	screen.begin_capture(p2_a)
+	screen.capture_key(KEY_M)
+	_check("a pause key is refused for a player control, and the capture goes on", screen.is_capturing() and shell.toast_text() == "M 已用于「选项（Menu）」，暂停键和玩家按键不能共用。" and store.bindings().is_empty())
+	screen.capture_key(KEY_ESCAPE)
+	_check("so is the other pause key", screen.is_capturing() and In.keycodes(p2_a) == [KEY_K])
+	screen.capture_key(KEY_ENTER)
+	_check("a key the interface uses for something else is free for a player", not screen.is_capturing() and not screen.is_dialog_open() and In.keycodes(p2_a) == [KEY_ENTER] and In.keycodes(In.ACCEPT).has(KEY_ENTER) and store.bindings() == {"game_p2_a": [KEY_ENTER]})
+
+	screen.begin_capture(p2_a)
+	screen.capture_key(KEY_F)
+	_check("a key the other player uses opens the conflict dialog", screen.is_dialog_open() and shell.find_child("DialogBody", true, false).text == "F 已用于「玩家 1 · A 键」。替换后，「玩家 1 · A 键」会改用 Enter。")
+	shell.dispatch(In.RIGHT)
+	shell.dispatch(In.ACCEPT)
+	_check("replacing swaps the two, so neither player is locked out", In.keycodes(p2_a) == [KEY_F] and In.keycodes(p1_a) == [KEY_ENTER] and _row(screen, "bind_game_p1_a").value_text() == "Enter" and _row(screen, "bind_game_p2_a").value_text() == "F")
+	var bound := true
+	for action in In.all_game_actions():
+		bound = bound and In.keycodes(action).size() == 1
+	_check("every control of both players still has a key", bound)
+
+	shell.go(&"settings", {"category": "controls"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.begin_capture(In.MENU)
+	screen.capture_key(KEY_F)
+	_check("a player key is refused for pause", screen.is_capturing() and In.keycodes(In.MENU) == [KEY_M] and shell.toast_text() == "F 已用于「玩家 2 · A 键」，暂停键和玩家按键不能共用。")
+	screen.capture_key(KEY_N)
+	_check("a free key is accepted", In.keycodes(In.MENU) == [KEY_N])
+	screen.begin_capture(In.UP)
+	screen.capture_key(KEY_W)
+	_check("a navigation key may be a player's key too: the two are never live together", not screen.is_dialog_open() and In.keycodes(In.UP) == [KEY_W] and In.keycodes(In.game_action(1, &"up")) == [KEY_W])
+
+	shell.free()
+	_reset_engine()
+	shell = _boot(_reload())
+	await _frames(2)
+	_check("player keys are stored and applied at the next start", In.keycodes(p2_a) == [KEY_F] and In.keycodes(p1_a) == [KEY_ENTER] and In.keycodes(In.MENU) == [KEY_N])
+	shell.go(&"settings", {"category": "players"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	shell.dispatch(In.RIGHT)
+	_check("the page can be restored", screen.can_reset())
+	screen.reset_page()
+	_check("restoring this page resets the player keys and leaves the interface's", In.keycodes(p2_a) == [KEY_K] and In.keycodes(p1_a) == [KEY_F] and In.keycodes(In.MENU) == [KEY_N] and In.keycodes(In.UP) == [KEY_W] and shell.store.bindings() == {"launcher_menu": [KEY_N], "launcher_up": [KEY_W]})
+	shell.undo()
+	_check("and can be undone", In.keycodes(p2_a) == [KEY_F] and In.keycodes(p1_a) == [KEY_ENTER])
+	shell.go(&"settings", {"category": "controls"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.reset_page()
+	_check("restoring the interface page leaves the player keys", In.keycodes(In.MENU) == [KEY_M] and In.keycodes(In.UP) == [KEY_UP] and In.keycodes(p2_a) == [KEY_F] and shell.store.bindings() == {"game_p1_a": [KEY_ENTER], "game_p2_a": [KEY_F]})
+	shell.free()
+	_reset_engine()
+
+func _test_effects_volume() -> void:
+	var store := _fresh_store()
+	var shell := _boot(store)
+	await _frames(2)
+	var bus := AudioServer.get_bus_index(&"SFX")
+	_check("there is an SFX bus under Master, next to Music", bus > 0 and AudioServer.get_bus_send(bus) == &"Master" and AudioServer.get_bus_index(&"Music") > 0)
+	shell.go(&"settings", {"category": "audio"})
+	var screen := shell.current_screen() as LauncherSettingsScreen
+	shell.dispatch(In.RIGHT)
+	shell.dispatch(In.DOWN)
+	shell.dispatch(In.DOWN)
+	_check("the effects row is the third audio row and starts full", screen.row == 2 and _row_ids(screen)[2] == "volume_sfx" and _row(screen, "volume_sfx").label_text() == "音效" and S.value(store, S.VOLUME_SFX) == 10)
+	for press in 4:
+		shell.dispatch(In.LEFT)
+	_check("lowering it lowers the SFX bus only", store.setting(S.VOLUME_SFX) == 6 and is_equal_approx(AudioServer.get_bus_volume_db(bus), linear_to_db(0.6)) and is_zero_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index(&"Music"))) and is_zero_approx(AudioServer.get_bus_volume_db(0)))
+	shell.free()
+	_reset_engine()
+	shell = _boot(_reload())
+	await _frames(2)
+	_check("it is applied again at the next start", is_equal_approx(AudioServer.get_bus_volume_db(bus), linear_to_db(0.6)))
+	shell.go(&"settings", {"category": "audio"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	shell.dispatch(In.RIGHT)
+	screen.reset_page()
+	_check("and is part of what the audio page restores", S.value(shell.store, S.VOLUME_SFX) == 10 and is_zero_approx(AudioServer.get_bus_volume_db(bus)))
+	shell.free()
+	_reset_engine()
+
 func _reset_engine() -> void:
 	Engine.max_fps = 0
 	for bus in AudioServer.bus_count:

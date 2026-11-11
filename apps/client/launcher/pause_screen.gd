@@ -302,6 +302,9 @@ func _step_row(step: int) -> void:
 			_set_volume(_volume.value + step)
 		ROW_DEVICE_ONE, ROW_DEVICE_TWO:
 			shell.game_host.players.cycle_device(0 if row_id() == ROW_DEVICE_ONE else 1, step)
+			# The seats are being rearranged, and the owner's device may just have been handed to the other player: from here the pause is anyone's, so nobody is locked out of it.
+			shell.game_host.pause_owner = -1
+			(_eyebrow.get_node("Meta") as Label).text = "PAUSED"
 			_sync_rows()
 			_build_pane()
 
