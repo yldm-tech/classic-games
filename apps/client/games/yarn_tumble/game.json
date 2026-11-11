@@ -1,0 +1,53 @@
+{
+	"schema": 1,
+	"id": "yarn_tumble",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "毛线滚滚", "en": "YARN TUMBLE"},
+	"initials": "mxgg",
+	"genre": {"zh": "单屏平台动作", "en": "ARCADE PLATFORMER"},
+	"tagline": {"zh": "把织塔里的捣蛋鬼缠成毛线球，一脚踢下去撞翻一整层。", "en": "Wrap the tower's pests into balls of yarn and kick them down through the rest."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "FFF3D6", "shadow": "5A2A4A", "glow": "F08A3C"},
+	"art": {"top": "2B1D3A", "bottom": "7A3B4E", "primary": "4F8FE8", "secondary": "F08A3C", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_ball", "icon": "bolt", "name": {"zh": "第一团毛线", "en": "First Ball"}, "desc": {"zh": "把一只捣蛋鬼缠成球并踢出去。", "en": "Wrap a pest into a ball and send it rolling."}, "when": {"min": {"kos": 1}}},
+		{"id": "triple_roll", "icon": "star", "name": {"zh": "一球三响", "en": "Three in One"}, "desc": {"zh": "一颗毛线球连同自己一共撞翻三只。", "en": "Knock out three pests with a single ball, the one inside included."}, "when": {"min": {"best_roll": 3}}},
+		{"id": "big_roll", "icon": "star", "name": {"zh": "连环撞", "en": "Bowled Over"}, "desc": {"zh": "一颗毛线球一共撞翻五只。", "en": "Knock out five pests with a single ball."}, "when": {"min": {"best_roll": 5}}},
+		{"id": "duchess_down", "icon": "shield", "name": {"zh": "女爵退场", "en": "Dusted"}, "desc": {"zh": "击败飞蛾阁楼的绒翼女爵。", "en": "Defeat Duchess Dustwing in the Moth Loft."}, "when": {"min": {"bosses_defeated": 1}}},
+		{"id": "tower_top", "icon": "cup", "name": {"zh": "登顶织塔", "en": "Top of the Tower"}, "desc": {"zh": "打通全部十四层。", "en": "Clear all fourteen floors."}, "when": {"cleared": true}},
+		{"id": "one_thread", "icon": "shield", "name": {"zh": "一线到底", "en": "One Thread"}, "desc": {"zh": "不使用续关打通织塔。", "en": "Clear the tower without using a continue."}, "when": {"cleared": true, "max": {"continues_used": 0}}},
+		{"id": "duet", "icon": "cup", "name": {"zh": "双人合织", "en": "Knit Together"}, "desc": {"zh": "两位玩家一起打通织塔。", "en": "Clear the tower with two players."}, "when": {"cleared": true, "players": 2}},
+		{"id": "tight_knit", "icon": "bolt", "name": {"zh": "紧针密线", "en": "Tight Knit"}, "desc": {"zh": "在困难难度下打通织塔。", "en": "Clear the tower on Hard."}, "when": {"cleared": true, "min": {"difficulty": 2}}}
+	],
+	"how": {
+		"zh": "用毛线击中捣蛋鬼，每击中一次就多缠一圈，缠满就变成毛线球；缠到一半放着不管，它会自己挣脱。把毛线球推到合适的位置，再用毛线一打把它踢出去：球会沿着平台滚落、撞墙反弹，撞到的捣蛋鬼全部出局，连撞越多分数越高，还会掉出纽扣和强化道具。清空一层就上一层，第七层和第十四层有守关首领。碰到没被缠住的捣蛋鬼会损失一条生命；生命和续关都用完就失败，打通十四层即通关。",
+		"en": "Hit a pest with yarn: every hit winds it a little more, and a fully wound pest is a ball. Leave one half wound and it wriggles free. Push the ball where you want it, then hit it with yarn again to kick it: it rolls down the ledges, turns at the walls and knocks out every pest it touches, with a bigger score for every one in the chain and buttons and power-ups dropping out. Clear a floor to climb to the next; guardians wait on floors 7 and 14. Touching a pest that is not wound costs a life. The run is lost when lives and continues are gone, and cleared at the top of floor 14."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动（按住下再跳可穿下平台）", "en": "Move (hold down and jump to drop through a ledge)"}, "inputs": ["move"]},
+		{"id": "jump", "name": {"zh": "跳跃", "en": "Jump"}, "inputs": ["a"]},
+		{"id": "yarn", "name": {"zh": "抛毛线 / 踢球", "en": "Throw yarn / kick a ball"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "none"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "生命", "en": "LIVES"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "守关首领", "en": "GUARDIAN"}}
+	},
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《毛线滚滚》第一层：蓝帽小织工踢出的蓝色毛线球正从针织平台上滚落，橙帽小织工身旁是一只被橙色毛线缠住一半的飞蛾怪。", "en": "Floor one of Yarn Tumble: a blue ball of yarn kicked by the knitter in the blue hat rolls off a knitted ledge, while the knitter in the orange hat stands beside a mothkin half wound in orange yarn."},
+		"art_alt": {"zh": "《毛线滚滚》主视觉：织塔里两位小织工举着毛线针，一颗蓝色毛线球滚向几只捣蛋鬼，月窗前飞着戴王冠的大飞蛾。", "en": "Key art of Yarn Tumble: two little knitters raise their needles inside the weaving tower as a blue ball of yarn tumbles towards a handful of pests, with a crowned giant moth in front of the moonlit window."}
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "影响生命和续关次数、捣蛋鬼的速度，以及毛线球能保持多久。", "en": "Changes lives and continues, how fast the pests move and how long a ball holds."},
+			"values": [0, 1, 2],
+			"default": 1,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "困难", "en": "Hard"}]
+		}
+	]
+}
