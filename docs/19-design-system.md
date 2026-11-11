@@ -1,64 +1,60 @@
 # 设计系统
 
-已有一套 HTML/CSS 原型(Claude Design 导出)定义了 Classic Games 的视觉语言:深色为主、橙红(熔炉)主色、设计 token 化。
-本文档讲怎么把它**落到 Godot**,以及实现时对照哪些既有产物。
+客户端的界面是主机风格启动器(结构见 [16-client-architecture](./16-client-architecture.md) 第 3 节):固定 1920×1080 的 16:9 画布,深色,以每款游戏的主视觉为背景,文字和控件叠在主视觉与一层压暗渐变之上。本文说明它的设计 token、控件,以及改动界面时的做法。数值以代码为准,这里不抄一遍。
 
 ## 来源
 
-原型 bundle 里的设计产物(实现时直接对照,不要凭记忆):
-
-- `_ds/.../tokens/` — colors / fonts / typography / spacing / base 的 CSS 变量
-- `app.css` / `ds.css` — 应用层样式
-- `covers/` — 9 款游戏封面图(真实素材,非占位)
-- 各 `fp-app-*.jsx` — 页面与组件的视觉与交互参照
-- 截图 `screenshots/` — 各页面深浅色、各平台的目标效果
-
-**原则**(来自 handoff README):**像素级复刻视觉输出,但不照搬原型的内部结构**。Godot 用自己的方式实现,对齐的是最终效果,不是 React 的组件树。
-
-## Token → Godot 映射
-
-原型的 CSS 变量映射到 Godot `Theme` 资源 + 一个 token 单例:
-
-| CSS token 类 | Godot 承载 |
+| 文件 | 内容 |
 |---|---|
-| colors(`--bg-app` `--text-muted` `--brand` …) | Theme color + token 单例常量;深/浅两套 |
-| typography(字号/字重/行高/eyebrow) | Theme font size + 自定义 type scale |
-| spacing(间距刻度) | token 单例常量,组件统一引用 |
-| radii / shadows / glow | Theme StyleBox(圆角、阴影、发光) |
-| motion(ease/时长) | Tween 的缓动常量(如 `ease-snap` cubic-bezier) |
+| `apps/client/launcher/launcher_tokens.gd` | `LauncherTokens`:颜色、前景透明度档位、间距与尺寸、动效时长、字号、系统字体的选择 |
+| `apps/client/launcher/pc_tokens.gd` | `LauncherPcTokens`:PC 模式在此之上独有的扁平配色与标题条、侧栏、网格、菜单的尺寸 |
+| `apps/client/launcher/launcher_catalog.gd` | 每款游戏自己的颜色:`colors`(标题字、投影、辉光)与 `art`(程序化主视觉的配色与图案) |
+| `apps/client/launcher/art/<游戏 id>.jpg` | 每款游戏的 16:9 主视觉,来源与许可见 [licenses](./legal/licenses.md) |
 
-做法:维护**一份 token 来源**(从原型 CSS 变量誊一份成 Godot 常量),颜色/字号/间距全引用它,不散落硬编码——这样深浅主题切换、整体调色才可控。
+所有屏幕和控件只引用 token,不写散落的颜色、字号和透明度。要调整视觉,改 token;某处需要一个现有 token 表达不了的值,先加一个有名字的 token。
 
-## 深浅双主题
+## Token
 
-- 原型两套主题都已适配(深色默认)。Godot 用两份 Theme(或一份 + 运行时换 token),运行时切换即时重渲([16-client-architecture](./16-client-architecture.md))。
-- 教训:设置页「外观」必须是真开关。原型曾因为「外观行是死的」被误判成「浅色没适配」——其实是控件没接 onClick。Godot 实现时把主题/语言开关接到全局 state。
-- 验证:每个页面深浅色都要真机过([13-testing](./13-testing.md)),别只测深色。
+- **画布**:`CANVAS` 为 1920×1080。`project.godot` 用 `canvas_items` 拉伸、`aspect=keep`,所以所有位置和尺寸都直接按画布像素写,不读窗口大小;其他比例的窗口留黑边,不重排。
+- **颜色**:背景 `BG`、前景 `FG`、压暗渐变的底色 `DEEP`、面板 / 卡片 / 对话框 / toast 的底色,以及收藏和危险操作共用的红色。启动器没有品牌主色:强调色来自当前游戏的 `colors`,所以换一款游戏,标题和辉光随之变化。
+- **前景透明度档位**:文字层级不靠换颜色,而靠同一个前景色的固定透明度档位(`A_STRONG`、`A_BODY`、`A_MUTED`、`A_FAINT`,分隔线用 `A_RULE`、`A_HAIRLINE`,未聚焦的行用 `A_ROW_IDLE`、`A_SUB_IDLE`)。用 `LauncherTokens.fg(alpha)` 取色,不写临时的透明度,这样每一屏的层级一致。
+- **间距与尺寸**:页面左右边距 `MARGIN`,顶部导航和页脚提示的位置与高度,行高、卡片与封面的尺寸、对话框宽度等。圆角只有一档 `RADIUS`。
+- **动效**:切屏、背景交叉淡入、行高亮、卡片缩放、封面淡入各有一个时长常量,toast 的停留时间也在这里。
+- **字号**:按文字角色命名(`SIZE_HERO`、`SIZE_PANEL_TITLE`、`SIZE_ROW`、`SIZE_BODY`、`SIZE_SMALL` 等),不按数值命名。
+- **字体**:仓库不带字体文件。`LauncherTokens.font(weight, spacing, latin)` 从系统里解析中文与拉丁两套字体并缓存,`label_settings` 把字体、字号、颜色打包;字重按 CSS 的 100 至 900,字距按画布像素。细节见 [18-i18n](./18-i18n.md)。
 
-## 组件库
+## 控件
 
-从 `Control` 基元搭一套对照原型的组件([16](./16-client-architecture.md) `shell/design_system/components/`)。对照原型已有的 preview 清单:
+| 文件 | 内容 |
+|---|---|
+| `launcher_widgets.gd` | 小工厂:`text`、`hbox` / `vbox`、`rule`、`section_header`、`place`、`fill` |
+| `launcher_controls.gd` | 主机屏幕的可交互控件:`FocusRow`、`Tab`、`Glyph`、`GlyphHint`、`ArtCard`、`Tile`,以及 `Icon`(成就图标的唯一实现)和 `GradientRect` |
+| `launcher_scroll_grid.gd` | `LauncherScrollGrid`:按整行滚动的等大单元格网格,游戏库封面与成就列表共用 |
+| `launcher_game_widgets.gd` | 游戏菜单、局内与暂停三屏共用:`KeyCap`、`Tag`、`Meter`、`HudChip`、`SliderRow`、`ConfirmDialog`、`GameTitle`、`AchievementRow` 等 |
+| `settings_controls.gd` | 设置屏:`SettingRow`、`Switch`、`Segments`、`OutlineButton`、`RowList`、`KeyCapture` |
+| `pc_controls.gd` | PC 模式:`Clickable` 及其派生(`Pill`、`IconButton`、`SideRow`、`LibraryCard`、`ListRow` 等)、`Menu`、`SearchField`、`Flow` |
+| `launcher_key_art.gd` | `LauncherKeyArt`:一款游戏的主视觉。有 `art/<游戏 id>.jpg` 时用图片,否则按目录里的 `art` 配色画程序化占位 |
 
-- 按钮(主/次/ghost,多尺寸)、徽章/chip、卡片、KPI 卡、表单/输入、表格、终端卡、代码块、导航头、游戏卡、段控(segment)、图标库。
-- **游戏封面**:用 `covers/` 真实封面图,不用字母占位(原型修过「ED/CG 字母占位」的坑——所有小卡、HUD 背景、直播/房间头图、回放都要传真实封面)。
-- **图标**:真实品牌图标(单色 SVG,跟随主题色),按 locale 切换([18-i18n](./18-i18n.md))。不用占位 emoji/字母。
+控件遵守同一套约定:
 
-## 视觉规范要点(从原型提炼)
+- **只管外观。** 控件不持有游戏数据、不读存档,只通过 `hovered`(指针进入)和 `activated`(左键点击)报告意图。哪个控件有焦点由屏幕决定,再用 `set_focused` / `set_selected` 告诉控件怎么画。
+- **不用 Godot 自带的键盘焦点。** 例外只有 PC 模式的搜索框,因为输入文字需要它。
+- **焦点可见。** 聚焦的行有左侧的焦点条和向右淡出的底色,选中的卡片与封面有外环并放大,未选中的封面压暗。
+- **页脚按键提示。** 每一屏在页脚用 `GlyphHint` 列出当前可用的按键,提示本身也可以点击,效果与按下那个键相同。
+- **三种输入都完整。** 键盘、手柄、鼠标都能完成全部操作;屏幕不读原始输入事件,只处理外壳翻译好的动作名。
 
-- **主色**:橙红「熔炉」色(`#FF4D1A` 一带),用于强调/CTA;背景近黑 `#0A0809`,顶部有微弱橙红径向光晕。
-- **信息架构**:每个页面只回答一个问题;Tab 平级、子页左上返回、操作半屏弹层、全屏只留游戏和直播([16](./16-client-architecture.md))。
-- **数字/徽章不换行**:大数字、短徽章单行显示([18-i18n](./18-i18n.md) 排版细节)。
-- **设备框 / 平台 chrome**:原型支持 iOS/Android/iPad/macOS/Windows 的状态栏、notch、标题栏(红绿灯 vs caption 按钮)、导航(tab/rail/sidebar)随平台切换。Godot 客户端按运行平台呈现对应 chrome。
+## 版式要点
 
-## 设计评审(流程教训)
+- 主视觉铺满画布,文字与它之间隔着一层以 `DEEP` 为底色的渐变。
+- 游戏标题用该游戏 `colors` 里的标题色、投影和辉光(`GameTitle`),其余文字一律用前景色的透明度档位。
+- 数字、分数和短标签单行显示;拉丁文字可以用拉丁字体(`latin = true`)。
+- 关于玩家的一切(时长、最高分、成就)没有记录时显示空状态,不放示例数据。
+- PC 模式是同一份数据的另一种布局:更密、扁平、用容器搭建并随宽度重排;它的专用值放在 `LauncherPcTokens`,共用的仍取自 `LauncherTokens`。
 
-原型迭代里有一条值得制度化的教训:**功能验收 ≠ 设计评审**。
+## 查看效果
 
-- 「能点、不报错、文字没截断」只是功能验收;「这个图标/控件放这里合不合理」是另一种检查。
-- 原型曾因只做功能验收,漏掉「齿轮画得像灯泡」「编辑资料按钮位置突兀」这类明显设计问题。
-- 制度化:每轮大改动跑两种检查——**功能验收 + 设计评审**(以挑剔 UI 设计师视角查图标语义、控件位置、移动端惯例、信息层级、重复入口)。纳入 [13-testing](./13-testing.md) 的跨平台验证清单。
+`make launcher-shot SCREEN=<屏幕 id> STATE=<played|fresh>` 把启动器的某一屏渲染成 1920×1080 的 PNG,默认写到 `~/screenshots/classic-games/console-launcher`。`played` 从一份带若干游玩记录的临时存档开始,`fresh` 从空存档开始,都不碰玩家的真实存档。语言、先派发的动作、PC 模式、游戏库里的条目数量等由环境变量控制,清单在 `apps/client/launcher/launcher_shot.gd` 开头。它需要真实的渲染器,不在 `make ci` 里。
 
-## 落地节奏
+## 设计评审
 
-- Phase 0/1:先把 token + Theme + 核心组件(按钮/卡片/输入/列表/导航)搭好,够核心闭环页面用。
-- Phase 2+:补全组件库与各平台 chrome 细节,全页面深浅色精修。
+功能验收不等于设计评审。「能操作、不报错、文字没截断」只是功能验收;「这个图标的语义对不对、这个控件放在这里合不合理、层级是否清楚、有没有重复入口」是另一种检查。每轮较大的界面改动两种都要做,并且中文和英文各看一遍([13-testing](./13-testing.md))。

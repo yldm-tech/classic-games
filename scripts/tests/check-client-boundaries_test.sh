@@ -81,7 +81,7 @@ printf '%s\n' 'func baseline() -> String:' '	return FileAccess.get_file_as_strin
 expect_fail "launcher reads a runtime data file" "$case_dir" "$LAUNCHER_PATHS"
 
 case_dir="$(fixture)"
-printf '%s\n' 'const Http := preload("res://core/http/http_client.gd")' > "$case_dir/apps/client/launcher/launcher_store.gd"
+printf '%s\n' 'const Sync := preload("res://cloud/profile_sync.gd")' > "$case_dir/apps/client/launcher/launcher_store.gd"
 expect_fail "launcher imports a directory outside the allowed three" "$case_dir" "$LAUNCHER_PATHS"
 
 case_dir="$(fixture)"

@@ -1,110 +1,56 @@
 # 客户端架构（Godot）
 
 更新时间：2026-11-11
-状态：七个 feature 切片与单一组合根已完成；主场景已切换为主机风格启动器（见第 8 节）
+状态：客户端是主机风格启动器加三个游戏运行时；原先的竖屏手机应用壳（`app/`、`features/`、`shell/`、`ui/`、`core/`、`platform/`）已整体移除
 
 ## 1. 目录与依赖方向
 
 ```text
 apps/client/
-├── main.gd                         # 创建 AppRoot
-├── app/
-│   ├── app_root.gd                 # composition root，只装配
-│   ├── screen_registry.gd          # screen 生命周期/查找
-│   └── chrome/chrome_controller.gd # 全局 chrome
-├── core/http/
-│   ├── api_result.gd               # 统一结果类型
-│   └── http_client.gd              # transport-only
-├── features/
-│   ├── identity/                   # 认证与 session
-│   ├── catalog/                    # 发现、搜索、详情、资料
-│   ├── creation/                   # AI、mod、草稿、发布
-│   ├── community/                  # 评论、收藏、关系、消息
-│   ├── engagement/                 # 下载、历史、房间、回放
-│   ├── commerce/                   # 积分、会员、活动、支付
-│   └── operations/                 # 账号、偏好、举报、反馈
-├── shell/                          # 设计 token、路由、全局/创作会话工具
-├── runtime/                        # 独立游戏运行时
-├── platform/                       # 原生能力端口
-└── ui/                             # 无业务 components 与 patterns
+├── project.godot          # 主场景 launcher/launcher.tscn，1920×1080 画布，launcher_* 输入动作，无 autoload
+├── default_bus_layout.tres # 音频总线：Master 之下一条 Music
+├── export_presets.cfg     # Web / Windows / macOS / Android / iOS 导出预设
+├── launcher/              # 主机风格启动器：外壳、屏幕、控件、本地存档、PC 模式，以及它们的测试（第 3 节）
+├── runtime/               # 游戏运行时：GameSession、RuntimeLoader、JSON Patch、DSL 迁移、shooter / survivor / tower_defense（第 2 节）
+├── i18n/                  # 界面文案：strings.gd（入口）与 launcher_strings.gd（启动器文案表），见 18-i18n
+├── assets/                # 目前为空
+└── spike_test.gd          # 运行时的 headless 测试（make spike）
 ```
 
 允许的依赖方向：
 
 ```text
-main → app → features → core
-              │
-              ├── ui
-              ├── platform ports
-              └── GameSession
+launcher → i18n
+        └→ runtime/game_session.gd（仅此一个文件）
+runtime  → 不依赖 runtime/ 之外的任何目录
+i18n     → 不依赖 i18n/ 之外的任何目录
 ```
 
-`core` 不依赖 feature；feature 的 endpoint 只属于本域 `*_api.gd`；feature 不能 import 另一 feature 的 screen。`scripts/check-client-boundaries.sh` 与 `scripts/check-architecture.sh` 在本地和 CI 中检查这些规则。
+客户端不发任何网络请求，没有账号、登录和服务端状态。后端（`apps/server`）、CLI、MCP 与 SDK 仍在仓库里，它们与客户端之间只通过 `runtime/` 下的数据文件相连（见第 2 节末尾），不通过网络。
 
-## 2. Feature 标准形态
+`scripts/check-client-boundaries.sh` 在本地和 CI 中检查这些规则：
 
-每个 feature 由四种角色组成：
+- 启动器里出现的每个 `res://` 路径都必须属于 `res://launcher/`、`res://i18n/` 或恰好是 `res://runtime/game_session.gd`；不得按类名使用运行时的类（`RuntimeLoader`、`JsonPatch`、`Shooter*` 等）；
+- 启动器里不得出现网络类（`HTTPRequest`、`HTTPClient`、`WebSocketPeer` 等）、`/api/` 端点和网址；
+- 运行时只引用 `res://runtime/`，不按类名使用任何 `Launcher*` 类，也不自己打开网络连接或持有地址；
+- `i18n/` 只引用 `res://i18n/`；
+- `*_screen.gd` 只存在于 `launcher/`。
 
-- `*_screen.gd`：渲染 store，发出用户意图；不知道 URL、token 和原始 HTTP 字典。
-- `*_coordinator.gd`：执行用例、并发保护、错误策略和跨端口编排。
-- `*_store.gd`：持有页面/领域状态，以 signal 通知 UI；不执行 I/O。
-- `*_api.gd`：拥有 endpoint、请求/响应 DTO 映射，返回 `ApiResult`。
+`scripts/check-architecture.sh` 另外保证已移除的手机应用壳不回到仓库：`apps/client` 下不得再出现 `app/`、`features/`、`shell/`、`ui/`、`main.gd`、`main.tscn`，客户端源码和 `project.godot` 也不得再引用它们或 `AppState` autoload。
 
-一次操作只有一个方向：
+## 2. Runtime 边界
 
-```text
-screen intent → coordinator → gateway → ApiResult → store → screen
-```
-
-七个现有切片共同构成参考实现。新增 feature 应复制角色边界，不复制业务代码，也不能借用相邻域的 store、screen 或 gateway。
-
-## 3. HTTP 与错误
-
-`HttpClient` 是唯一 transport 实现，负责：
-
-- bearer token 注入；
-- JSON 编解码与公共响应信封；
-- offline、unauthorized、validation、conflict、rate-limited、unexpected 分类；
-- 返回 `ApiResult`，不操作 store 或 UI。
-
-Feature API 提供业务方法并拥有 URL。Coordinator 根据 `ApiResult.kind` 决定重试、登录跳转、页面错误或 toast。Screen 只显示已经归一化的状态。
-
-## 4. 应用根与导航
-
-`AppRoot` 只做依赖构造、全局信号接线和 feature 生命周期管理。`ScreenRegistry` 负责注册/创建 screen；`ChromeController` 管理顶栏、底栏、toast 与全局遮罩。业务查询、提交和 DTO 组装不得回流到这三个对象。
-
-`AppRoot` 是唯一应用组合根，构造 feature API/store/coordinator/screen，连接稳定的意图与状态信号，并持有 account-scoped transport 图。注销或换号时先推进 session epoch 和阻断旧提交，再取消旧请求；节点图延迟到当前 signal/coroutine 栈退出后销毁和重建，避免释放正在执行的按钮、screen 或 coordinator。
-
-## 5. 状态所有权
-
-- 跨 feature 只共享认证会话、locale、theme、全局未读等真正全局状态。
-- 列表、详情、草稿、订单等数据归各自 feature store。
-- 跨 feature 传稳定 ID 或不可变快照，不共享具体 screen 节点和可变 Dictionary 引用。
-- Coordinator 负责重复提交抑制和取消/过期响应处理；不得用任意 timeout 修复竞态。
-
-## 6. 公共 UI
-
-公共 UI 分三层：
-
-| 层 | 内容 | 禁止内容 |
-|---|---|---|
-| theme | color/type/spacing/radius token、Theme | 业务状态 |
-| components | Button、Card、Input、VirtualList | game/order/user 语义 |
-| patterns | AsyncContent、EmptyState、PagedList、ConfirmSheet | endpoint 与用例 |
-
-组件只有在至少两个 feature 中真实复用后提取。页面专用控件先留在 feature 内，避免预先抽象。
-
-## 7. Runtime 边界
-
-Shell 与 Runtime 只通过 `runtime/game_session.gd` 通信。Shell 传 runtime ref 与完整有效 DSL；Runtime 发 `game_ended`/`game_error`。双方禁止读取对方内部节点、状态或文件。
+启动器与 Runtime 只通过 `runtime/game_session.gd` 通信。启动器传 runtime ref 与完整有效 DSL；Runtime 发 `game_ended`/`game_error`。双方禁止读取对方内部节点、状态或文件。
 
 `GameSession` 有两种用法。`start_game` 加载后立即回传摘要，用于校验与预览。`start_run` 是真实的一局：运行时保持挂载并持续模拟，直到通关、失败、超时，或宿主调用 `end_run`；期间宿主用 `set_paused` 暂停、`snapshot` 读取 HUD 所需的状态、`perform` 发送少量命令（移动、加速、护盾、放塔），并监听 `game_started` / `score_changed` / `paused_changed` / `game_ended`。结束时的结果包含 `play_seconds`（不含暂停）、`timed_out`、`aborted`。运行时以自身原点为中心绘制 `STAGE_SIZE`（960×540）的舞台，宿主把 `GameSession` 放进同尺寸的 `SubViewport` 再整体缩放。`baseline_payload(runtime_ref)` 返回某个运行时内置基线的启动参数，宿主因此不必自己读运行时目录里的文件。
 
 Runtime 目录同时是仓库里其他部分的数据来源：`runtime/<name>/baseline.dsl.json` 是后端注册的基线，`runtime/shooter/testdata/fork_expected.dsl.json` 是客户端 `runtime/json_patch.gd` 与 Go 模块 `packages/dsl` 共用的 golden。两份补丁实现、两份迁移实现（`runtime/dsl_migrations.gd` 与 `packages/dsl/migrate.go`）必须同语义，改其中一侧时另一侧、两边的测试和共用的夹具要在同一个 PR 里一起改。对应的 schema 在 `packages/schemas`。
 
-## 8. 主机风格启动器（launcher）
+`runtime/network_match_session.gd` 与 `runtime/network_match_runtime.gd` 是联机对局的运行时：前者只接纳服务端按 tick 递增的权威快照，后者把快照里的玩家画出来。它们不自己联网，由宿主传入一个端口对象来收发；启动器目前没有联机入口，所以现在只有 `spike_test.gd` 用到它们。
 
-客户端的主场景是 `apps/client/launcher/launcher.tscn`：一个固定 1920×1080 画布（`canvas_items` 拉伸、`aspect=keep`）的主机风格启动器，键盘、手柄、鼠标都能完整操作。上面第 1 至 6 节描述的移动端应用壳（`app/`、`features/`、`shell/`、`ui/`）仍在仓库里并继续跑各自的测试，等启动器的全部屏幕就绪后整体移除。
+## 3. 主机风格启动器（launcher）
+
+客户端的主场景是 `apps/client/launcher/launcher.tscn`：一个固定 1920×1080 画布（`canvas_items` 拉伸、`aspect=keep`）的主机风格启动器，键盘、手柄、鼠标都能完整操作。
 
 ```text
 apps/client/launcher/
@@ -123,23 +69,16 @@ apps/client/launcher/
 └── launcher_test.gd / launch_test.gd / launcher_shot.gd
 ```
 
-其余屏幕各有一小节：8.1 游戏库与成就，8.2 设置，8.3 游戏流程（游戏菜单、局内、暂停），8.4 PC 模式。
+其余屏幕各有一小节：3.1 游戏库与成就，3.2 设置，3.3 游戏流程（游戏菜单、局内、暂停），3.4 PC 模式。
 
-依赖方向：
-
-```text
-launcher → i18n
-        └→ runtime/game_session.gd（仅此一个文件）
-```
-
-- 启动器完全本地：不登录、不发网络请求，不依赖移动端应用壳的任何目录；运行时与移动端应用壳也不得反向依赖启动器。`scripts/check-client-boundaries.sh` 检查这几条。
+- 启动器完全本地：不登录、不发网络请求，唯一的持久状态是 `LauncherStore` 的 `user://launcher.json`；运行时不得反向依赖启动器（第 1 节）。
 - 屏幕不读 `InputEvent`。`LauncherRoot` 把每次按键、手柄按下和页脚提示的点击翻译成 `LauncherInput` 的动作名，交给当前屏幕的 `handle_action`；屏幕不处理的动作回落到外壳（LB/RB、LT/RT 切换顶层标签，B 返回）。
 - 焦点由屏幕自己持有（分区名 + 序号），控件只负责外观并发出 `hovered` / `activated`，不使用 Godot 自带的键盘焦点。
 - 屏幕上关于玩家的一切（游玩时长、上次游玩、最高分、收藏、最近游玩、成就）都读自 `LauncherStore`，只有真实游玩和真实操作会写入；没有记录时如实显示空状态。
 - 游戏只经 `LauncherGameHost` 启动。它是外壳的一层而不是屏幕，游戏屏与暂停屏在它上面切换时舞台保持挂载。
 - 成就图标（目录的 `icon` 字段：`star`、`bolt`、`cup`、`shield`，以及 `lock`）只有一份实现 `LauncherControls.Icon.draw_badge`，主机屏幕的 `Icon` 和 PC 模式的 `Symbol` 都经它绘制。
 
-### 8.1 游戏库与成就
+### 3.1 游戏库与成就
 
 ```text
 apps/client/launcher/
@@ -153,15 +92,15 @@ apps/client/launcher/
 - 游戏库的数据入口是 `LauncherLibraryScreen.entries`（默认取自 `LauncherCatalog.all()`，`set_entries()` 可整体替换），分类只有全部、最近游玩、收藏和目录里出现的类型；搜索按拼音首字母或英文名的词首匹配。
 - 文本输入是「屏幕不读 `InputEvent`」的唯一例外：游戏库的搜索层打开期间，其根节点在 `_input` 里先于外壳取走字母键和退格键当作文字，其余按键照常翻译成动作；手柄用同一层上的屏幕键盘。
 - 成就屏只显示目录定义的成就及其真实解锁时间，存档里目录已不再定义的解锁记录不计数；没有稀有度和排行榜。
-- 游戏库的 Menu 键和成就屏详情面板的按钮都以 `{"game": id}` 打开该游戏的游戏菜单（8.3），从那里返回时回到原来的屏幕和焦点。
+- 游戏库的 Menu 键和成就屏详情面板的按钮都以 `{"game": id}` 打开该游戏的游戏菜单（3.3），从那里返回时回到原来的屏幕和焦点。
 
-### 8.2 设置屏与设置项
+### 3.2 设置屏与设置项
 
 `settings_screen.gd`（屏幕）、`settings_controls.gd`（设置行、开关、滑块、对话框按钮、改键时读取原始按键的 `KeyCapture`）和 `launcher_settings.gd`（设置项的键、默认值、取值范围，以及把它们应用到引擎的代码）组成设置屏，测试在 `settings_test.gd`（`make settings-test`）。
 
 - 每个设置项都经 `LauncherStore.set_setting` 保存，修改时立即生效，并在下次启动时由 `LauncherRoot._ready` 调用 `LauncherSettings.apply_all` 再次应用。读取一律走 `LauncherSettings.value(store, key)`：存档文件可以被手改，不在取值范围内的值按默认值处理。
 - 设置项的键（存档 `settings` 段）：`lang`（`zh` / `en`）、`clock_24h`（布尔，外壳时钟 24 / 12 小时制）、`default_mode`（`console` / `pc`）、`window_mode`（`windowed` / `fullscreen` / `exclusive`）、`vsync`（布尔）、`max_fps`（`0` 为不限，或 30 / 60 / 120 / 144）、`volume_master` 与 `volume_music`（0 至 10 的音量档位）、`audio_mute`（布尔）。
-- `default_mode` 由设置屏写入，设置屏自己不读取：`LauncherRoot._ready` 在启动时读取它，决定是否直接进入 PC 模式（8.4）。
+- `default_mode` 由设置屏写入，设置屏自己不读取：`LauncherRoot._ready` 在启动时读取它，决定是否直接进入 PC 模式（3.4）。
 - 窗口模式与垂直同步只在启动器就是真实窗口的内容时才会应用（`LauncherSettings.drives_window`）；headless 测试和把启动器挂在离屏视口里的截图脚本不会改动窗口。
 - 音频总线定义在 `apps/client/default_bus_layout.tres`：`Master` 之下有一条 `Music` 总线，运行时的背景音乐播放器输出到 `Music`。目前没有任何运行时播放音效，所以没有音效总线，也没有音效音量这一项。
 - 改键只改键盘按键，保存在存档的 `bindings` 段（只保存与 `project.godot` 默认值不同的操作），由 `LauncherInput.reset_and_apply` 应用。一次改键把该操作换成单独一个新键；新键已被别的操作占用时先弹出确认，替换后对方若因此没有按键，就接过本操作原来的按键，所以任何操作都不会失去键盘按键。`LauncherInput.apply_bindings` 会跳过不含有效按键的条目。手柄按键是固定的，设置屏只按 `InputMap` 的内容把它们列出来。
@@ -169,7 +108,7 @@ apps/client/launcher/
 - 存档页的导出把完整存档写成 `classic-games-profile-<日期>-<时间>.json`（默认在系统的「文档」文件夹）；导入从同一文件夹列出最近的导出文件，经 `LauncherStore.read_profile`（与读取存档相同的版本检查和规范化）后用 `replace_progress` 只替换进度（游玩记录、收藏、最近游玩、成就），设置和按键保持不变，并可在提示消失前撤销；清除进度前必须确认，确认框的默认焦点在「取消」。
 - 启动器目录不允许出现网址（`check-client-boundaries.sh` 的本地化约束），所以「关于」页的仓库地址只作展示，不会打开浏览器。
 
-### 8.3 游戏流程：游戏菜单、局内、暂停
+### 3.3 游戏流程：游戏菜单、局内、暂停
 
 ```text
 apps/client/launcher/
@@ -191,7 +130,7 @@ apps/client/launcher/
 - **主音量。** 与设置屏共用设置键 `volume_master`（整数 0 到 10，默认 10），暂停屏调整时和每次开局时应用到 Master 音频总线；静音开关归设置屏。
 - **`LauncherRoot.close_to(id, args, closing)`** 用来离开一段嵌套流程：先把 `closing` 里的屏幕从返回历史里去掉再显示目标屏，这样从结算或暂停退到游戏菜单后，按返回是回到进入这段流程之前的地方，而不是回到已经结束的那一局。
 
-### 8.4 PC 模式
+### 3.4 PC 模式
 
 F11 或长按 View 在主机模式与 PC 模式之间切换；`LauncherStore` 的设置项 `default_mode`（`"console"` 默认，或 `"pc"`）决定启动时进入哪一个。PC 模式是同一份数据的另一种布局，面向键盘和鼠标，不新增任何状态来源。
 
@@ -210,18 +149,16 @@ apps/client/launcher/
 - 窗口：应用运行在真实的系统窗口里，标题条只放品牌和「主机模式」按钮，不绘制最小化、最大化、关闭按钮。
 - 选中的游戏双向保持：进入 PC 模式时取首页的 `hero_id`，离开时交还给首页。
 - 借用主机屏幕：PC 模式没有自己的游戏画面、游戏菜单、完整成就页和设置页。需要它们时调用 `open_console(screen_id, args)`，切回主机模式并打开那一屏，这一趟叫一次「借用」。借用总是从首页出发（主机层此前停在别的屏幕时先回到首页），所以从借来的屏幕返回一定到达首页。
-- 借用何时结束只有一条规则，写在 `LauncherPcMode._on_screen_changed`：**主机外壳到达首页时借用结束，PC 模式接回画面。** 从借来的屏幕返回、结算界面的「返回首页」、启动失败后的自动返回，都会自己到达首页。直接进游戏的借用（开始游戏、双击、Enter）多一个出口：游戏流程在一局结束后退到该游戏的游戏菜单（暂停屏确认退出、结算界面的「返回游戏菜单」或 B），而玩家并没有打开过那个菜单，所以外壳被接着送到首页，借用随之结束。「再来一局」和「重新开始」不离开游戏屏，借用继续。从游戏菜单的借用里开始的一局，退出后回到那个菜单，再返回才回到 PC 模式。主机模式下的游戏流程（8.3）不受这条规则影响。
-- 借用结束回到 PC 模式时，选中的游戏、视图（游戏页或游戏库）、搜索与筛选都保持原样；借用期间在设置里换了语言，回来时整个 PC 模式按新语言重建，状态不变。玩家自己按 F11 则以玩家为准：借用就此结束，之后在主机模式里的操作不再把他带回 PC 模式。一局进行期间不能切到 PC 模式（见 8.3）。
+- 借用何时结束只有一条规则，写在 `LauncherPcMode._on_screen_changed`：**主机外壳到达首页时借用结束，PC 模式接回画面。** 从借来的屏幕返回、结算界面的「返回首页」、启动失败后的自动返回，都会自己到达首页。直接进游戏的借用（开始游戏、双击、Enter）多一个出口：游戏流程在一局结束后退到该游戏的游戏菜单（暂停屏确认退出、结算界面的「返回游戏菜单」或 B），而玩家并没有打开过那个菜单，所以外壳被接着送到首页，借用随之结束。「再来一局」和「重新开始」不离开游戏屏，借用继续。从游戏菜单的借用里开始的一局，退出后回到那个菜单，再返回才回到 PC 模式。主机模式下的游戏流程（3.3）不受这条规则影响。
+- 借用结束回到 PC 模式时，选中的游戏、视图（游戏页或游戏库）、搜索与筛选都保持原样；借用期间在设置里换了语言，回来时整个 PC 模式按新语言重建，状态不变。玩家自己按 F11 则以玩家为准：借用就此结束，之后在主机模式里的操作不再把他带回 PC 模式。一局进行期间不能切到 PC 模式（见 3.3）。
 - 鼠标：控件自带悬停与按下状态；单击选中，双击开始游戏，右键打开该游戏的菜单，滚轮滚动。
 - 键盘与手柄：焦点是分区（搜索、侧栏、主区）加分区内的行列位置。Tab / Shift+Tab 换分区，方向键在分区内移动并可越过边界，Enter 激活（落在游戏上即开始），Ctrl+F 或 `/` 跳到搜索框，Esc 清空搜索，Y 收藏，M 打开游戏菜单，Q / E 在游戏页与游戏库之间切换，PageUp / PageDown 滚动。搜索框是启动器里唯一使用 Godot 自带键盘焦点的控件，因为输入文字需要它。
 - 布局用容器搭建，网格列数由可用宽度算出，所以 PC 模式的区域变窄时会重排；`set_entries` 可以换入更多条目来检验（测试和截图工具使用），目录之外的条目能列出但不能开始。
 
-## 9. 完成态不变量
+## 4. 不变量
 
-- Godot 4.6.3 精确版本门禁和 fail-closed test runner；
-- transport-only `HttpClient` 与统一 `ApiResult`；
-- 七域 API/store/coordinator/screen 所有权；
-- `AppRoot`、`ScreenRegistry`、`ChromeController` 单一装配与导航路径；
-- account session epoch、旧请求取消、全域 cache 清理和延迟依赖图重建；
-- AsyncContent、EmptyState、PagedList、ConfirmSheet 等无业务共享 pattern；
-- 仓库级 fixture checker 拒绝旧入口、endpoint/transport 越界和跨 feature screen import。
+- Godot 4.6.3 精确版本门禁（`apps/client/.godot-version`）和 fail-closed 的测试 runner（`scripts/run-godot-test.sh`）：版本不符、脚本解析错误、资源泄漏、缺少成功摘要都算失败；
+- 启动器只经 `runtime/game_session.gd` 进入运行时，运行时不认识启动器；
+- 客户端不联网，玩家数据只在 `user://launcher.json`；
+- 每一局恰好记录一次，屏幕上关于玩家的数据都来自真实游玩；
+- 两个检查器（`check-client-boundaries.sh`、`check-architecture.sh`）各有自测（`scripts/tests/`），先证明规则会在违例时失败，再检查仓库。
