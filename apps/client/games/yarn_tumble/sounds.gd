@@ -90,7 +90,7 @@ static func music(track: int) -> Dictionary:
 				var octave := root.substr(0, root.length() - 1) + str(int(root.right(1)) + 1)
 				bass += "%s .5 %s .5 %s .5 %s .5 %s .5 %s .5 %s .5 %s .5 " % [root, root, octave, root, root, root, octave, root]
 			return {"bpm": 164, "voices": [
-				{"wave": "square", "volume": 0.18, "release": 0.04, "notes": _melody("D5 .5 D5 .5 F5 .5 D5 .5 A5 1 G#5 1 G5 .5 F5 .5 E5 .5 F5 .5 D5 2 D5 .5 D5 .5 F5 .5 A5 .5 C6 1 Bb5 1 A5 .5 G5 .5 F5 .5 E5 .5 C#5 2 D6 1 C6 .5 Bb5 .5 A5 1 F5 1 G5 1 Bb5 .5 A5 .5 G5 1 E5 1 F5 .5 G5 .5 A5 .5 Bb5 .5 C#6 1 A5 1 D6 1.5 A5 .5 D5 2")},
+				{"wave": "square", "volume": 0.18, "release": 0.04, "notes": _melody("D5 .5 A4 .5 D5 .5 F5 .5 E5 1 C#5 1 D5 .5 E5 .5 F5 .5 A5 .5 G5 2 D5 .5 D5 .5 F5 .5 A5 .5 C6 1 Bb5 1 A5 .5 G5 .5 F5 .5 E5 .5 C#5 2 D6 1 C6 .5 Bb5 .5 A5 1 F5 1 G5 1 Bb5 .5 A5 .5 G5 1 E5 1 F5 .5 G5 .5 A5 .5 Bb5 .5 C#6 1 A5 1 D6 1.5 A5 .5 D5 2")},
 				{"wave": "saw", "volume": 0.16, "release": 0.03, "notes": _melody(bass)},
 				{"wave": "noise", "volume": 0.09, "release": 0.03, "notes": _beat(32, ["C5 .25 - .25 C8 .25 C8 .25", "C8 .25 - .25 C8 .25 - .25"])},
 			]}
