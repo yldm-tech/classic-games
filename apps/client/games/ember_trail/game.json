@@ -6,7 +6,7 @@
 	"stage": {"size": [480, 270], "pixel_art": true},
 	"name": {"zh": "烬途提灯", "en": "EMBER TRAIL"},
 	"initials": "jttd",
-	"genre": {"zh": "横版平台跳跃", "en": "PLATFORMER"},
+	"genre": {"zh": "平台跳跃", "en": "PLATFORMER"},
 	"tagline": {"zh": "提着一盏不断变暗的灯穿过烬原与霜洞，把沿途的烽火重新点亮。", "en": "Carry a lantern that never stops burning down across the cinder highlands and the rime hollow, and relight the beacons on the way."},
 	"players": {"min": 1, "max": 1},
 	"colors": {"title": "FFE9B0", "shadow": "7A2D1E", "glow": "F6B24A"},
