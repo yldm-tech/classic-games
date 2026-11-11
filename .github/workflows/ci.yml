@@ -132,3 +132,5 @@ jobs:
         run: make launch-test GODOT=godot
       - name: Run launcher PC mode tests
         run: make pc-mode-test GODOT=godot
+      - name: Run game flow tests
+        run: make game-flow-test GODOT=godot

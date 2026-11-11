@@ -13,6 +13,9 @@ extends SceneTree
 ##   LAUNCHER_SHOT_LIBRARY_EXTRA  number of synthetic entries to add to the library's grid, to look at it with more rows than the catalog fills (they have no art and exist only in this render)
 ##   LAUNCHER_SHOT_MODE     "pc" switches to PC mode before the actions are dispatched
 ##   LAUNCHER_SHOT_PC       semicolon-separated steps applied to PC mode after the actions: view=library, layout=list, sort=recent, category=favorites, genre=<English genre>, tab=1, locked, select=<game id>, query=<text>, search (focus the field), many=<n> (n synthetic games on top of the catalog), width=<canvas px> (narrower PC area, to check reflow), hover=<game id>, zone=<search|sidebar|main> (move keyboard focus there and show the ring), menu (the selected game's menu), sort_menu
+##   LAUNCHER_SHOT_GAME     catalog game id passed to the screen as { "game": id }, default "shooter"
+##
+## Besides action names, LAUNCHER_SHOT_ACTIONS accepts steps that let a live game reach a state worth capturing: "wait=SECONDS" (real seconds), "scale=N" (Engine.time_scale), "press=ACTION" / "release=ACTION" (hold or let go of a launcher action, for what the game screen polls) and "cursor=X:Y" (put the game screen's tower cursor at a stage position).
 ##
 ## The launcher is mounted in a SubViewport of the canvas size, so the PNG does not depend on the size of the window or the display. The profile lives in its own file and never touches the player's real one.
 
@@ -65,13 +68,18 @@ func _initialize() -> void:
 			sample["initials"] = "yltm"
 			crowded.append(sample)
 		(shell.screen(LauncherRoot.LIBRARY) as LauncherLibraryScreen).set_entries(crowded)
+	(shell.screen(LauncherRoot.GAME) as LauncherGameScreen).pause_on_focus_loss = false
 	if screen_id != "home":
-		shell.go(StringName(screen_id), {"game": "shooter"})
+		shell.go(StringName(screen_id), {"game": _env("LAUNCHER_SHOT_GAME", "shooter")})
 	if _env("LAUNCHER_SHOT_MODE", "console") == "pc":
 		shell.toggle_pc_mode()
 		await process_frame
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
-		shell.dispatch(StringName("launcher_" + action.strip_edges()))
+		var step := action.strip_edges()
+		if step.contains("="):
+			await _run_step(shell, step.get_slice("=", 0), step.get_slice("=", 1))
+			continue
+		shell.dispatch(StringName("launcher_" + step))
 		await process_frame
 	for key_name in _env("LAUNCHER_SHOT_KEYS", "").split(",", false):
 		var key := InputEventKey.new()
@@ -85,9 +93,12 @@ func _initialize() -> void:
 			_pc_step(pc, step.strip_edges())
 			await process_frame
 			await process_frame
+	Engine.time_scale = 1.0
 	# Let the screen fade, the backdrop cross-fade and the card resize finish.
 	await create_timer(1.2).timeout
-	await RenderingServer.frame_post_draw
+	# A window that is covered, minimised or on another desktop is never drawn, so waiting for frame_post_draw would hang there. Force the frames instead: one for the nested viewports (blur, game stage), one for the canvas that shows them.
+	RenderingServer.force_draw()
+	RenderingServer.force_draw()
 	var image := viewport.get_texture().get_image()
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var path := out_dir.path_join(file_name + ".png")
@@ -136,6 +147,22 @@ func _many(count: int) -> Array[Dictionary]:
 		copy["name"] = {"zh": "%s %d" % [copy["name"]["zh"], index + 2], "en": "%s %d" % [copy["name"]["en"], index + 2]}
 		out.append(copy)
 	return out
+
+func _run_step(shell: LauncherRoot, kind: String, value: String) -> void:
+	match kind:
+		"wait":
+			await create_timer(value.to_float(), true, false, true).timeout
+		"scale":
+			Engine.time_scale = value.to_float()
+		"press":
+			Input.action_press(StringName("launcher_" + value))
+		"release":
+			Input.action_release(StringName("launcher_" + value))
+		"cursor":
+			var game := shell.current_screen() as LauncherGameScreen
+			if game != null:
+				game.cursor_at = Vector2(value.get_slice(":", 0).to_float(), value.get_slice(":", 1).to_float())
+	await process_frame
 
 func _env(name: String, fallback: String) -> String:
 	var value := OS.get_environment(name)

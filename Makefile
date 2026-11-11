@@ -209,6 +209,10 @@ launch-test: ## 等待主场景(启动器)ready 后验证装配并显式释放
 pc-mode-test: ## 跑启动器 PC 模式测试(筛选排序、模式切换、详情页与游戏库、键鼠操作、开局与返回)
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/pc_mode_test.gd '^pc_mode_test: [0-9]+ passed, 0 failed$$'
 
+.PHONY: game-flow-test
+game-flow-test: ## 跑游戏流程测试(游戏菜单、局内 HUD 与输入、暂停、结算、每局只记录一次)
+	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/game_flow_test.gd '^game_flow_test: [0-9]+ passed, 0 failed$$'
+
 .PHONY: screenshot
 screenshot: ## 渲染关键屏并写出 PNG(需 X11,不进 CI)
 	GODOT="$(GODOT)" scripts/run-screenshot-verify.sh
@@ -230,7 +234,7 @@ publish-check: ## 公开前门禁:任何 ref 的历史都不得含内部文档(�
 # ---- aggregate ----
 
 .PHONY: ci
-ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test http-test identity-test catalog-test creation-test community-test engagement-test commerce-test operations-test patterns-test app-test spike ui-test launcher-test settings-test library-test launch-test pc-mode-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
+ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test http-test identity-test catalog-test creation-test community-test engagement-test commerce-test operations-test patterns-test app-test spike ui-test launcher-test settings-test library-test launch-test pc-mode-test game-flow-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
 
 .PHONY: ci-web
 ci-web: web-install web-check web-build ## 本地复现官网 CI 门禁(需 Node 与 pnpm)

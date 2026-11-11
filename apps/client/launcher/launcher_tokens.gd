@@ -164,3 +164,47 @@ const SIZE_STAT_VALUE := 20
 const SIZE_COVER_NAME := 19
 const SIZE_ACHIEVEMENT_NAME := 17
 const SIZE_STAT_LABEL := 13
+
+# ---- game menu, in-game HUD, pause ----
+
+## Tag colour of the player's HUD block.
+const PLAYER_ONE := Color("5AB4FF")
+const DIALOG_BG := Color("0C0E16")
+const HUD_CHIP_BG := Color(5.0 / 255.0, 7.0 / 255.0, 13.0 / 255.0, 0.55)
+## Scrim over the frozen game on the pause screen and under a dialog.
+const A_SCRIM_PAUSE := 0.62
+const A_SCRIM_DIALOG := 0.7
+const A_CHIP_BORDER := 0.35
+
+## The HUD sits closer to the edges than the menus do, to leave the stage clear.
+const HUD_MARGIN := 64.0
+const HUD_TOP := 40.0
+const HUD_BOTTOM := 40.0
+const HUD_CHIP_HEIGHT := 48.0
+const SUBHEADER_TOP := 48.0
+const MENU_COLUMN_TOP := 168.0
+const MENU_COLUMN_WIDTH := 760.0
+const MENU_ROWS_WIDTH := 580.0
+const MENU_PANE_TOP := 300.0
+const PAUSE_COLUMN_TOP := 200.0
+const PAUSE_COLUMN_WIDTH := 560.0
+const PAUSE_PANE_WIDTH := 760.0
+const PAUSE_ROW_HEIGHT := 58.0
+const PANE_ROW_HEIGHT := 62.0
+const DIALOG_WIDTH := 640.0
+const BUTTON_HEIGHT := 52.0
+const KEYCAP_HEIGHT := 34.0
+const METER_HEIGHT := 8.0
+const SLIDER_SEGMENT := Vector2(20, 8)
+
+const SIZE_MENU_TITLE := 112
+const SIZE_PAUSE_TITLE := 72
+const SIZE_HUD_SCORE := 44
+const SIZE_HUD_CLOCK := 38
+const SIZE_DIALOG_TITLE := 28
+const SIZE_STAT := 26
+const SIZE_PAUSE_ROW := 25
+const SIZE_PANE_ROW := 18
+const SIZE_DIALOG_BODY := 17
+const SIZE_MENU_LATIN := 16
+const SIZE_KEY := 13

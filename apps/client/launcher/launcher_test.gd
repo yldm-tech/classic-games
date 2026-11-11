@@ -533,21 +533,19 @@ func _test_game_updates_stats() -> void:
 	_check("start launches the selected game inside the launcher", shell.current_id() == &"game" and game != null and shell.game_host.is_running() and shell.game_host.game_id() == "tower_defense")
 	_check("the game screen shows the stage without the navigation", shell.backdrop_layer() == &"game" and shell.game_host.visible and not shell.find_child("Nav", false, false).visible)
 	await _frames(6)
-	_check("the HUD follows the live run", game.find_child("Title", true, false).text == "隘口守卫" and game.find_child("Score", true, false).text == "150" and game.find_child("Status", true, false).text.contains("金币 150") and game.find_child("Status", true, false).text.contains("塔：arrow"))
+	_check("the HUD follows the live run", game.find_child("Title", true, false).text.begins_with("隘口守卫") and game.find_child("Score", true, false).text == "150" and game.find_child("Stat_gold", true, false).get_node("Value").text == "150" and game.find_child("Tower_arrow", true, false).caption() == "箭塔")
 	_check("nothing is recorded while the run is live", not store.has_played("tower_defense") and store.recents().is_empty())
 
 	shell.dispatch(In.RB)
 	_check("the game owns the buttons while it runs", shell.current_id() == &"game")
-	shell.dispatch(In.LEFT)
-	shell.dispatch(In.X)
 	shell.dispatch(In.ACCEPT)
 	_check("accept places the chosen tower at the cursor through the host", int(shell.game_host.snapshot()["gold"]) == 60)
 	shell.dispatch(In.MENU)
 	var paused_at := float(shell.game_host.snapshot()["play_seconds"])
 	await _frames(4)
-	_check("Menu pauses the run", shell.game_host.is_paused() and game.find_child("Paused", true, false).visible and is_equal_approx(float(shell.game_host.snapshot()["play_seconds"]), paused_at))
+	_check("Menu pauses the run", shell.game_host.is_paused() and shell.current_id() == &"pause" and is_equal_approx(float(shell.game_host.snapshot()["play_seconds"]), paused_at))
 	shell.dispatch(In.MENU)
-	_check("Menu again resumes", not shell.game_host.is_paused() and not game.find_child("Paused", true, false).visible)
+	_check("Menu again resumes", not shell.game_host.is_paused() and shell.current_id() == &"game")
 
 	# Let the real runtime play itself out, only faster.
 	Engine.time_scale = 30.0
@@ -563,9 +561,9 @@ func _test_game_updates_stats() -> void:
 	shell.dispatch(In.ACCEPT)
 	await _frames(4)
 	_check("play again starts a fresh run", game.phase == &"playing" and shell.game_host.is_running() and game.find_child("Outcome", true, false) == null and int(shell.game_host.snapshot()["gold"]) == 150)
-	shell.dispatch(In.BACK)
+	shell.go(&"home", {"game": "tower_defense"})
 	stats = store.stats("tower_defense")
-	_check("back quits to Home with that game selected", shell.current_id() == &"home" and home.hero_id == "tower_defense" and not shell.game_host.is_running() and not shell.game_host.visible)
+	_check("leaving for Home ends the run with that game selected", shell.current_id() == &"home" and home.hero_id == "tower_defense" and not shell.game_host.is_running() and not shell.game_host.visible)
 	_check("the quit run is recorded too", int(stats["runs"]) == 2 and int(stats["best_score"]) == first_best)
 	_check("Home now shows the played game on the shelf", home.find_child("Card_tower_defense", true, false) != null and home.find_child("Empty", true, false) == null and home.find_child("Row0", true, false).sub_text().contains(Format.score(first_best)) and home.find_child("Row0", true, false).progress_visible())
 

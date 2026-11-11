@@ -22,6 +22,7 @@ var now_provider := func() -> int: return int(Time.get_unix_time_from_system())
 var _session: GameSession
 var _viewport: SubViewport
 var _game_id := ""
+var _options: Dictionary = {}
 var _last_error: Dictionary = {}
 
 func _init() -> void:
@@ -33,12 +34,13 @@ func _init() -> void:
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	container.stretch = true
-	# The canvas is exactly twice the runtime stage, so the stage renders at its own resolution and is scaled up as a whole.
-	container.stretch_shrink = roundi(LauncherTokens.CANVAS.x / GameSession.STAGE_SIZE.x)
 	add_child(container)
+	# The viewport has the canvas's own pixel size and maps the runtime's logical stage onto it, so the runtimes keep drawing in STAGE_SIZE coordinates while their shapes are rasterised at full resolution instead of being drawn small and blown up.
 	_viewport = SubViewport.new()
 	_viewport.name = "StageViewport"
-	_viewport.size = GameSession.STAGE_SIZE
+	_viewport.size = Vector2i(LauncherTokens.CANVAS)
+	_viewport.size_2d_override = GameSession.STAGE_SIZE
+	_viewport.size_2d_override_stretch = true
 	_viewport.transparent_bg = false
 	_viewport.handle_input_locally = false
 	container.add_child(_viewport)
@@ -50,8 +52,15 @@ func _init() -> void:
 	_session.score_changed.connect(func(score: int) -> void: score_changed.emit(score))
 	_session.paused_changed.connect(func(paused: bool) -> void: paused_changed.emit(paused))
 
+func _notification(what: int) -> void:
+	# Closing the window or tearing the launcher down with a run still live ends that run like any other quit, so its play time and score are recorded. end_run does nothing once a run is over, which is what keeps every run recorded exactly once.
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_EXIT_TREE:
+		if _session != null and store != null:
+			quit()
+
 ## Start the catalog game with this id. Any run still live is ended (and recorded) first. Returns false and emits run_failed when the game is unknown or its runtime will not start.
-func launch(game_id: String) -> bool:
+## `options` are the game's own start options from LauncherGameGuide ({ option id: value }, e.g. { "difficulty": 3 }); each one becomes a JSON Patch on the runtime's baseline, so the run is the baseline with exactly those values replaced.
+func launch(game_id: String, options: Dictionary = {}) -> bool:
 	quit()
 	var entry := LauncherCatalog.by_id(game_id)
 	_last_error = {}
@@ -60,17 +69,30 @@ func launch(game_id: String) -> bool:
 		_last_error = {"code": "UNKNOWN_GAME", "msg": game_id}
 		run_failed.emit(game_id, _last_error)
 		return false
+	var patch := LauncherGameGuide.option_patch(game_id, options)
+	if not patch.is_empty():
+		payload = {"runtime": payload["runtime"], "baseline": payload["mod"], "patches": [patch]}
 	_game_id = game_id
+	_options = options.duplicate()
 	if not _session.start_run(payload):
 		_game_id = ""
 		run_failed.emit(game_id, _last_error)
 		return false
+	LauncherGameGuide.apply_volume(LauncherGameGuide.stored_volume(store))
 	run_started.emit(game_id)
 	return true
 
 ## End the live run as "the player left". It is recorded like any other run and run_finished fires with result.aborted = true. Does nothing when no run is live.
 func quit() -> void:
 	_session.end_run()
+
+## End the live run (recorded as a quit) and start the same game again with the same options. Returns false when there is no game on the stage.
+func restart() -> bool:
+	return _game_id != "" and launch(_game_id, _options)
+
+## The start options of the run on the stage.
+func run_options() -> Dictionary:
+	return _options.duplicate()
 
 ## Remove the finished run's frozen last frame from the stage.
 func clear_stage() -> void:
@@ -91,7 +113,7 @@ func set_paused(paused: bool) -> void:
 func game_id() -> String:
 	return _game_id
 
-## GameSession.snapshot(): live score, play_seconds, hp and the runtime's own summary fields, for a HUD.
+## GameSession.snapshot(): live score, play_seconds, hp and max_hp, shield and boss state, the tower catalogue and the runtime's own summary fields, for a HUD.
 func snapshot() -> Dictionary:
 	return _session.snapshot()
 

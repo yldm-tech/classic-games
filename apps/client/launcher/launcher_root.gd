@@ -25,6 +25,8 @@ const ACHIEVEMENTS_SCREEN := "res://launcher/achievements_screen.gd"
 const PC_MODE_SCRIPT := "res://launcher/pc_mode.gd"
 ## Store setting that picks the mode the launcher starts in: MODE_CONSOLE (default) or MODE_PC.
 const SETTING_DEFAULT_MODE := "default_mode"
+const MENU_SCREEN := "res://launcher/menu_screen.gd"
+const PAUSE_SCREEN := "res://launcher/pause_screen.gd"
 
 const HOME := &"home"
 const LIBRARY := &"library"
@@ -37,12 +39,12 @@ const PAUSE := &"pause"
 ## Screen id -> script path. A screen that is not built yet is served by the unavailable screen, which says so; point its entry at the real script when that screen lands. Paths rather than preloads, because every screen script refers back to LauncherRoot.
 const SCREENS := {
 	HOME: HOME_SCREEN,
-	SETTINGS: SETTINGS_SCREEN,
 	LIBRARY: LIBRARY_SCREEN,
 	ACHIEVEMENTS: ACHIEVEMENTS_SCREEN,
-	MENU: UNAVAILABLE_SCREEN,
+	SETTINGS: SETTINGS_SCREEN,
+	MENU: MENU_SCREEN,
 	GAME: GAME_SCREEN,
-	PAUSE: UNAVAILABLE_SCREEN,
+	PAUSE: PAUSE_SCREEN,
 }
 ## The top-level tabs, in order. LB/RB and LT/RT cycle through these.
 const NAV_TABS: Array[StringName] = [HOME, LIBRARY, ACHIEVEMENTS, SETTINGS]
@@ -193,6 +195,22 @@ func go_back() -> void:
 	if target in NAV_TABS:
 		_history.clear()
 	_show(target, {}, true)
+
+## Leave a nested flow for `id`. The screens listed in `closing` are dropped from the back history first, so Back on the destination returns to where the flow was entered from instead of into a screen that is over (a finished game, its pause menu). The current screen is not remembered either.
+func close_to(id: StringName, args: Dictionary = {}, closing: Array[StringName] = []) -> void:
+	if not _registry.has(id):
+		push_error("launcher: unknown screen %s" % id)
+		return
+	var kept: Array[StringName] = []
+	for entry in _history:
+		if not entry in closing:
+			kept.append(entry)
+	_history = kept
+	if id in NAV_TABS:
+		_history.clear()
+	while not _history.is_empty() and _history.back() == id:
+		_history.pop_back()
+	_show(id, args, true)
 
 func _show(id: StringName, args: Dictionary, animate: bool) -> void:
 	var next := screen(id)
