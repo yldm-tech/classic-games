@@ -71,17 +71,20 @@ func _test_stage_data() -> void:
 				kinds_ok = false
 	_check("every machine a stage asks for exists", kinds_ok)
 	_check("every placed machine has a tile under it", spawns_stand)
-	var reachable := true
-	for level in range(1, Levels.TOWER_LEVELS):
-		var here: Array = Levels.TOWER_ROWS[(level - 1) % Levels.TOWER_ROWS.size()]
-		var above: Array = Levels.TOWER_ROWS[level % Levels.TOWER_ROWS.size()]
-		var linked := false
-		for low: Array in here:
-			for high: Array in above:
-				if int(low[0]) <= int(high[0]) + int(high[1]) and int(high[0]) <= int(low[0]) + int(low[1]):
-					linked = true
-		reachable = reachable and linked
-	_check("every row of the tower can be reached from the row below", reachable)
+	# Every stage can be walked and jumped from its start to its boss arena.
+	for index in Levels.STAGE_COUNT:
+		var world := World.new()
+		world.load_stage(Levels.stage(index))
+		var start: Vector2 = world.def["start"]
+		var reached := _reachable(world, floori(start.x / 16.0), roundi(start.y / 16.0))
+		var arrived := false
+		for key: Vector2i in reached:
+			if world.vertical and key.y <= Levels.TOWER_ARENA_ROW:
+				arrived = true
+			if not world.vertical and key.x >= int(world.def["boss_col"]) + 4:
+				arrived = true
+		_check("stage %d can be crossed from the start to the boss arena" % (index + 1), arrived)
+	_check("the tower's rows end at the arena floor", Levels.TOWER_FLOOR_ROW - 3 * (Levels.TOWER_LEVELS + 1) == Levels.TOWER_ARENA_ROW)
 	# No gap in the ground of a scrolling stage is wider than a jump unless a platform bridges it.
 	var crossable := true
 	for index in [0, 2]:
@@ -99,6 +102,47 @@ func _test_stage_data() -> void:
 				push_error("stage %d: a gap wider than four tiles ends at column %d" % [index, column])
 	_check("no gap is wider than a jump", crossable)
 	_check("the tunes parse into notes", Sounds.notes("D5:.5 -:1").size() == 2 and is_equal_approx(float(Sounds.notes("D5:.5")[0][1]), 0.5) and (Sounds.boss_music()["voices"] as Array).size() == 3)
+
+func _stands(world: World, column: int, row: int) -> bool:
+	return column >= 0 and column < world.cols and world.cell(column, row) != World.EMPTY and world.cell(column, row - 1) == World.EMPTY and world.cell(column, row - 2) == World.EMPTY
+
+## The tiles a diver can come to stand on from a starting tile, by a cautious model of the movement rules: walk, hop a gap of up to four tiles, jump up to three rows (through thin platforms, never through solid tiles) and drop down.
+func _reachable(world: World, column: int, row: int) -> Dictionary:
+	var seen := {Vector2i(column, row): true}
+	var queue: Array[Vector2i] = [Vector2i(column, row)]
+	while not queue.is_empty():
+		var at: Vector2i = queue.pop_back()
+		var next: Array[Vector2i] = []
+		for across in range(-5, 6):
+			if _stands(world, at.x + across, at.y):
+				next.append(Vector2i(at.x + across, at.y))
+		for up in range(1, 4):
+			var clear := true
+			for above in range(1, up + 3):
+				if world.cell(at.x, at.y - above) == World.SOLID:
+					clear = false
+			if not clear:
+				continue
+			var reach := 2 if up == 3 else 3
+			for across in range(-reach, reach + 1):
+				var target := Vector2i(at.x + across, at.y - up)
+				if _stands(world, target.x, target.y) and (across != 0 or world.cell(target.x, target.y) == World.PLAT):
+					next.append(target)
+		for across in range(-3, 4):
+			for down in range(1, 16):
+				var below := world.cell(at.x + across, at.y + down)
+				if across == 0 and down == 1 and world.cell(at.x, at.y) == World.SOLID:
+					break
+				if _stands(world, at.x + across, at.y + down):
+					next.append(Vector2i(at.x + across, at.y + down))
+					break
+				if below == World.SOLID:
+					break
+		for target in next:
+			if not seen.has(target):
+				seen[target] = true
+				queue.append(target)
+	return seen
 
 # ---- rules ----
 

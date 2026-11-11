@@ -18,7 +18,7 @@ const World := preload("res://games/tide_runners/world.gd")
 ## kind -> [width, height, hit points, score]
 const KINDS := {
 	"scut": [14.0, 10.0, 1, 100], "troop": [10.0, 16.0, 2, 200], "turret": [18.0, 14.0, 4, 300], "drone": [14.0, 10.0, 1, 150], "toad": [16.0, 12.0, 3, 300],
-	"pike": [14.0, 9.0, 1, 150], "cling": [12.0, 8.0, 2, 150], "debris": [8.0, 7.0, 1, 50], "carrier": [20.0, 11.0, 1, 200], "crate": [16.0, 15.0, 3, 100],
+	"pike": [14.0, 9.0, 1, 150], "cling": [12.0, 10.0, 2, 150], "debris": [8.0, 7.0, 1, 50], "carrier": [20.0, 11.0, 1, 200], "crate": [16.0, 15.0, 3, 100],
 }
 const GRAVITY := 520.0
 const STREAM_CAP := 6
@@ -163,7 +163,9 @@ static func _send(g: Variant, kind: String, wave: bool) -> void:
 			var x := cam.x - 10.0 if from_left else cam.x + 490.0
 			var top: float = world.surface_below(floori(x / World.TILE), floori((cam.y + 80.0) / World.TILE))
 			if top == INF or top > cam.y + 244.0:
-				# Nothing to stand on at that edge: it drops in from above instead.
+				# Nothing to stand on at that edge. A stream just skips a beat; an ambush drops it in from above.
+				if not wave:
+					return
 				x = cam.x + g.rng.float_range(120.0, 440.0)
 				top = cam.y + 40.0
 			foe = spawn(g, kind, x, top)

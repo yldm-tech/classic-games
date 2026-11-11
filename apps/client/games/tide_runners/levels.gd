@@ -22,25 +22,22 @@ const BOSS_NAMES := [
 	{"zh": "龙门海兽", "en": "THE GANTRY LEVIATHAN"},
 ]
 
-## The tower's platform rows, repeated up the shaft: each entry is the [column, width] spans of one row. Consecutive rows always overlap, so every row can be reached from the one below.
+## The tower's platform rows, repeated up the shaft between the decks: each entry is the [column, width] spans of one row. Consecutive rows always overlap, so every row can be reached from the one below.
 const TOWER_ROWS := [
 	[[3, 8], [19, 8]], [[9, 12]], [[2, 8], [20, 8]], [[8, 5], [17, 5]], [[1, 8], [21, 8]],
 	[[7, 6], [17, 6]], [[11, 8]], [[4, 8], [18, 8]], [[1, 5], [12, 6], [24, 5]], [[5, 8], [17, 8]],
 	[[10, 10]], [[3, 8], [19, 8]], [[1, 4], [9, 5], [16, 5], [25, 4]], [[5, 6], [19, 6]], [[10, 10]],
 	[[2, 9], [19, 9]], [[9, 4], [17, 4]], [[3, 7], [20, 7]], [[8, 14]], [[1, 8], [21, 8]],
 ]
-const TOWER_LEVELS := 50
-const TOWER_FLOOR_ROW := 168
+const TOWER_LEVELS := 72
 const TOWER_ARENA_ROW := 15
-## What stands on which tower level: level -> [kind, which span of that row, extra].
-const TOWER_SPAWNS := {
-	4: ["cling", 0, 0], 6: ["carrier", 0, 5], 7: ["turret", 0, 0], 8: ["cling", 1, 0], 11: ["cling", 0, 0], 12: ["turret", 1, 0],
-	14: ["cling", 0, 0], 15: ["turret", 0, 0], 16: ["cling", 1, 0], 19: ["cling", 0, 0], 20: ["turret", 0, 0], 22: ["carrier", 0, 3],
-	23: ["cling", 1, 0], 24: ["turret", 0, 0], 26: ["cling", 1, 0], 28: ["cling", 0, 0], 29: ["turret", 1, 0], 30: ["crate", 0, 6],
-	31: ["cling", 0, 0], 32: ["turret", 0, 0], 33: ["cling", 2, 0], 35: ["turret", 0, 0], 36: ["cling", 1, 0], 38: ["carrier", 0, 1],
-	39: ["cling", 0, 0], 40: ["turret", 1, 0], 41: ["cling", 0, 0], 43: ["cling", 1, 0], 44: ["turret", 0, 0], 45: ["cling", 0, 0],
-	46: ["carrier", 0, 4], 47: ["turret", 1, 0], 48: ["cling", 0, 0], 49: ["turret", 0, 0],
-}
+const TOWER_FLOOR_ROW := TOWER_ARENA_ROW + 3 * (TOWER_LEVELS + 1)
+## Every fourth level of the tower is a solid deck with one hatch (a thin platform five tiles wide) to climb through, and the level under it is a catwalk from wall to wall; these are the hatch columns, in turn, so the way up zigzags.
+const TOWER_HATCHES := [3, 22, 12, 2, 23, 11]
+const TOWER_GUARDS := ["turret", "troop", "toad"]
+## Couriers in the tower: level -> the canister it carries.
+const TOWER_COURIERS := {6: 5, 26: 3, 46: 1, 62: 4}
+const TOWER_LOCKER_LEVEL := 38
 
 static func stage(index: int) -> Dictionary:
 	match index:
@@ -69,28 +66,41 @@ static func _boulevard() -> Dictionary:
 
 static func _tower() -> Dictionary:
 	var plats: Array = []
+	var blocks: Array = [[0, 0, 1, TOWER_FLOOR_ROW + 2], [29, 0, 1, TOWER_FLOOR_ROW + 2]]
 	var spawns: Array = []
 	for level in range(1, TOWER_LEVELS + 1):
 		var row := TOWER_FLOOR_ROW - 3 * level
-		var spans: Array = TOWER_ROWS[(level - 1) % TOWER_ROWS.size()]
-		for span: Array in spans:
-			plats.append([span[0], row, span[1]])
-		if TOWER_SPAWNS.has(level):
-			var entry: Array = TOWER_SPAWNS[level]
-			var span: Array = spans[mini(int(entry[1]), spans.size() - 1)]
-			var column := int(span[0]) + int(span[1]) / 2
-			var kind: String = entry[0]
-			spawns.append([kind, column, row - 5 if kind == "carrier" else row, entry[2]])
+		if level % 4 == 0:
+			var deck := level / 4
+			var hatch: int = TOWER_HATCHES[(deck - 1) % TOWER_HATCHES.size()]
+			blocks.append([1, row, hatch - 1, 1])
+			blocks.append([hatch + 5, row, 29 - (hatch + 5), 1])
+			plats.append([hatch, row, 5])
+			spawns.append([TOWER_GUARDS[deck % TOWER_GUARDS.size()], hatch + 13 if hatch < 14 else hatch - 9, row, 0])
+		elif level % 4 == 3:
+			# A catwalk right across the shaft under each deck, so the hatch can be reached from anywhere.
+			plats.append([1, row, 28])
+		else:
+			var spans: Array = TOWER_ROWS[(level - 1) % TOWER_ROWS.size()]
+			for span: Array in spans:
+				plats.append([span[0], row, span[1]])
+			if level % 4 == 2 and level > 4:
+				var span: Array = spans[(level / 4) % spans.size()]
+				spawns.append(["cling", int(span[0]) + int(span[1]) / 2, row, 0])
+			if level == TOWER_LOCKER_LEVEL:
+				spawns.append(["crate", int(spans[0][0]) + 2, row, 6])
+		if TOWER_COURIERS.has(level):
+			spawns.append(["carrier", 14, row - 5, TOWER_COURIERS[level]])
 	plats.append([1, TOWER_ARENA_ROW, 28])
 	plats.append([3, 11, 5])
 	plats.append([22, 11, 5])
 	return {
-		"format": "v", "theme": 1, "cols": 30, "rows": 170, "boss": 1, "boss_row": TOWER_ARENA_ROW, "start": Vector2(200, TOWER_FLOOR_ROW * 16),
+		"format": "v", "theme": 1, "cols": 30, "rows": TOWER_FLOOR_ROW + 2, "boss": 1, "boss_row": TOWER_ARENA_ROW, "start": Vector2(200, TOWER_FLOOR_ROW * 16),
 		"ground": [[0, 29, TOWER_FLOOR_ROW]],
-		"blocks": [[0, 0, 1, 170], [29, 0, 1, 170]],
+		"blocks": blocks,
 		"plats": plats,
 		"spawns": spawns,
-		"zones": [[20, 140, "drone", 4.6], [20, 118, "debris", 3.4], [20, 96, "pike", 6.0]],
+		"zones": [[20, 205, "drone", 4.6], [20, 175, "debris", 3.4], [20, 140, "pike", 6.0]],
 		"locks": [],
 	}
 

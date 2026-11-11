@@ -131,6 +131,18 @@ static func _block(gfx: Variant, image: Image, theme: int, x: int, y: int, w: in
 			gfx._rect(image, x + w - 1, y, 1, h, "0")
 			gfx._rect(image, x, y, w, 1, "0")
 		1:
+			if w > T:
+				# A deck across the shaft.
+				gfx._rect(image, x, y, w, h, "7")
+				gfx._rect(image, x, y, w, 1, "9")
+				gfx._rect(image, x, y + 1, w, 2, "8")
+				gfx._rect(image, x, y + 10, w, 5, "6")
+				gfx._rect(image, x, y + 15, w, 1, "0")
+				for column in range(x + 4, x + w, 8):
+					gfx._px(image, column, y + 6, "9")
+				gfx._hazard(image, x, y + 11, 6, 3, "e", "g")
+				gfx._hazard(image, x + w - 6, y + 11, 6, 3, "e", "g")
+				return
 			# The shaft wall.
 			gfx._rect(image, x, y, w, h, "6")
 			gfx._rect(image, x + (w - 3 if x == 0 else 0), y, 3, h, "7")
@@ -203,7 +215,7 @@ static func layers(gfx: Variant, theme: int) -> Array:
 		0:
 			return [
 				{"image": _skyline(gfx, 140, "2", "3", 26, 100, 11), "factor": 0.08, "y": 66, "vertical": false},
-				{"image": _skyline(gfx, 150, "1", "e", 34, 120, 29), "factor": 0.2, "y": 98, "vertical": false},
+				{"image": _skyline(gfx, 150, "1", "e", 30, 104, 29), "factor": 0.2, "y": 98, "vertical": false},
 			]
 		1:
 			return [
@@ -285,7 +297,8 @@ static func _clouds(gfx: Variant) -> Image:
 		var cy := 20 + (roll / 512) % 70
 		var radius := 12 + (roll / 4096) % 18
 		for copy: int in [-480, 0, 480]:
-			gfx._ball(image, cx + copy, cy, radius, "2", "1", "1")
+			gfx._ball(image, cx + copy, cy, radius, "1", "1", "1")
+			gfx._rect(image, cx + copy - radius, cy + radius / 3, radius * 2, radius, "1")
 	return image
 
 static func _cranes(gfx: Variant) -> Image:
