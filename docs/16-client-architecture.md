@@ -39,7 +39,7 @@ i18n          → 不依赖 i18n/ 之外的任何目录
 - 启动器不得按类名使用游戏支持库的类（`GameModule`、`GameRegistry`、`GameManifest`、`GameInput`、`GameAudio` 等），游戏的清单只经 `GameSession.catalog()` 得到；
 - 运行时只引用 `res://runtime/` 与 `res://games/shared/`，不按类名使用任何 `Launcher*` 类，也不自己打开网络连接或持有地址；某款游戏的入口脚本按清单里的路径在运行时加载，不写在代码里；
 - 共用支持库 `games/shared/` 只引用自己；
-- 每个游戏目录（`games/<id>/`，以及测试夹具 `testing/games/<id>/`）只引用自己的目录和 `res://games/shared/`，不使用启动器和运行时的类（包括 `GameSession`），不联网，不声明 `class_name`，不碰宿主的东西（`Input`、`InputMap`、`_input`、`user://`、`OS`、`AudioServer`、`DisplayServer`、窗口与场景树）；
+- 每个游戏目录（`games/<id>/`，以及测试夹具 `testing/games/<id>/`）只引用自己的目录和 `res://games/shared/`，不使用启动器和运行时的类（包括 `GameSession`），不联网，不声明 `class_name`，不碰宿主的东西（`Input`、`InputMap`、`_input`、`user://`、`OS`、`AudioServer`、`DisplayServer`、`ClassDB`、窗口、视口与场景树，不写文件）；资源一律写完整的 `res://` 路径，`uid://`、经过上级目录的相对路径和运行时拼出来的 `res://` 前缀在客户端的每一棵树里都不允许，因为按路径的规则看不见它们；
 - `i18n/` 只引用 `res://i18n/`；
 - `*_screen.gd` 只存在于 `launcher/`。
 
@@ -79,7 +79,7 @@ apps/client/games/
 - **无效的清单不会让启动器崩溃。** 该游戏不进目录；启动器启动时用 toast 说明有几款没能加载以及第一条原因，「设置 › 关于」逐条列出，`make games-check` 则直接失败。
 - **启动器不持有任何单款游戏的数据。** `launcher_catalog.gd` 与 `launcher_game_guide.gd` 只剩查询逻辑：名称、类型、人数、配色、成就及其条件、玩法说明、操作表、HUD 字段、开局选项全部读自清单。原有三款游戏的清单是 `kind: "dsl"`，照旧运行各自运行时的基线 DSL；它们特有的字段（`runtime`、`options[].path`、`towers`、`tuning`）也在清单里。
 - **游戏模块的契约**见 [20-adding-a-game](./20-adding-a-game.md)：入口脚本的 API、清单字段、舞台与缩放、每位玩家的输入、能碰与不能碰的东西。
-- **测试夹具** `apps/client/testing/games/fixture_duo/` 是一个用到整个契约的最小模块（双人、卷轴、倒计时、生命、首领、选项、合成声音），只供测试使用，不在随附的目录里；`LauncherCatalog.use_root()` 让测试把目录指向它。
+- **测试夹具** `apps/client/testing/games/fixture_duo/` 是一个用到整个契约的最小模块（双人、卷轴、倒计时、生命、首领、选项、合成声音），`fixture_arena/` 补上它没有的部分（单人座位、平滑舞台、模拟量移动、成就读取 `finish()` 附带的字段）。两者只供测试使用，不在随附的目录里；`LauncherCatalog.use_root()` 让测试把目录指向它们。`testing/unfit_games/` 是清单有效但目录不合格的样本，供清单检查的自测使用。
 
 ## 3. 主机风格启动器（launcher）
 
@@ -197,7 +197,7 @@ apps/client/launcher/
 
 ## 4. 不变量
 
-- Godot 4.6.3 精确版本门禁（`apps/client/.godot-version`）和 fail-closed 的测试 runner（`scripts/run-godot-test.sh`）：版本不符、脚本解析错误、资源泄漏、缺少成功摘要都算失败；
+- Godot 4.6.3 精确版本门禁（`apps/client/.godot-version`）和 fail-closed 的测试 runner（`scripts/run-godot-test.sh`）：版本不符、脚本解析错误、资源泄漏、缺少成功摘要、超过时限都算失败；
 - 启动器只经 `runtime/game_session.gd` 进入运行时和游戏，运行时与游戏都不认识启动器；
 - 一款游戏是 `games/` 下的一个自足的目录：加一款游戏不改任何共享文件，游戏之间互不引用；
 - 客户端不联网，玩家数据只在 `user://launcher.json`；

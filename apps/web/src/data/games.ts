@@ -33,8 +33,8 @@ export interface GameInfo {
 type Json = Record<string, unknown>;
 
 const manifests = import.meta.glob<Json>('../../../client/games/*/game.json', { eager: true, import: 'default' });
-// Pictures are loaded on demand, so only the two a manifest names are pulled into the build, not every sprite of every game.
-const pictures = import.meta.glob<ImageMetadata>('../../../client/games/*/*.{png,jpg,jpeg,webp}', { import: 'default' });
+// Pictures are loaded on demand, so only the two a manifest names are pulled into the build, not every sprite of every game. The glob reaches into sub-directories because a manifest may keep its key art in one (art.image is any path inside the game's directory).
+const pictures = import.meta.glob<ImageMetadata>('../../../client/games/*/**/*.{png,jpg,jpeg,webp}', { import: 'default' });
 
 function fail(file: string, message: string): never {
 	throw new Error(`${file}: ${message}. The site lists games from their manifests; fix the manifest (make games-check reports every problem).`);
@@ -57,9 +57,9 @@ function color(file: string, value: unknown, field: string): string {
 }
 
 async function picture(file: string, directory: string, name: unknown, field: string): Promise<ImageMetadata> {
-	if (typeof name !== 'string' || name === '' || name.includes('/') || name.includes('..')) fail(file, `"${field}" must be a picture file in the game's own directory`);
+	if (typeof name !== 'string' || name === '' || name.startsWith('/') || name.includes('..') || name.includes('\\')) fail(file, `"${field}" must be a picture file inside the game's own directory`);
 	const load = pictures[`${directory}/${name}`];
-	if (load === undefined) fail(file, `"${field}" names ${name}, which is not a .png, .jpg, .jpeg or .webp file in the game's directory`);
+	if (load === undefined) fail(file, `"${field}" names ${name}, which is not a .png, .jpg, .jpeg or .webp file (lowercase extension) inside the game's directory`);
 	return load();
 }
 

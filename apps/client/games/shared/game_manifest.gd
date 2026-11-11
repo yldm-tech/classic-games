@@ -19,7 +19,7 @@ extends RefCounted
 ##   controls      module: [{ id, name, inputs: ["move" | a GameInput control] }]; dsl: [{ id, name, actions, glyphs, pad?, mouse?, performs? }]
 ##   hud           { clock: { mode, field?, total? }, vital?: { field, max, label }, stats?: [{ label, fields }], player_stats?: [{ label, fields }], boss?: { field, max, label? } }
 ##   options       [{ id, name, note, values: [int], default, labels?: [{ zh, en }], path?: JSON pointer (dsl only, required there) }]
-##   site          optional, for the website only: { screenshot: a picture inside the directory, screenshot_alt: { zh, en }, art_alt: { zh, en } }
+##   site          optional, for the website only: { screenshot: "site_screenshot.<ext>" at the top of the directory, screenshot_alt: { zh, en }, art_alt: { zh, en } }
 ##   towers, tuning   dsl only: display names of tower types, and numbers the host applies around the runtime
 
 const SCHEMA := 1
@@ -32,6 +32,8 @@ const CLOCK_MODES := ["countdown", "elapsed", "none"]
 const INPUT_MOVE := "move"
 const INPUTS := ["move", "up", "down", "left", "right", "a", "b", "x", "y", "l", "r"]
 const IMAGE_EXTENSIONS := ["png", "jpg", "jpeg", "webp"]
+## File name (without extension) of the picture a game provides for the website only.
+const SITE_SCREENSHOT := "site_screenshot"
 const KEYS_COMMON := ["schema", "id", "kind", "name", "initials", "genre", "tagline", "how", "players", "colors", "art", "achievements", "controls", "hud", "options", "site"]
 const KEYS_MODULE := ["entry", "stage"]
 const KEYS_DSL := ["runtime", "towers", "tuning"]
@@ -91,6 +93,9 @@ static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 		else:
 			if (site as Dictionary).has("screenshot"):
 				_check_file(errors, "site.screenshot", site["screenshot"], dir, IMAGE_EXTENSIONS, false)
+				# The export presets leave the website's picture out of the game by this exact name (games/*/site_screenshot.*), so any other name or place would ship it.
+				if site["screenshot"] is String and (site["screenshot"] as String).get_basename() != SITE_SCREENSHOT:
+					errors.append("site.screenshot: must be named %s.<png|jpg|jpeg|webp> at the top of the game's directory, the name the export presets exclude" % SITE_SCREENSHOT)
 			for key: Variant in site:
 				match str(key):
 					"screenshot":

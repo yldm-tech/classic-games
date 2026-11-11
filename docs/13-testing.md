@@ -19,7 +19,7 @@
 
 ### 客户端(Godot)
 
-客户端是主机风格启动器、三个 DSL 运行时和 `games/` 下由清单描述的游戏([16-client-architecture](./16-client-architecture.md)),不联网,所以它的测试全部是 headless 的本地测试,不需要后端。每个测试是一个 `extends SceneTree` 的脚本,经 `scripts/run-godot-test.sh` 运行:先校验 Godot 精确版本并导入资源,再跑脚本;进程退出码非零、出现脚本解析或加载错误、退出时有泄漏的对象或资源、没有打印约定的成功摘要,任何一条都算失败。
+客户端是主机风格启动器、三个 DSL 运行时和 `games/` 下由清单描述的游戏([16-client-architecture](./16-client-architecture.md)),不联网,所以它的测试全部是 headless 的本地测试,不需要后端。每个测试是一个 `extends SceneTree` 的脚本,经 `scripts/run-godot-test.sh` 运行:先校验 Godot 精确版本并导入资源,再跑脚本;进程退出码非零、出现脚本解析或加载错误、退出时有泄漏的对象或资源、没有打印约定的成功摘要、超过时限(每个 Godot 进程 600 秒,`GODOT_TEST_TIMEOUT` 可改;脚本在调用 `quit()` 之前出错时引擎不会自己退出,没有时限就会把整条门禁挂住),任何一条都算失败。
 
 | 测试 | 目标 | 内容 |
 |---|---|---|
@@ -33,14 +33,15 @@
 | `games/shared/shared_test.gd` | `make games-test` | 游戏支持库:确定性随机数、固定步、每位玩家的输入状态、合成音效与音乐、`GameModule` 基类、清单 schema 的每条规则、游戏发现 |
 | `games/<id>/*_test.gd` | `make games-test` | 每款模块游戏自带的测试:直接加载入口脚本,用固定种子和 `advance()` 确定性地推进 |
 | `testing/module_contract_test.gd` | `make games-test` | 宿主一侧的模块契约:`GameSession` 发现游戏、报告无效清单、用夹具模块跑完整一局(选项与人数、每位玩家的控制、暂停、加入与退出、快照、分数、每种结束方式、同种子重放) |
-| `testing/module_flow_test.gd` | `make games-test` | 玩家一侧的模块契约,经启动器:首页、游戏库、PC 模式显示真实人数,游戏菜单的人数与设备行,两套键盘方案和手柄的输入归属,HUD 的第二个玩家角,暂停归属,中途加入、退出与手柄拔出,结算与只记录一次,无效清单的提示 |
-| `games/shared/manifest_check.gd` | `make games-check` | 清单 schema 检查:每个游戏目录(含测试夹具)的清单有效、模块入口能加载并继承 `GameModule`、模块自带测试、`ASSETS.md` 记了每个素材文件 |
+| `testing/module_flow_test.gd` | `make games-test` | 玩家一侧的模块契约,经启动器:首页、游戏库、PC 模式显示真实人数,游戏菜单的人数与设备行,两套键盘方案和手柄的输入归属,HUD 的第二个玩家角,暂停归属,中途加入、退出与手柄拔出(单人和双人),像素舞台与平滑舞台的视口设置,结算与只记录一次,中途退出不解锁成就,无效清单的提示 |
+| `testing/manifest_check_test.gd` | `make games-test` | 清单检查自身:把它作为子进程跑在 `testing/unfit_games/`(每个目录清单有效、恰好有一种不合格:没有测试、测试放在子目录、缺 `ASSETS.md`、素材没登记、入口重定义了 `_process`、入口不是 `GameModule`、HUD 点名的字段快照里没有、双人游戏只报了一个座位、官网截图不存在)上,要求每一种都失败并说出原因,夹具游戏则通过 |
+| `games/shared/manifest_check.gd` | `make games-check` | 清单检查:每个游戏目录(含测试夹具)的清单有效、模块入口能加载并继承 `GameModule` 且没有重定义基类的方法、用默认选项和最多人数启动一步后快照里有 HUD 点名的每个字段、目录顶层有自带测试、官网截图存在、`ASSETS.md` 记了每个素材文件 |
 
-`make games-test` 不列出测试:`scripts/run-game-tests.sh` 找出每个 `games/*/*_test.gd`、`testing/*_test.gd` 和 `testing/games/*/*_test.gd`,逐个交给同一个 fail-closed 的 runner,要求各自打印 `<文件名>: N passed, 0 failed`;一个测试也没找到算失败。所以加一款游戏就加上了它的测试,不需要改 Makefile 或 CI。模块契约的测试对象是夹具模块 `testing/games/fixture_duo/`,它不在随附的目录里,也不随导出发布。
+`make games-test` 不列出测试:`scripts/run-game-tests.sh` 找出每个 `games/*/*_test.gd`、`testing/*_test.gd` 和 `testing/games/*/*_test.gd`,逐个交给同一个 fail-closed 的 runner,要求各自打印 `<文件名>: N passed, 0 failed`;一个测试也没找到算失败。所以加一款游戏就加上了它的测试,不需要改 Makefile 或 CI。模块契约的测试对象是两个夹具模块 `testing/games/fixture_duo/`(双人、像素舞台、卷轴)和 `testing/games/fixture_arena/`(单人、平滑舞台、成就读取 `finish()` 附带的字段),它们不在随附的目录里,也不随导出发布。只有游戏目录顶层的 `*_test.gd` 会被运行;放在子目录里的由 `make games-check` 报错。
 
 `make export-test` 导出一个资源包(不需要导出模板),在一个空目录里从包内运行游戏发现,要求源码树里的每款游戏都能在包里找到且清单有效,并且 `testing/` 不在包里。
 
-两条结构性门禁不跑 Godot,只扫描源码:`make boundary-test`(依赖方向、启动器不联网、游戏目录只引用自己和 `games/shared/` 且不碰宿主的东西)与 `make architecture-test`(已移除的手机应用壳不得回归,另含后端与 Go 模块的规则)。两个检查器都先跑自测(`scripts/tests/`),用最小的违例样本证明每条规则确实会失败。
+两条结构性门禁不跑 Godot,只扫描源码:`make boundary-test`(依赖方向、启动器不联网、游戏目录只引用自己和 `games/shared/` 且不碰宿主的东西;任何一棵树都不得用 `uid://`、上级目录的相对路径或运行时拼出来的 `res://` 绕开按路径的检查)与 `make architecture-test`(已移除的手机应用壳不得回归,另含后端与 Go 模块的规则)。两个检查器都先跑自测(`scripts/tests/`),用最小的违例样本证明每条规则确实会失败。
 
 `make launcher-shot SCREEN=<屏幕> STATE=<played|fresh>` 把启动器的某一屏渲染成 1920×1080 的 PNG,供人工查看视觉效果([19-design-system](./19-design-system.md))。它也能启动任何游戏模块、按脚本给每位玩家输入若干秒再截图(`LAUNCHER_SHOT_GAME`、`LAUNCHER_SHOT_PLAYERS`、`LAUNCHER_SHOT_INPUT`,用法见 [20-adding-a-game](./20-adding-a-game.md) 第 7 节)。它需要真实的渲染器,不在 `make ci` 里。
 
