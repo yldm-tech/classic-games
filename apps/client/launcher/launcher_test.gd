@@ -251,7 +251,7 @@ func _test_strings() -> void:
 	_check("launcher strings are served by the project's Strings", Strings.t("zh", "launcher.nav.library") == "游戏库" and Strings.t("en", "launcher.nav.library") == "Library")
 	_check("a language the launcher has not translated falls back to zh", Strings.t("ja", "launcher.nav.home") == "首页")
 	_check("formatting goes through Strings.fmt", Strings.fmt("zh", "launcher.home.achievements_sub_fmt", [2, 11]) == "全部游戏 2 / 11 已解锁")
-	_check("existing strings are untouched", Strings.t("zh", "featured") == "本周精选")
+	_check("the offered languages are exactly the translated ones", Strings.LOCALES == LauncherTable.TABLE.keys())
 
 # ---- project and input ----
 

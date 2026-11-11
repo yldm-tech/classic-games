@@ -17,10 +17,6 @@ run/main_scene="res://launcher/launcher.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
-[autoload]
-
-AppState="*res://shell/state/app_state.gd"
-
 [display]
 
 ; The console launcher is a fixed 16:9 canvas authored at 1920x1080 (see launcher/launcher_tokens.gd). canvas_items scales the whole UI with the window and aspect=keep letterboxes other ratios instead of reflowing.
