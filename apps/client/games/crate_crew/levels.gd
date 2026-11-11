@@ -172,8 +172,8 @@ func _workbench() -> void:
 	_foe("turret", 146, 15, -1)
 	_crate(148, 15, "battery")
 	_foe("bug", 150, 15)
-	# The long gap is crossed on a lift.
-	_lift(153, 16, 160, 16, 2, 5.0)
+	# The long gap is crossed on a lift that docks flush with both banks, so stepping on and off needs no jump.
+	_lift(153, 16, 161, 16, 2, 5.0)
 	_foe("drone", 158, 11, -1, 3)
 	_ground(163, 179, 16)
 	_crate(165, 15, "core")
@@ -383,7 +383,7 @@ func _foundry() -> void:
 	_crate(131, 15)
 	_crate(132, 15, "gears")
 	_crate(132, 14)
-	_ground(139, 154, 16)
+	_ground(139, 155, 16)
 	_crate(141, 15, "", "steel")
 	_foe("bug", 145, 15)
 	_foe("turret", 151, 15, -1)
@@ -414,7 +414,7 @@ func _foundry() -> void:
 	_foe("hopper", 233, 12)
 	_foe("turret", 239, 12, -1)
 	_lift(241, 13, 241, 7, 2, 5.0)
-	_ground(244, 261, 7)
+	_ground(243, 261, 7)
 	_flag(245, 6)
 	_crate(246, 6)
 	_crate(247, 6, "gears")

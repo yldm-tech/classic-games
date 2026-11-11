@@ -644,6 +644,19 @@ func _test_stages_can_be_walked() -> void:
 		var built: Dictionary = Levels.new().build(stage)
 		sizes.append(maxi(int(built["w"]), int(built["h"])))
 	_check("every stage is long enough for a few minutes of play: at least 120 tiles along its way", sizes.all(func(size: int) -> bool: return size >= 96) and sizes[0] >= 230 and sizes[1] >= 120 and sizes[2] >= 250 and (Levels.new().build(3)["flags"] as Array).size() >= 4)
+	# The lifts of the two walking stages (the foundry's first one aside, which is jumped off at the top) dock flush with the ground at both ends, so no jump is needed to step on or off.
+	var docked := true
+	for pick: Array in [[0, 0], [0, 1], [2, 1]]:
+		var with_lift: Dictionary = Levels.new().build(int(pick[0]))
+		var lift: Dictionary = (with_lift["lifts"] as Array)[int(pick[1])]
+		var from: Vector2 = lift["from"] / 16.0
+		var to: Vector2 = (lift["to"] as Vector2) / 16.0
+		var cells: PackedByteArray = with_lift["tiles"]
+		var wide := int(with_lift["w"])
+		var near := cells[int(from.y) * wide + int(from.x) - 1]
+		var far := cells[int(to.y) * wide + int(to.x) + int(float(lift["w"]) / 16.0)]
+		docked = docked and near != Levels.EMPTY and near != Levels.SPIKES and far != Levels.EMPTY and far != Levels.SPIKES
+	_check("lifts between two banks dock flush with both", docked)
 	_check("two stages end in a boss room and two at a door", not (Levels.new().build(1)["boss"] as Dictionary).is_empty() and not (Levels.new().build(3)["boss"] as Dictionary).is_empty() and Levels.new().build(0)["door"] is Vector2 and Levels.new().build(2)["door"] is Vector2)
 
 func _test_art_and_sound() -> void:
