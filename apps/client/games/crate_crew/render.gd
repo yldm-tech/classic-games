@@ -15,16 +15,26 @@ const TILE := 16.0
 const MAX_PARTICLES := 220
 const MAX_PENDING := 96
 const HERO_COLORS := [Color("5fd4c4"), Color("f5a340")]
-## Every frame a squirrel atlas holds.
-const HERO_FRAMES := ["idle_0", "idle_1", "run_0", "run_1", "run_2", "run_3", "run_4", "run_5", "jump", "fall", "land", "lift", "carry", "carry_run_0", "carry_run_1", "carry_run_2", "carry_run_3", "throw_0", "throw_1", "throw_up", "duck", "hurt", "out", "cheer", "carried"]
-const RUN_FPS := 15.0
-const CARRY_RUN_FPS := 11.0
-## How long a crate takes from the floor to the paws, and how long something let go takes to settle from the paws onto the path the simulation gives it.
-const LIFT_SPAN := 0.24
+## The actions a squirrel atlas holds as numbered frames ("run_0", "run_1" ...), cut from short clips of the squirrel moving, and the single pictures beside them.
+const HERO_MOVES := ["idle", "run", "jump", "fall", "land", "lift", "carry", "carry_run", "throw", "throw_up", "duck", "hide", "hurt", "cheer"]
+const HERO_STILLS := ["carry_jump", "carry_fall", "out", "carried"]
+## The actions in which something rests on the paws: every frame of them names its carry spot.
+const HERO_CARRIES := ["lift", "carry", "carry_run", "duck", "hide"]
+## Stage pixels one cycle of a run covers when an atlas does not say: the legs turn with the distance run, so the feet do not slide.
+const STRIDE_DEFAULT := 28.0
+## How long the pick-up plays, which first part of it brings the load from where it stood into the paws, and how long something let go takes to settle from the paws onto the path the simulation gives it.
+const LIFT_SPAN := 0.3
+const GRIP := 0.3
 const DRIFT_SPAN := 0.12
-## How long the throwing pose is held, and how much of it is the wind-up.
-const THROW_SPAN := 0.24
-const WIND_UP := 0.05
+## How long the throw, the landing, the crouch under a crate and the recoil play. The recoil is as long as the simulation stuns.
+const THROW_SPAN := 0.34
+const LAND_SPAN := 0.26
+const DUCK_SPAN := 0.16
+const HURT_SPAN := 0.32
+## The turn on the heel, the lean into a start and the lean back out of a stop.
+const TURN_SPAN := 0.11
+const START_SPAN := 0.16
+const STOP_SPAN := 0.14
 ## A carried thing sinks this far into the paws, so the fingers lie over its bottom edge.
 const HOLD_SINK := 0.4
 ## Where a carried thing rests when a frame names no spot of its own, from the feet.
@@ -65,6 +75,10 @@ var _popups: Array[Dictionary] = []
 var _looks: Array[Dictionary] = []
 ## Per squirrel: frame name -> where the bottom middle of a carried thing rests, in stage pixels from the frame's pivot, for a squirrel facing right. Read from the "hold" entries of the frame tables.
 var _holds: Array[Dictionary] = []
+## Per squirrel: action -> how many frames it has.
+var _counts: Array[Dictionary] = []
+## Per squirrel: run action -> { "stride": stage pixels per cycle, "steps": the parts of the cycle (0 .. 1) at which a foot comes down }.
+var _gaits: Array[Dictionary] = []
 ## Things just let go: [{ "thing", "offset", "life" }]. They are drawn `offset` away from where the simulation has them, shrinking to nothing, so a crate leaves from the paws.
 var _drifts: Array[Dictionary] = []
 ## Where crates at rest and squirrels stood on the last frame: [[thing, position]], so a lift can start from where the thing was.
@@ -92,7 +106,7 @@ func setup(simulation: World, language: String) -> void:
 	_popups.clear()
 	_looks.clear()
 	for slot in 2:
-		_looks.append({"squash": 0.0, "stretch": 0.0, "pose": "", "pose_time": 0.0, "step": 0, "land_time": 0.0, "lift_time": 0.0, "lift_from": Vector2.ZERO, "held": null, "held_at": Vector2.ZERO})
+		_looks.append({"squash": 0.0, "stretch": 0.0, "pose": "", "pose_time": 0.0, "stride": 0.0, "land_time": 0.0, "lift_time": 0.0, "lift_from": Vector2.ZERO, "held": null, "held_at": Vector2.ZERO, "running": false, "face": 0, "turn": 0.0, "start": 0.0, "stop": 0.0, "hide_time": 0.0, "rise": 0.0, "air": 0.0})
 	_drifts.clear()
 	_seen.clear()
 	_shake = 0.0
@@ -104,12 +118,21 @@ func art_ready() -> bool:
 	if heroes.size() != 2 or fills.size() != Levels.COUNT or backs.size() != Levels.COUNT:
 		return false
 	for slot in 2:
-		for frame: String in HERO_FRAMES:
+		for move: String in HERO_MOVES:
+			if int(_counts[slot].get(move, 0)) < 1:
+				return false
+			for index in int(_counts[slot][move]):
+				if not heroes[slot].has_frame("%s_%d" % [move, index]):
+					return false
+		for frame: String in HERO_STILLS:
 			if not heroes[slot].has_frame(frame):
 				return false
-		for frame: String in ["carry", "carry_run_0", "carry_run_1", "carry_run_2", "carry_run_3", "duck"]:
-			if not _holds[slot].has(frame):
-				return false
+		for move: String in HERO_CARRIES:
+			for index in int(_counts[slot][move]):
+				if not _holds[slot].has("%s_%d" % [move, index]):
+					return false
+		if not _holds[slot].has("carry_jump") or not _holds[slot].has("carry_fall"):
+			return false
 	for stage in Levels.COUNT:
 		if not fills[stage].has_frame("main") or not backs[stage].has_frame("main"):
 			return false
@@ -128,7 +151,10 @@ func _load_art() -> void:
 	text = GameText.new()
 	for slot in 2:
 		heroes.append(GameSprites.load_atlas(ART + "squirrel%d.json" % slot))
-		_holds.append(_read_holds(ART + "squirrel%d.json" % slot))
+		var table := _read_table(ART + "squirrel%d.json" % slot)
+		_holds.append(table["holds"])
+		_counts.append(table["counts"])
+		_gaits.append(table["gaits"])
 	foes = GameSprites.load_atlas(ART + "foes.json")
 	bosses = GameSprites.load_atlas(ART + "bosses.json")
 	props = GameSprites.load_atlas(ART + "props.json")
@@ -153,19 +179,27 @@ func _load_art() -> void:
 	for index in MOTES:
 		_motes.append({"at": Vector2(_random.float_range(0.0, VIEW.x), _random.float_range(0.0, VIEW.y)), "drift": Vector2(_random.float_range(-4.0, 4.0), _random.float_range(0.4, 1.0)), "size": _random.float_range(0.35, 1.0), "depth": _random.float_range(0.35, 0.8), "phase": _random.float_range(0.0, TAU)})
 
-## The carry spots of one squirrel atlas: its frame table gives them as "hold", in source pixels like the pivot.
-func _read_holds(table_path: String) -> Dictionary:
+## What the renderer needs from one squirrel's frame table beyond the pictures: the carry spot of each carrying frame ("hold", in source pixels like the pivot), how many frames each action has, and the stride and footfalls of its runs ("gaits").
+func _read_table(table_path: String) -> Dictionary:
 	var spots := {}
+	var counts := {}
+	var gaits := {}
 	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string(table_path))
 	if not table is Dictionary:
-		return spots
+		return {"holds": spots, "counts": counts, "gaits": gaits}
 	var size := float(table.get("scale", 1.0))
 	var frames: Dictionary = table.get("frames", {})
 	for frame: String in frames:
 		var entry: Dictionary = frames[frame]
 		if entry.get("hold") is Array and entry.get("pivot") is Array:
 			spots[frame] = Vector2(float(entry["hold"][0]) - float(entry["pivot"][0]), float(entry["hold"][1]) - float(entry["pivot"][1])) * size
-	return spots
+		var cut := frame.rfind("_")
+		if cut > 0 and frame.substr(cut + 1).is_valid_int():
+			var move := frame.substr(0, cut)
+			counts[move] = maxi(int(counts.get(move, 0)), int(frame.substr(cut + 1)) + 1)
+	if table.get("gaits") is Dictionary:
+		gaits = table["gaits"]
+	return {"holds": spots, "counts": counts, "gaits": gaits}
 
 ## Called from the step with what the world reported; kept short so a run without frames (a test) cannot pile them up.
 func note(event: Dictionary) -> void:
@@ -182,15 +216,13 @@ func advance(delta: float) -> void:
 	_flash = maxf(0.0, _flash - delta)
 	_offset = Vector2(_random.float_range(-_shake, _shake), _random.float_range(-_shake, _shake)) * 0.6 if _shake > 0.3 else Vector2.ZERO
 	for look in _looks:
-		look["squash"] = maxf(0.0, float(look["squash"]) - delta)
-		look["stretch"] = maxf(0.0, float(look["stretch"]) - delta)
-		look["pose_time"] = maxf(0.0, float(look["pose_time"]) - delta)
-		look["land_time"] = maxf(0.0, float(look["land_time"]) - delta)
-		look["lift_time"] = maxf(0.0, float(look["lift_time"]) - delta)
+		for timer: String in ["squash", "stretch", "pose_time", "land_time", "lift_time", "turn", "start", "stop", "rise"]:
+			look[timer] = maxf(0.0, float(look[timer]) - delta)
 	for drift in _drifts:
 		drift["life"] = float(drift["life"]) - delta
 	_drifts = _drifts.filter(func(drift: Dictionary) -> bool: return float(drift["life"]) > 0.0)
 	if world != null:
+		_track_motion(delta)
 		_track_holds()
 		_ambient()
 	for particle in _particles:
@@ -211,6 +243,58 @@ func advance(delta: float) -> void:
 	_band_age += delta
 	queue_redraw()
 	_flash_layer.queue_redraw()
+
+## Which run a squirrel is in: its legs turn at the pace of that one.
+func _gait_of(hero: Dictionary) -> String:
+	return "carry_run" if hero["carry"] != null or int(hero["lifting"]) >= 0 else "run"
+
+## Stage pixels one cycle of a squirrel's run covers.
+func _stride_of(slot: int, gait: String) -> float:
+	var entry: Variant = _gaits[slot].get(gait)
+	return maxf(8.0, float(entry.get("stride", STRIDE_DEFAULT))) if entry is Dictionary else STRIDE_DEFAULT
+
+## The renderer's own memory of how each squirrel moves: how far through its stride it is (the legs turn with the ground covered, not with the clock), when it turned round, set off or stopped, how long it has been crouching under its crate, and a puff of dust for every foot that comes down.
+func _track_motion(delta: float) -> void:
+	for hero in world.heroes:
+		var slot := int(hero["slot"])
+		var look: Dictionary = _looks[slot]
+		var normal := int(hero["state"]) == World.H_NORMAL
+		var grounded := normal and bool(hero["ground"])
+		var speed := absf(float(hero["vx"]))
+		var running := grounded and speed > 6.0 and float(hero["stun"]) <= 0.0
+		var facing := int(hero["face"])
+		if running:
+			if not bool(look["running"]):
+				# Every run sets off on the same foot.
+				look["stride"] = 0.0
+				look["start"] = START_SPAN
+				look["stop"] = 0.0
+			elif facing != int(look["face"]) and int(look["face"]) != 0:
+				look["turn"] = TURN_SPAN
+				_dust(Vector2(float(hero["x"]), float(hero["y"])), 3, 30.0, 0.5)
+			var gait := _gait_of(hero)
+			var before := fposmod(float(look["stride"]), 1.0)
+			var after := before + speed * delta / _stride_of(slot, gait)
+			look["stride"] = float(look["stride"]) + speed * delta / _stride_of(slot, gait)
+			var entry: Variant = _gaits[slot].get(gait)
+			if entry is Dictionary:
+				for step: Variant in entry.get("steps", []):
+					var part := float(step)
+					if (before < part and after >= part) or (before < part + 1.0 and after >= part + 1.0):
+						_spark(Vector2(float(hero["x"]) - float(facing) * 3.0, float(hero["y"]) - 0.5), Vector2(-float(facing) * 14.0, -9.0), -10.0, 0.3, Color(0.92, 0.88, 0.8, 0.6), 0.45, "puff")
+		elif bool(look["running"]) and grounded:
+			look["stop"] = STOP_SPAN
+			look["start"] = 0.0
+		look["running"] = running
+		look["face"] = facing
+		look["air"] = 0.0 if grounded or not normal else float(look["air"]) + delta
+		var hiding := normal and bool(hero["hide"])
+		if hiding:
+			look["hide_time"] = float(look["hide_time"]) + delta
+		elif float(look["hide_time"]) > 0.0:
+			look["hide_time"] = 0.0
+			if normal and hero["carry"] != null:
+				look["rise"] = DUCK_SPAN
 
 ## Notice what each squirrel picked up or let go since the last frame. A new load starts its way up from where it stood; a load let go keeps, for a moment, the distance between the paws it left and the place the simulation gave it.
 func _track_holds() -> void:
@@ -251,7 +335,7 @@ func _drift_of(thing: Dictionary) -> Vector2:
 			return (drift["offset"] as Vector2) * left * left
 	return Vector2.ZERO
 
-## Effects that come from what is going on rather than from one event: the Dustmaw's breath, exhaust, running dust, the trail behind anything thrown.
+## Effects that come from what is going on rather than from one event: the Dustmaw's breath, exhaust, the trail behind anything thrown. The dust of running feet comes from _track_motion.
 func _ambient() -> void:
 	if not world.boss.is_empty():
 		var boss := world.boss
@@ -272,14 +356,6 @@ func _ambient() -> void:
 	for object in world.objects:
 		if int(object["state"]) == World.O_THROWN and _random.chance(0.5):
 			_spark(Vector2(float(object["x"]), float(object["y"]) - float(object["tall"]) * 0.5 + _random.float_range(-4.0, 4.0)), Vector2.ZERO, 0.0, 0.22, Color(1.0, 0.97, 0.9, 0.8), 0.8, "dot")
-	for hero in world.heroes:
-		if int(hero["state"]) != World.H_NORMAL or not bool(hero["ground"]) or absf(float(hero["vx"])) < 40.0:
-			continue
-		var look: Dictionary = _looks[int(hero["slot"])]
-		var step := int(float(hero["anim"]) * RUN_FPS / 3.0)
-		if step != int(look["step"]):
-			look["step"] = step
-			_spark(Vector2(float(hero["x"]) - signf(float(hero["vx"])) * 3.0, float(hero["y"]) - 1.0), Vector2(-signf(float(hero["vx"])) * 12.0, -8.0), -10.0, 0.3, Color(0.92, 0.88, 0.8, 0.6), 0.45, "puff")
 
 # ---- effects ----
 
@@ -322,7 +398,7 @@ func _react(event: Dictionary) -> void:
 			_dust(at, 4, 34.0, 0.55)
 			if look != null:
 				look["squash"] = 0.14
-				look["land_time"] = 0.13
+				look["land_time"] = LAND_SPAN
 		"thud", "put_down":
 			_dust(at, 4, 34.0, 0.6)
 		"lift":
@@ -803,7 +879,26 @@ func _draw_boss(boss: Dictionary) -> void:
 	var shut := mode == "stuck" or mode == "retract"
 	_put(bosses, "claw_shut" if shut else "claw_open", Vector2(x, y + 28.0 + chain + 22.0), false, Vector2.ONE, sin(_clock * 3.0) * 0.03 if mode != "stuck" else 0.0, Color.WHITE, white)
 
-## Which frame a squirrel shows and how it is squashed, tilted and lifted off its feet. It reads the simulation and the renderer's own short timers and changes nothing, so the frame under a carried crate is known before anything is drawn. Returns { "frame", "at", "flip", "scale", "angle" }; "at" is where the frame's pivot (the feet) goes.
+## The name of frame `index` of an action of a squirrel, wrapped round the action's length. An action without numbered frames is one picture of that name.
+func _frame(slot: int, move: String, index: int) -> String:
+	var count := int(_counts[slot].get(move, 0))
+	return move if count <= 0 else "%s_%d" % [move, posmod(index, count)]
+
+## The frame of an action that plays once, `progress` (0 .. 1) of the way through it.
+func _shot(slot: int, move: String, progress: float) -> String:
+	var count := int(_counts[slot].get(move, 0))
+	return move if count <= 0 else "%s_%d" % [move, clampi(int(progress * float(count)), 0, count - 1)]
+
+## An action that repeats with the clock: [the frame at `seconds`, the frame after it, how far the first has turned into the second (0 .. 1)]. Slow motions such as breathing are drawn as the first frame with the second faded in over it, so they flow instead of stepping.
+func _cycle(slot: int, move: String, seconds: float) -> Array:
+	var count := int(_counts[slot].get(move, 0))
+	var length := heroes[slot].animation_length(move)
+	if count <= 1 or length <= 0.0:
+		return [_frame(slot, move, 0), "", 0.0]
+	var at := fposmod(seconds / length, 1.0) * float(count)
+	return [_frame(slot, move, int(at)), _frame(slot, move, int(at) + 1), at - floorf(at)]
+
+## Which frame a squirrel shows and how it is squashed and tilted. It reads the simulation and the renderer's own short timers and changes nothing, so the frame under a carried crate is known before anything is drawn. Runs advance with the ground covered, actions that happen once with their timers, and standing still with the clock. Returns { "frame", "next", "mix", "at", "flip", "scale", "angle" }: "at" is where the frame's pivot (the feet) goes, "next" a frame to fade in over "frame" by "mix" (or "").
 func _pose(hero: Dictionary) -> Dictionary:
 	var slot := int(hero["slot"])
 	var look: Dictionary = _looks[slot]
@@ -811,66 +906,95 @@ func _pose(hero: Dictionary) -> Dictionary:
 	var carrying: bool = hero["carry"] != null or int(hero["lifting"]) >= 0
 	var grounded := bool(hero["ground"])
 	var running := grounded and absf(float(hero["vx"])) > 6.0
-	var frame := "carry" if carrying else "idle_0"
+	var facing := float(int(hero["face"]))
+	var flip := facing < 0.0
+	var loop: Array = []
+	var frame := ""
 	var scale := Vector2.ONE
 	var angle := 0.0
-	var lift := 0.0
 	if float(hero["stun"]) > 0.0:
-		frame = "hurt"
+		frame = _shot(slot, "hurt", 1.0 - float(hero["stun"]) / HURT_SPAN)
 	elif bool(hero["hide"]):
-		frame = "duck"
-	elif carrying and float(look["lift_time"]) > LIFT_SPAN * 0.3:
-		frame = "lift"
+		# Down under the crate, then peeking out from under it for as long as it stays there.
+		var crouched := float(look["hide_time"])
+		if crouched < DUCK_SPAN:
+			frame = _shot(slot, "duck", crouched / DUCK_SPAN)
+		else:
+			loop = _cycle(slot, "hide", crouched - DUCK_SPAN)
+	elif carrying and float(look["lift_time"]) > 0.0:
+		frame = _shot(slot, "lift", 1.0 - float(look["lift_time"]) / LIFT_SPAN)
 	elif float(look["pose_time"]) > 0.0 and not carrying:
-		if str(look["pose"]) == "throw_up":
-			frame = "throw_up"
-		else:
-			frame = "throw_0" if float(look["pose_time"]) > THROW_SPAN - WIND_UP else "throw_1"
+		frame = _shot(slot, str(look["pose"]), 1.0 - float(look["pose_time"]) / THROW_SPAN)
 	elif not grounded:
-		frame = "carry_run_3" if carrying else ("jump" if float(hero["vy"]) < 0.0 else "fall")
-		# Long and thin on the way up, a little wide when falling fast.
-		var pull := clampf(absf(float(hero["vy"])) / 300.0, 0.0, 1.0) * 0.06
-		scale = Vector2(1.0 - pull, 1.0 + pull)
-	elif running:
-		# The bob of the stride is painted into the frames.
+		var rise := float(hero["vy"])
 		if carrying:
-			frame = "carry_run_%d" % (int(anim * CARRY_RUN_FPS) % 4)
+			frame = "carry_jump" if rise < 0.0 else "carry_fall"
+		elif rise < 0.0:
+			# The leap opens up as the rise slows, the fall as it quickens.
+			frame = _shot(slot, "jump", 1.0 - clampf(-rise / World.JUMP_SPEED, 0.0, 1.0))
 		else:
-			frame = "run_%d" % (int(anim * RUN_FPS) % 6)
-	elif world.phase == World.P_CLEAR or world.phase == World.P_WON:
-		if not carrying:
-			frame = "cheer"
-		lift = absf(sin(_clock * 7.0 + float(slot))) * 3.0
+			frame = _shot(slot, "fall", rise / World.MAX_FALL)
+		# Long and thin on the way up, a little wide when falling fast.
+		var pull := clampf(absf(rise) / 300.0, 0.0, 1.0) * 0.05
+		scale = Vector2(1.0 - pull, 1.0 + pull)
+	elif carrying and float(look["rise"]) > 0.0:
+		# Up from under the crate: the crouch played backwards.
+		frame = _shot(slot, "duck", float(look["rise"]) / DUCK_SPAN * 0.999)
+	elif running:
+		var gait := _gait_of(hero)
+		frame = _frame(slot, gait, int(fposmod(float(look["stride"]), 1.0) * float(int(_counts[slot].get(gait, 1)))))
+	elif (world.phase == World.P_CLEAR or world.phase == World.P_WON) and not carrying:
+		loop = _cycle(slot, "cheer", _clock + float(slot) * 0.21)
 	elif float(look["land_time"]) > 0.0 and not carrying:
-		frame = "land"
+		frame = _shot(slot, "land", 1.0 - float(look["land_time"]) / LAND_SPAN)
 	else:
-		# Standing still it breathes, and blinks now and then.
-		var breath := sin(anim * 3.0 + float(slot)) * 0.018
-		scale = Vector2(1.0 - breath, 1.0 + breath)
-		if not carrying and fmod(anim + float(slot) * 1.3, 3.4) < 0.13:
-			frame = "idle_1"
+		# Standing still it breathes, blinks and sways its tail; the two squirrels are never in step.
+		loop = _cycle(slot, "carry" if carrying else "idle", anim + float(slot) * 0.7)
+	if grounded:
+		# The simulation changes speed at once; the body shows the effort: it leans into a start, back out of a stop, and comes round thin on its heel in a turn, facing the old way for the first half.
+		var turn := float(look["turn"]) / TURN_SPAN
+		var start := float(look["start"]) / START_SPAN
+		var stop := float(look["stop"]) / STOP_SPAN
+		if turn > 0.0:
+			if turn > 0.5:
+				flip = not flip
+			scale.x *= 0.4 + 0.6 * absf(turn * 2.0 - 1.0)
+			angle += facing * 0.2 * turn
+		elif start > 0.0 and running:
+			angle += facing * 0.15 * start * start
+			scale *= Vector2(1.0 + 0.05 * start, 1.0 - 0.04 * start)
+		elif stop > 0.0 and not running:
+			angle -= facing * 0.12 * stop
+			scale *= Vector2(1.0 + 0.05 * stop, 1.0 - 0.06 * stop)
 	var squash := float(look["squash"]) / 0.14
 	var stretch := float(look["stretch"]) / 0.16
 	if squash > 0.0:
-		scale *= Vector2(1.0 + 0.16 * squash, 1.0 - 0.16 * squash)
+		scale *= Vector2(1.0 + 0.14 * squash, 1.0 - 0.14 * squash)
 	elif stretch > 0.0:
 		scale *= Vector2(1.0 - 0.1 * stretch, 1.0 + 0.12 * stretch)
 	var shift := _drift_of(hero)
-	return {"frame": frame, "at": Vector2(float(hero["x"]) + shift.x, float(hero["y"]) + shift.y + 0.5 - lift), "flip": int(hero["face"]) < 0, "scale": scale, "angle": angle}
+	var pose := {"frame": frame, "next": "", "mix": 0.0, "at": Vector2(float(hero["x"]) + shift.x, float(hero["y"]) + shift.y + 0.5), "flip": flip, "scale": scale, "angle": angle}
+	if not loop.is_empty():
+		pose["frame"] = loop[0]
+		pose["next"] = loop[1]
+		pose["mix"] = loop[2]
+	return pose
 
-## Where the bottom middle of what a squirrel carries is drawn: on the paws of the frame it shows, wherever the squash, the stride and the facing put them. While the load is on its way up from the floor it travels there from where it stood; hidden under a crate, the crate is lowered to the spot the crouching frame names.
+## Where a frame of a squirrel has its paws, from its pivot, facing right.
+func _hold_of(slot: int, frame: String) -> Vector2:
+	return _holds[slot].get(frame, _holds[slot].get("carry_0", HOLD_DEFAULT))
+
+## Where the bottom middle of what a squirrel carries is drawn: on the paws of the frame it shows, wherever the squash, the stride, the lean and the facing put them, so the load rides every frame of the motion. A load being picked up leaves the place it stood and is in the paws within the first part of the pick-up, then comes up with them; hidden under a crate, the crate comes down with the paws of the crouch.
 func _held_spot(hero: Dictionary, pose: Dictionary) -> Vector2:
 	var slot := int(hero["slot"])
 	var look: Dictionary = _looks[slot]
-	var frame := str(pose["frame"])
-	var hold: Vector2 = _holds[slot].get(frame if _holds[slot].has(frame) else "carry", HOLD_DEFAULT)
+	var hold := _hold_of(slot, str(pose["frame"]))
+	if str(pose["next"]) != "":
+		hold = hold.lerp(_hold_of(slot, str(pose["next"])), float(pose["mix"]))
 	var spot: Vector2 = (pose["at"] as Vector2) + (Vector2(-hold.x if bool(pose["flip"]) else hold.x, hold.y) * (pose["scale"] as Vector2)).rotated(float(pose["angle"]))
-	var rising := float(look["lift_time"]) / LIFT_SPAN
-	if rising > 0.0:
-		var from: Vector2 = look["lift_from"]
-		# Slow off the floor while the squirrel still bends over it, then quickly up.
-		var along := (1.0 - rising) * (1.0 - rising)
-		spot = from.lerp(spot, along) - Vector2(0.0, sin(along * PI) * 2.0)
+	var left := float(look["lift_time"]) / LIFT_SPAN
+	if left > 0.0:
+		spot = (look["lift_from"] as Vector2).lerp(spot, smoothstep(0.0, GRIP, 1.0 - left))
 	return spot
 
 ## What a squirrel holds, drawn on its paws: a crate, a lump of scrap or the partner.
@@ -917,6 +1041,8 @@ func _draw_hero(hero: Dictionary) -> void:
 	if not hiding:
 		_draw_held(hero, spot)
 	_put(sheet, str(pose["frame"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), tint)
+	if str(pose["next"]) != "" and float(pose["mix"]) > 0.0:
+		_put(sheet, str(pose["next"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), Color(tint.r, tint.g, tint.b, tint.a * float(pose["mix"])))
 	if hiding:
 		_draw_held(hero, spot)
 	if world.stage_time < 4.0 and world.phase == World.P_PLAY:
