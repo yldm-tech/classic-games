@@ -22,6 +22,7 @@ var players := 1
 var _textures: Dictionary = {}
 var _layers: Dictionary = {}
 var _font: SystemFont
+var _font_locale := ""
 var _random: GameRng = Rng.new(20261)
 var _pending: Array[Dictionary] = []
 var _particles: Array[Dictionary] = []
@@ -49,10 +50,15 @@ func note(event: Dictionary) -> void:
 func advance(delta: float) -> void:
 	if _textures.is_empty():
 		_textures = Sprites.new().build()
+	if _font == null or _font_locale != locale:
 		_font = SystemFont.new()
 		_font.font_names = PackedStringArray(["Noto Sans SC", "PingFang SC", "Microsoft YaHei", "sans-serif"])
 		_font.allow_system_fallback = true
-		_font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		# At this size Chinese reads best as hard pixels and Latin letters need their grey edges.
+		_font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY if locale == "en" else TextServer.FONT_ANTIALIASING_NONE
+		_font.hinting = TextServer.HINTING_NORMAL
+		_font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+		_font_locale = locale
 	_clock += delta
 	for event in _pending:
 		_react(event)
@@ -166,7 +172,7 @@ func _react(event: Dictionary) -> void:
 # ---- drawing ----
 
 func _draw() -> void:
-	if world == null or _textures.is_empty():
+	if world == null or _textures.is_empty() or _font == null:
 		draw_rect(Rect2(Vector2.ZERO, VIEW), Color("1a1423"))
 		return
 	var camera := Vector2(roundf(world.camera.x), roundf(world.camera.y)) + _offset
@@ -254,7 +260,11 @@ func _draw_tiles(camera: Vector2) -> void:
 					name = "tile%d_belt%d" % [stage, 3 - belt_frame]
 				Levels.BELT_RIGHT:
 					name = "tile%d_belt%d" % [stage, belt_frame]
-			draw_texture(_textures[name], Vector2(column * 16, row * 16))
+			# Ground gets darker the deeper it lies under its surface.
+			var shade := Color.WHITE
+			if tile == Levels.SOLID and World.is_solid(world.tile_at(column, row - 2)) and row > 1:
+				shade = Color(0.8, 0.8, 0.84) if not World.is_solid(world.tile_at(column, row - 3)) or row < 3 else Color(0.62, 0.62, 0.7)
+			draw_texture(_textures[name], Vector2(column * 16, row * 16), shade)
 
 func _draw_fixtures() -> void:
 	var door: Variant = world.level.get("door")

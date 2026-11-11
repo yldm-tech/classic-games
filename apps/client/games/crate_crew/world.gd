@@ -176,7 +176,7 @@ func _place_hero(hero: Dictionary, x: float, y: float) -> void:
 	hero["y"] = y
 	hero["vx"] = 0.0
 	hero["vy"] = 0.0
-	hero["ground"] = false
+	hero["ground"] = true
 	hero["stun"] = 0.0
 	hero["lift_time"] = 0.0
 	hero["hide"] = false

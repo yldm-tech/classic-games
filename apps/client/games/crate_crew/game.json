@@ -51,6 +51,7 @@
 		}
 	],
 	"site": {
+		"screenshot": "site_screenshot.png",
 		"screenshot_alt": {"zh": "《搬箱小队》局内画面：小机器人举着木箱站在工作台上，面前是发条虫。", "en": "Crate Crew in play: a small robot holding a wooden crate on the workbench, facing a wind-up bug."},
 		"art_alt": {"zh": "《搬箱小队》主视觉：两个小维修机器人在巨大的工坊里合力举起一只木箱。", "en": "Crate Crew key art: two small repair robots lifting a wooden crate together in an enormous workshop."}
 	}
