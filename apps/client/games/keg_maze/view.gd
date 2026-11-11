@@ -448,7 +448,11 @@ func _draw_hazard_shadows() -> void:
 		if int(clock * 10.0) % 2 == 0:
 			draw_rect(Rect2((Vector2(hazard["cell"]) * TILE) + Vector2(1, 1), Vector2(TILE - 2, TILE - 2)), Color(1.0, 0.3, 0.25, 0.7), false, 1.0)
 	for at: int in game.impacts:
-		draw_rect(Rect2(Vector2(Levels.cell_of(at)) * TILE, Vector2(TILE, TILE)), Color(1.0, 0.9, 0.8, clampf(float(game.impacts[at]) / 0.3, 0.0, 1.0) * 0.6))
+		# The rock has landed: it sits squashed for a moment, in a flash of dust.
+		var left := clampf(float(game.impacts[at]) / 0.3, 0.0, 1.0)
+		var corner := Vector2(Levels.cell_of(at)) * TILE
+		draw_rect(Rect2(corner + Vector2(1, 9), Vector2(14, 6)), Color(0, 0, 0, 0.35 * left))
+		draw_texture_rect(tex["boulder"], Rect2(corner + Vector2(-1, 4.0 * (1.0 - left)), Vector2(18, 16.0 - 4.0 * (1.0 - left))), false, Color(1.0, 0.95, 0.9, 0.4 + 0.6 * left))
 
 func _draw_hazards() -> void:
 	for hazard: Dictionary in game.hazards:

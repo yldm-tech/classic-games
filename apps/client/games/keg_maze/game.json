@@ -10,7 +10,7 @@
 	"tagline": {"zh": "两只鼹鼠矿工，九层矿道，一路用火药桶炸到地心。", "en": "Two mole miners, nine levels of mine, and powder kegs all the way down."},
 	"players": {"min": 1, "max": 2, "join_in_progress": true},
 	"colors": {"title": "FFF3D6", "shadow": "8A3B12", "glow": "F2B233"},
-	"art": {"top": "17100E", "bottom": "4A2F25", "primary": "F2B233", "secondary": "58C7D9"},
+	"art": {"top": "17100E", "bottom": "4A2F25", "primary": "F2B233", "secondary": "58C7D9", "image": "key_art.jpg"},
 	"achievements": [
 		{"id": "first_descent", "icon": "bolt", "name": {"zh": "初次下井", "en": "First Descent"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
 		{"id": "mine_cleared", "icon": "cup", "name": {"zh": "打通矿井", "en": "All the Way Down"}, "desc": {"zh": "打通全部九层，击败熔心巨螯。", "en": "Clear all nine levels and defeat the Molten Claw."}, "when": {"cleared": true}},

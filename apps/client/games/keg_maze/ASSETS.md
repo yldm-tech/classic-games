@@ -4,5 +4,6 @@ Every file in this directory that is not code or the manifest, with where it cam
 
 | File | What it is | Source | Licence |
 |---|---|---|---|
+| `key_art.jpg` | 16:9 key art (1920x1080) shown by the launcher and the website: two mole miners rolling a powder keg in a timbered tunnel, a crystal-clawed cave creature behind them | Generated for this project with the image model `doubao-seedream-5.0-pro` from a prompt written for it; an original composition that depicts no character or artwork of any existing game | Distributed with the project under Apache-2.0. AI-generated images may not be protected by copyright in some jurisdictions; judge for yourself before reusing it |
 
 All in-game art is original pixel art written by hand as rows of palette letters in `sprites.gd` (the fire is painted by a routine in the same file) and turned into textures at run time; no sprite comes from an image file. All sound effects and the four music loops are written as note and effect tables in `sounds.gd` and synthesised by `games/shared/game_audio.gd`; the game ships no audio file.
