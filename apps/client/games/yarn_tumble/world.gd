@@ -124,6 +124,9 @@ func load_stage(number: int) -> void:
 		boss.y = -20.0
 		boss.to_x = 240.0
 	for hero in heroes:
+		# A knitter who was losing their last life as the floor was cleared arrives like one who was already out.
+		if hero.state == Hero.DYING and hero.lives <= 0:
+			hero.state = Hero.OUT
 		if hero.state == Hero.OUT:
 			hero.state = Hero.ALIVE
 			hero.lives = 1

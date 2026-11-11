@@ -37,7 +37,7 @@
 	},
 	"site": {
 		"screenshot": "site_screenshot.png",
-		"screenshot_alt": {"zh": "《毛线滚滚》第一层：两位戴毛线帽的小织工站在针织平台之间，一蓝一橙两颗毛线球正沿着地板滚向两侧。", "en": "Floor one of Yarn Tumble: two little knitters in bobble hats stand among knitted ledges while a blue and an orange ball of yarn roll away along the floor."},
+		"screenshot_alt": {"zh": "《毛线滚滚》第一层：蓝帽小织工踢出的蓝色毛线球正从针织平台上滚落，橙帽小织工身旁是一只被橙色毛线缠住一半的飞蛾怪。", "en": "Floor one of Yarn Tumble: a blue ball of yarn kicked by the knitter in the blue hat rolls off a knitted ledge, while the knitter in the orange hat stands beside a mothkin half wound in orange yarn."},
 		"art_alt": {"zh": "《毛线滚滚》主视觉：织塔里两位小织工举着毛线针，一颗蓝色毛线球滚向几只捣蛋鬼，月窗前飞着戴王冠的大飞蛾。", "en": "Key art of Yarn Tumble: two little knitters raise their needles inside the weaving tower as a blue ball of yarn tumbles towards a handful of pests, with a crowned giant moth in front of the moonlit window."}
 	},
 	"options": [

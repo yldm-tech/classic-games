@@ -45,7 +45,6 @@ const EVENT_SOUNDS := {"respawn": "hop", "join": "power", "boss_gone": "burst", 
 ## Short tunes played one note per entry: [steps to wait after the previous note, pitch factor of "note"].
 const JINGLE_CLEAR := [[0, 1.0], [6, 1.26], [6, 1.5], [6, 2.0], [9, 1.5], [6, 2.0]]
 const JINGLE_BOSS := [[0, 1.0], [5, 1.0], [5, 1.0], [8, 1.335], [10, 1.19], [8, 1.335], [8, 1.5], [10, 2.0]]
-const JINGLE_STAGE := [[0, 1.5], [7, 2.0]]
 
 static func define_all(audio: GameAudio) -> void:
 	for sound: String in EFFECTS:
