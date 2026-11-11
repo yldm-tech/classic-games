@@ -4,195 +4,160 @@
 
 [English](./README.md) | 简体中文
 
-AI 驱动的小游戏创作与社区平台。用户无需编程，通过自然语言对现有游戏做修改、扩展、再创作，并发布到社区供他人体验和 Fork。形态上是 GitHub + Roblox + NexusMods 的混合体。
+经典厅（Classic Games）是一个开源的主机风格游戏启动器，自带一组经典类型的原创游戏。用手柄或键盘游玩，另有面向键盘鼠标的 PC 模式。全部进度保存在本机，启动器不发任何网络请求。
 
-核心范式不是「从零创建游戏」，而是「Fork 游戏 → AI 改 → 发布」——AI 擅长增量修改，不擅长从零创造。核心赌注是 **Mod DSL**：AI 只生成和修改 DSL，**绝不生成可执行代码**，输出空间被 DSL 的 JSON Schema 死死框住。
+项目尚未发布：没有公开的二进制、软件包或商店版本，下面的一切都从源码开始。
 
-项目尚未发布：没有公开的二进制、软件包或应用商店版本，下面的一切都从源码开始。
+![启动器首页：《星环巡航》的标题与「开始游戏」「游戏菜单」「成就」三行，下方是最近游玩的游戏](./apps/web/src/assets/launcher/home-played.png)
 
-## 工作方式
+本文的截图都是启动器未经修饰的 1920×1080 画面，界面语言为中文；启动器另内置英文界面。
 
-1. **Fork。** 一个游戏是 Runtime 基线之上的一条补丁链。Fork 一个游戏会生成一个以该游戏的 mod 为父节点的草稿 mod，所以 Fork 存的是补丁，不是游戏的副本。
-2. **AI 改。** 客户端把当前生效 DSL 和用户的一句话发给后端。后端让模型产出 JSON Patch，应用补丁，按 schema 校验结果，校验失败就把错误回灌给模型重试（次数有上限）。模型的输出空间就是 schema，不存在从模型输出通向代码执行的路径。
-3. **发布。** 草稿提交为游戏，经过审核后公开，其他人可以继续 Fork。
+## 游戏
 
-同样的三步既可以在 Godot 客户端里完成，也可以用命令行 `classic-games` 完成，AI 助手则通过 `classic-games-mcp` 完成。
+目前有三款游戏，都是为本项目制作的原创游戏。
 
-## 仓库结构
+| 游戏 | 类型 | 玩法 |
+|---|---|---|
+| 星环巡航 / Orbit Patrol | 飞行射击 | 武器自动开火，你只管走位。在倒计时结束前击落全部敌机和首领。按住加速时移动更快、击落得分翻倍；护盾抵消一次伤害，之后需要冷却。 |
+| 长夜草原 / Meadow Vigil | 生存动作 | 武器自动攻击，你只管走位。拾取敌人掉落的经验球升级，撑到倒计时结束。 |
+| 隘口守卫 / Gatewatch | 塔防 | 敌人沿道路走向基地。用金币放置五种防御塔，击倒敌人拿回金币，挡下全部波次。 |
 
-```
-classic-games/
-├── apps/
-│   ├── client/      单一 Godot 4.6 工程，一套代码导出 5 端（iOS / Android / macOS / Windows / Web）
-│   ├── server/      Go 后端（gin + GORM），模块 github.com/yldm-tech/classic-games/apps/server：领域服务、HTTP API、AI 编排
-│   ├── cli/         命令行工具 classic-games（cobra），模块 github.com/yldm-tech/classic-games/apps/cli：目录、mod、AI 生成，离线校验 / 补丁 / 迁移
-│   ├── mcp/         MCP 服务 classic-games-mcp（官方 Go SDK），模块 github.com/yldm-tech/classic-games/apps/mcp：把同样的能力作为工具交给 AI 助手
-│   └── web/         官网：落地页 + 文档站（Astro + Starlight，pnpm）
-├── packages/
-│   ├── schemas/     Mod DSL 的 JSON Schema（AI 输出约束、后端校验、Runtime 加载共用）
-│   ├── dsl/         Go 模块 github.com/yldm-tech/classic-games/packages/dsl：RFC 6902 补丁、DSL 迁移、schema 校验，后端 / CLI / MCP 共用
-│   └── sdk/         Go 模块 github.com/yldm-tech/classic-games/packages/sdk：后端 HTTP API 的类型化客户端，CLI / MCP 共用
-├── docs/            技术文档（愿景 / 架构 / DSL / API / 测试 / 合规），中文
-├── scripts/         仓库门禁与辅助脚本（架构边界检查、Godot 测试 runner、双端集成）
-├── go.work          Go workspace，串起上面五个 Go 模块
-└── .github/         CI：Go 各模块、官网、Godot headless，跑在 GitHub 托管 runner
-```
+每款游戏都是单人游戏，各有自己的成就，共 11 个。
 
-依赖只有一个方向：`apps` 依赖 `packages`。五个 Go 模块由 [`go.work`](./go.work) 组成 workspace，同时彼此用 `require classic-games/<name> v0.0.0` 加相对路径 `replace` 引用，所以每个模块在 `GOWORK=off` 下也能独立构建。这些模块路径只在本仓库内有效，没有发布到模块代理。
+| 主视觉（插画） | 局内画面 |
+|---|---|
+| ![《星环巡航》主视觉：一架战机飞向星云中的巨型机甲](./apps/web/src/assets/key-art/shooter.jpg) | ![《星环巡航》局内：蓝色三角形向橙色方块发射黄色子弹](./apps/web/src/assets/launcher/game-shooter.png) |
+| ![《长夜草原》主视觉：月夜草原上举着发光法杖的披斗篷的人](./apps/web/src/assets/key-art/survivor.jpg) | ![《长夜草原》局内：绿色场地上的蓝色多边形和几个黄色圆点](./apps/web/src/assets/launcher/game-survivor.png) |
+| ![《隘口守卫》主视觉：黄昏时一座放电的塔守着道路](./apps/web/src/assets/key-art/tower-defense.jpg) | ![《隘口守卫》局内：灰色道路、粉色六边形敌人、蓝色的塔和射程圆圈](./apps/web/src/assets/launcher/game-tower-defense.png) |
 
-单仓（monorepo）的理由见 [decisions ADR-012](./docs/decisions.md)，`apps/` + `packages/` 布局、共享模块与许可证的决策见 [ADR-015](./docs/decisions.md)。
+局内目前用的是纯几何图形，还没有贴图美术。主视觉是插画，不代表游戏的实际画面。三张主视觉由本项目用图像生成模型生成，是原创构图，来源记录在 [docs/legal/licenses.md](./docs/legal/licenses.md)。
 
-### apps/client/
+## 启动器
 
-单一 Godot 工程，以应用装配根、纵向 feature 和 Runtime 边界组织（详见 [16-client-architecture](./docs/16-client-architecture.md)）：
+启动器是固定 1920×1080 的画布，随窗口整体缩放。代码在 [`apps/client/launcher`](./apps/client/launcher)，说明见[客户端架构第 8 节](./docs/16-client-architecture.md)。
 
-- `app/`、`core/`、`features/` — composition root、公共 transport 与七个按用户旅程组织的业务切片
-- `ui/`、`shell/` — 无业务公共 UI，以及保留的设计 token、路由、全局会话/创作会话工具；不含应用根、业务 screen 或全局 API
-- `runtime/` — 游戏运行时；`game_session.gd` 是 Shell↔Runtime 的**唯一**通信边界
-- `platform/` — 各端原生能力插件（GDExtension）
-- `i18n/`、`assets/` — 多语言与本地兜底资源
+- **首页**：当前选中的游戏和它的主视觉，以及最近游玩的游戏。
+- **游戏库**：按全部、最近游玩、收藏和类型分类，可以排序，可以按拼音首字母或英文名搜索。
+- **成就**：只列出游戏目录里定义的成就和真实的解锁时间，没有稀有度，也没有排行榜。
+- **设置**：语言（中文 / English）、窗口模式、垂直同步、帧率上限、音量、键盘改键，以及存档的导出、导入和清除。
+- **游戏菜单、局内界面、暂停与结算**：每款游戏有自己的菜单，列出玩法、操作、游玩记录和成就。一局进行时由启动器绘制 HUD，窗口失去焦点时自动暂停，每一局恰好记录一次。
+- **PC 模式**：同一份数据的另一种布局，有侧栏、搜索框、网格或列表、类型筛选。按 F11 或长按手柄的 View 键在两种模式之间切换；一局进行期间不能切换。
 
-**纪律**：Shell 与 Runtime 只经 `runtime/game_session.gd` 通信，谁都不许伸手进对方内部（[ADR-003](./docs/decisions.md)）。守住这条边界，「将来某端换原生壳、游戏侧原样拆出」的逃生口才有效。
+界面上关于玩家的一切（游玩时长、最高分、收藏、成就）都读自同一个本地存档文件，没有记录时显示空状态。
 
-运行时关键件：
+| 游戏库 | 游戏菜单 |
+|---|---|
+| ![游戏库界面：分类标签和三张游戏封面](./apps/web/src/assets/launcher/library-played.png) | ![《隘口守卫》的游戏菜单，背景是主视觉](./apps/web/src/assets/launcher/game-menu.png) |
 
-- `runtime/runtime_loader.gd` — 读 DSL → 校验 runtime 版本（同 major 兼容）→ 把枚举/数值套到游戏对象
-- `runtime/json_patch.gd` — 最小 RFC 6902 实现，服务 Fork 补丁链
+| PC 模式：游戏页 | PC 模式：游戏库 |
+|---|---|
+| ![PC 模式下《星环巡航》的游戏页与游玩记录](./apps/web/src/assets/launcher/pc-detail.png) | ![PC 模式的游戏库：侧栏和封面网格](./apps/web/src/assets/launcher/pc-library.png) |
 
-### apps/server/
+## 操作
 
-Go 后端，栈选型 [ADR-011](./docs/decisions.md)。框架无关的核心层（不绑 gin，可单测）：
+启动器界面的默认按键，定义在 [`apps/client/project.godot`](./apps/client/project.godot)。手柄按键图标是 A / B / X / Y 布局。
 
-- `internal/ai/service.go` — `Service.GenerateMod`：调 provider → apply 6902 补丁 → 校验生效 DSL → 失败把错误回灌重试（有限次）→ 记录 `ai_calls`。provider 只保证补丁**格式**合法，**语义**合法由 apply + 校验保证，两者不捆绑。
-- `internal/ai/provider.go` — `LLMProvider` / `Validator` / `Recorder` 接口。目前的实现只有 `ClaudeProvider` 和无 API key 时使用的确定性 `StubProvider`；接口为以后接入 GPT / Gemini / 本地模型预留，这些 provider 尚未实现（见 [ADR-008](./docs/decisions.md)）
+| 操作 | 键盘 | 手柄 |
+|---|---|---|
+| 移动焦点 | 方向键 | 十字键或左摇杆 |
+| 确认 | Enter、Space | A |
+| 返回 | Esc、Backspace | B |
+| 当前界面的附加操作（如搜索、收藏） | X、Y | X、Y |
+| 切换页内标签 | Q、E | LB、RB |
+| 切换顶层标签 | Page Up、Page Down | LT、RT |
+| 选项或游戏菜单 | M | Menu |
+| 切换主机模式与 PC 模式 | F11 | 长按 View |
 
-`internal/app` 通过七个领域 installer 统一装配 HTTP API、GORM 仓储、AI provider、迁移、配额和 Swagger；跨领域连接只暴露具名窄端口，`cmd/server` 只管理进程生命周期。契约见 [09-api-design](./docs/09-api-design.md)，模块说明见 [apps/server/README](./apps/server/README.md)。
+键盘按键可以在「设置 → 控制」里修改，手柄按键是固定的。局内的操作每款游戏不同，列在各自的游戏菜单和暂停界面里。PC 模式另外支持鼠标：单击选中，双击开始，右键打开这款游戏的菜单。
 
-**AI 调用放后端，客户端不直连模型**（[ADR-007](./docs/decisions.md)）：统一管控 API key、限流、配额、审计、成本核算。
+## 运行
 
-### packages/dsl/
-
-补丁、迁移与 schema 校验不在 `apps/server` 内，而在共享 Go 模块 `packages/dsl`（`github.com/yldm-tech/classic-games/packages/dsl`），后端、CLI、MCP 共用同一份实现（说明见 [packages/dsl/README](./packages/dsl/README.md)）：
-
-- `patch.go` — RFC 6902 实现，与客户端 `json_patch.gd` **刻意同语义**
-- `migrate.go` — 历史 DSL 大版本升级（shooter 0.x → 1.0.0）
-- `schema_validator.go` — 权威校验器，按 runtime 版本加载对应 JSON Schema 文件做完整校验（draft 2020-12，编译结果按 ref 缓存）
-
-### packages/sdk/
-
-`github.com/yldm-tech/classic-games/packages/sdk` 是后端 HTTP API 的类型化 Go 客户端，只依赖标准库。CLI 和 MCP 服务都经它访问后端，不 import `github.com/yldm-tech/classic-games/apps/server`。方法列表见 [packages/sdk/README](./packages/sdk/README.md)。
-
-### apps/cli/ 与 apps/mcp/
-
-- `classic-games`：联网命令（`auth` / `server` / `games` / `mods` / `ai`）走 `github.com/yldm-tech/classic-games/packages/sdk`，离线命令（`dsl validate` / `dsl patch` / `dsl migrate`）走 `github.com/yldm-tech/classic-games/packages/dsl`，与后端对同一份 DSL 得出同一个结论。命令说明见 [apps/cli/README](./apps/cli/README.md)。
-- `classic-games-mcp`：14 个工具（离线的 schema / 校验 / 补丁，后端的游戏与 mod 读写），stdio 与 streamable HTTP 两种传输，`--read-only` 时不注册写工具。保存补丁前先在本地应用并校验，不合 schema 的内容不会落库。工具列表、客户端配置与安全说明见 [apps/mcp/README](./apps/mcp/README.md)。
-
-### apps/web/
-
-官网与文档站。`docs/` 下的 Markdown 在构建时同步进站点，不在 `apps/web` 里另存副本；落地页上的补丁示例在构建期用仓库里的 baseline 与 golden 重放，结果不一致则构建失败。说明见 [apps/web/README](./apps/web/README.md)。
-
-## Mod DSL 契约
-
-DSL 是 AI 输出约束、后端校验、Runtime 加载三方共用的同一份契约。schema 在 [`packages/schemas`](./packages/schemas)，Shooter 第一版权威 schema：[`shooter-1.0.0.schema.json`](./packages/schemas/shooter-1.0.0.schema.json)。目前有三个 Runtime：`shooter`、`survivor`、`tower_defense`。
-
-两个关键结构决策（[ADR-013](./docs/decisions.md)）：
-
-- 补丁语义定为 **RFC 6902（JSON Patch）**，不用 Merge Patch——后者对数组只能整体替换，表达不了「删某个敌人」，会让 Fork 补丁链失效。
-- `enemies` / `drops` 设计成**以稳定 id 为 key 的 map**（非匿名数组），让 6902 路径 `/enemies/<id>/...` 在深 Fork 链里稳定不错位，AI 也能按 id 精确引用。
-
-客户端（GDScript，[`apps/client/runtime/json_patch.gd`](./apps/client/runtime/json_patch.gd)）与 Go 侧（[`packages/dsl`](./packages/dsl)）各有一份 6902 实现，**同一条补丁链两端 apply 必须得到相同生效 DSL**，否则「客户端预览」与「服务端入库/校验」会分叉。这条一致性由两端测试共用同一份 baseline + golden 输出（[`fork_expected.dsl.json`](./apps/client/runtime/shooter/testdata/fork_expected.dsl.json)）钉死。支持的操作是 `add`、`replace`、`remove`、`test`；`move` 与 `copy` 在所有实现里都被拒绝。
-
-## 快速开始
-
-需要 Go 1.26（较旧的 Go 会按需下载工具链）、GNU Make，客户端需要精确的 Godot 4.6.3（版本锁在 [`apps/client/.godot-version`](./apps/client/.godot-version)）。官网另需 Node.js 22.23.4 以上与 pnpm 12。
+需要精确的 Godot 4.6.3（标准版，不要用 .NET 版；版本锁在 [`apps/client/.godot-version`](./apps/client/.godot-version)）和 GNU Make。只运行启动器和游戏不需要 Go，也不需要 Node.js。
 
 ```bash
 git clone https://github.com/yldm-tech/classic-games.git
 cd classic-games
-make help                             # 列出全部目标
+make import GODOT=/path/to/godot      # 首次导入资源
+/path/to/godot --path apps/client     # 启动启动器
 ```
 
-后端：
+也可以用 Godot 4.6.3 编辑器打开 `apps/client` 后运行工程。`make help` 列出全部目标。
+
+## 仓库结构
+
+| 路径 | 内容 |
+|---|---|
+| [`apps/client`](./apps/client) | Godot 4.6 工程：`launcher/` 是启动器，`runtime/` 是游戏运行时。见[客户端架构](./docs/16-client-architecture.md)。 |
+| [`apps/server`](./apps/server) | 可选在线服务的 Go 后端（gin + GORM），模块 `github.com/yldm-tech/classic-games/apps/server`。见其 [README](./apps/server/README.md)。 |
+| [`apps/cli`](./apps/cli) | 命令行工具 `classic-games`（cobra），模块 `github.com/yldm-tech/classic-games/apps/cli`：离线校验 DSL、应用补丁、做迁移，也可以访问后端。见其 [README](./apps/cli/README.md)。 |
+| [`apps/mcp`](./apps/mcp) | MCP 服务 `classic-games-mcp`（官方 Go SDK），模块 `github.com/yldm-tech/classic-games/apps/mcp`：把同样的能力作为工具交给 AI 助手。见其 [README](./apps/mcp/README.md)。 |
+| [`apps/web`](./apps/web) | 官网：落地页与文档站（Astro + Starlight，pnpm）。见其 [README](./apps/web/README.md)。 |
+| [`packages/schemas`](./packages/schemas) | Mod DSL 的 JSON Schema，每个运行时每个版本一个文件。 |
+| [`packages/dsl`](./packages/dsl) | Go 模块 `github.com/yldm-tech/classic-games/packages/dsl`：RFC 6902 补丁、DSL 迁移、schema 校验，后端、CLI、MCP 共用。见其 [README](./packages/dsl/README.md)。 |
+| [`packages/sdk`](./packages/sdk) | Go 模块 `github.com/yldm-tech/classic-games/packages/sdk`：后端 HTTP API 的类型化客户端，CLI、MCP 共用。见其 [README](./packages/sdk/README.md)。 |
+| [`docs`](./docs) | 技术文档，中文。从 [docs/README.md](./docs/README.md) 进。 |
+| [`scripts`](./scripts) | 仓库门禁与辅助脚本。 |
+
+依赖只有一个方向：`apps` 依赖 `packages`。五个 Go 模块由 [`go.work`](./go.work) 组成 workspace，同时彼此用相对路径 `replace` 引用，所以每个模块在 `GOWORK=off` 下也能独立构建。这些模块路径只在本仓库内有效，没有发布到模块代理。这种布局的理由见 [ADR-015](./docs/decisions.md)。
+
+## 游戏即数据：Mod DSL
+
+每款游戏都是 [`apps/client/runtime`](./apps/client/runtime) 下的一个运行时，运行时玩什么由一份 JSON 文档描述，这就是 **Mod DSL**：敌人、波次、防御塔、关卡参数等。启动器运行的是每个运行时自带的基线文档（`baseline.dsl.json`）。schema 在 [`packages/schemas`](./packages/schemas)，目前有三个运行时：`shooter`、`survivor`、`tower_defense`。设计见 [docs/05-dsl-design.md](./docs/05-dsl-design.md)。
+
+对文档的修改是 RFC 6902（JSON Patch）补丁，会增删元素的集合是以稳定 id 为 key 的 map，不是数组（[ADR-013](./docs/decisions.md)）。启动器自己也用到这一点：《星环巡航》的难度这类开局选项，就是基线上的一条 `replace` 操作。补丁语义有两份实现，GDScript 的 [`apps/client/runtime/json_patch.gd`](./apps/client/runtime/json_patch.gd) 和 Go 的 [`packages/dsl`](./packages/dsl)，两边的测试共用同一份基线和同一份 golden 输出（[`apps/client/runtime/shooter/testdata/fork_expected.dsl.json`](./apps/client/runtime/shooter/testdata/fork_expected.dsl.json)）。支持的操作是 `add`、`replace`、`remove`、`test`；`move` 与 `copy` 在两端都被拒绝。
+
+## 可选的在线服务
+
+Go 后端、CLI、MCP 服务和 SDK 实现了 Mod DSL（schema 校验、RFC 6902 补丁、迁移、与 GDScript 实现共用 golden 文件的一致性测试）和一套在线服务的 API：账号、游戏目录、Mod、社区与商业化。它们可以运行，有测试覆盖，但属于可选组件：启动器没有接入其中任何一个，不运行它们也能玩全部游戏。
+
+它们需要 Go 1.26（较旧的 Go 会按需下载工具链）。
 
 ```bash
-make dev                              # 监听 :8080，改端口用 PORT=9090 make dev
+make dev                              # 后端监听 :8080，改端口用 PORT=9090 make dev
 curl http://localhost:8080/healthz    # {"ok":true}
 ```
 
-不设任何环境变量时，后端以开发模式运行，数据库是一个 SQLite 文件，模型由确定性的 stub 代替，所以不需要 API key 就能走通「一句话 → 补丁 → 校验」整条链路。设置 `ANTHROPIC_API_KEY` 后调用真实模型。全部环境变量见 [`.env.example`](./.env.example)，接口文档在 `http://localhost:8080/swagger/index.html`。
-
-客户端：
-
-```bash
-make import GODOT=/path/to/godot      # 首次导入资源
-CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
-```
-
-CLI：
+不设任何环境变量时，后端以开发模式运行，数据库是一个 SQLite 文件，模型由确定性的 stub 代替，所以不需要任何密钥就能启动。全部环境变量见 [`.env.example`](./.env.example)。接口文档在 `http://localhost:8080/swagger/index.html`，设计见 [docs/09-api-design.md](./docs/09-api-design.md)。
 
 ```bash
 make cli-build                        # 产物在 apps/cli/bin/classic-games
 export PATH="$PWD/apps/cli/bin:$PATH"
-
 classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json   # 离线
-classic-games server health
-classic-games auth login                  # 游客会话
-classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
-classic-games mods list
-```
+classic-games server health           # 需要后端在运行
 
-MCP 服务：
-
-```bash
 make mcp-build                        # 产物在 apps/mcp/bin/classic-games-mcp
-export CLASSIC_GAMES_TOKEN="$(classic-games auth token)"    # 可选；不设则匿名运行
-claude mcp add classic-games --env CLASSIC_GAMES_SERVER_URL=http://localhost:8080 --env CLASSIC_GAMES_TOKEN="$CLASSIC_GAMES_TOKEN" -- "$PWD/apps/mcp/bin/classic-games-mcp"
 ```
 
-官网：
+命令说明、MCP 客户端配置与安全说明见 [`apps/cli/README.md`](./apps/cli/README.md) 和 [`apps/mcp/README.md`](./apps/mcp/README.md)，Go 客户端见 [`packages/sdk/README.md`](./packages/sdk/README.md)。
 
-```bash
-pnpm install
-pnpm web:dev                          # http://localhost:4321
-```
+## 计划
+
+计划加入更多经典类型的原创游戏：基地防御坦克、横版平台跳跃、合作平台跳跃、迷宫炸弹、合作清版街机、跑动射击。每一款都会使用原创的名称、角色、美术和关卡，不复刻任何现有商业游戏。没有日期。
 
 ## 本地开发与验证
 
 所有门禁都是仓库根目录的 `make` 目标。
 
 ```bash
-make ci GODOT=/path/to/godot          # Go 与 Godot 的全部门禁（需精确安装 Godot 4.6.3）
+make ci GODOT=/path/to/godot          # Go 与 Godot 的全部门禁
 make ci-web                           # 官网：安装、类型检查、构建与断链检查
 make ci-all GODOT=/path/to/godot      # 两者都跑
-GODOT=/path/to/godot scripts/spike-integration.sh    # 真实客户端对真实后端，占用 8099 端口
 ```
 
-`make ci` 覆盖五个 Go 模块的 `gofmt`、`go mod tidy`、`go vet`、`go test`（workspace 与 `GOWORK=off` 各一遍）、CLI 与 MCP 的编译、架构检查（[`scripts/check-architecture.sh`](./scripts/check-architecture.sh)、[`scripts/check-client-boundaries.sh`](./scripts/check-client-boundaries.sh)）和 Godot headless 测试。只改某一块时可以跑更窄的目标，例如 `make test`（后端）、`make dsl-test`、`make sdk-test`、`make cli-test`、`make mcp-test`、`make spike`；按领域的完整列表见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+`make ci` 覆盖五个 Go 模块的 `gofmt`、`go mod tidy`、`go vet`、`go test`（workspace 与 `GOWORK=off` 各一遍）、CLI 与 MCP 的编译、架构检查（[`scripts/check-architecture.sh`](./scripts/check-architecture.sh)、[`scripts/check-client-boundaries.sh`](./scripts/check-client-boundaries.sh)）和 Godot 无头测试。`make ci-web` 需要 Node.js 22.23.4 以上与 pnpm 12。各部分另有更窄的目标，例如 `make launcher-test`、`make game-flow-test`、`make dsl-test`、`make test`（后端），按领域的列表见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
-## CI
-
-[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)，push / PR 到 main 触发，跑在 GitHub 托管 runner（`ubuntu-latest`）上，来自 fork 的 PR 同样执行：
-
-- `server (go)` — 后端 `go vet` + `go test ./...`
-- `go modules (dsl, sdk, cli, mcp)` — 格式与 tidy 检查，全部模块的 vet / test（workspace 与 `GOWORK=off`），CLI 与 MCP 编译
-- `web (astro)` — `pnpm install --frozen-lockfile`、类型检查、构建与断链检查
-- `client spike (godot headless)` — 精确版本检查、边界检查、HTTP/feature/app/spike/UI/launch 门禁
-
-托管 runner 每个 job 用一台全新的虚拟机，跑完即弃，所以可以安全地构建来自 fork 的 PR；不要把这些 job 挪到常驻的 self-hosted runner 上。
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) 在 push 和 PR 到 `main` 时运行同样的目标。
 
 ## 文档
 
-从 [`docs/README.md`](./docs/README.md) 进，有完整索引和阅读顺序。关键决策汇总见 [decisions（ADR Log）](./docs/decisions.md)；概念不清查 [术语表](./docs/glossary.md)。官网（`apps/web`）发布同一套文档，另有 CLI、MCP 服务与 Go SDK 的开发者指南。
-
-## 当前状态
-
-模块化架构重构已完成：客户端由单一 `AppRoot` 装配 identity、catalog、creation、community、engagement、commerce、operations 七个纵向切片；服务端由对应七个 installer 组成模块化单体。旧的全局壳与全局 API 入口已删除，架构边界由 `scripts/check-architecture.sh`、客户端 boundary checker、Go/Godot 测试和真实双端集成共同守护。
-
-仓库已整理为 `apps/` + `packages/` 的 monorepo：补丁、迁移与 schema 校验抽成共享模块 `github.com/yldm-tech/classic-games/packages/dsl`，后端 API 客户端抽成 `github.com/yldm-tech/classic-games/packages/sdk`，在其上新增了 CLI、MCP 服务和官网。
+- [docs/README.md](./docs/README.md) 是技术文档的索引。
+- [docs/01-vision.md](./docs/01-vision.md) 说明产品定位，[docs/16-client-architecture.md](./docs/16-client-architecture.md) 说明启动器和运行时边界。
+- [docs/decisions.md](./docs/decisions.md) 是决策记录（ADR），[docs/glossary.md](./docs/glossary.md) 是术语表。
+- 官网（`apps/web`）发布同一套文档，另有 CLI、MCP 服务与 Go SDK 的开发者指南。
 
 ## 参与贡献
 
-欢迎贡献。工具、提交前要过的检查和评审时坚持的架构规则见 [CONTRIBUTING.md](./CONTRIBUTING.md)（英文，含中文指引）。参与者须遵守 [行为准则](./CODE_OF_CONDUCT.md)。变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
+欢迎贡献。工具、提交前要过的检查、评审时坚持的架构规则，以及「游戏内容必须原创」的规则，见 [CONTRIBUTING.md](./CONTRIBUTING.md)（英文，含中文指引）。参与者须遵守[行为准则](./CODE_OF_CONDUCT.md)。变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ## 安全
 

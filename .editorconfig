@@ -35,15 +35,7 @@ indent_size = unset
 [*.{md,mdx}]
 trim_trailing_whitespace = false
 
-# Licence texts and upstream sources are kept byte-identical to their origin.
+# Licence texts are kept byte-identical to their origin.
 [{LICENSE,NOTICE,CODE_OF_CONDUCT.md}]
 trim_trailing_whitespace = false
 insert_final_newline = unset
-
-[apps/client/vendor/**]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset

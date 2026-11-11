@@ -8,7 +8,7 @@
 
 ## Test evidence
 
-<!-- The commands you ran and their results, for example `make test`, `make dsl-test`, `make ui-test GODOT=...`, `make web-build`. -->
+<!-- The commands you ran and their results, for example `make test`, `make dsl-test`, `make launcher-test GODOT=...`, `make web-build`. -->
 
 ## Screenshots
 
@@ -24,7 +24,7 @@
 - [ ] New behaviour is covered by tests, and no test was skipped, deleted or commented out.
 - [ ] Schema or contract change? If a file in `packages/schemas`, the patch semantics, the DSL migration or the HTTP API changed, the client runtime, the server, the baseline DSL, the tests and the docs are updated in this pull request. Otherwise: not applicable.
 - [ ] Both RFC 6902 implementations updated? If patch or migration behaviour changed, `packages/dsl` and `apps/client/runtime/json_patch.gd` (and `dsl_migrations.gd`) are changed together and the shared golden fixtures still pass on both sides. Otherwise: not applicable.
-- [ ] The Shell and Runtime boundary is intact: all communication goes through `apps/client/runtime/game_session.gd`.
+- [ ] The launcher and runtime boundary is intact: all communication goes through `apps/client/runtime/game_session.gd`.
 - [ ] No model output is executed or stored without schema validation.
 - [ ] New third-party code or assets are licence-compatible with Apache-2.0 and recorded in `docs/legal/licenses.md`.
 - [ ] Docs are updated where behaviour, configuration or the API changed.

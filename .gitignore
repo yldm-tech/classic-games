@@ -23,12 +23,6 @@ go.work.sum
 *.test
 *.out
 vendor/
-# Godot QR runtime is an intentionally vendored MIT dependency required by
-# preload paths in the client and must be present in clean CI checkouts.
-!apps/client/vendor/
-apps/client/vendor/*
-!apps/client/vendor/qrcode/
-!apps/client/vendor/qrcode/**
 *.log
 .env
 .env.*

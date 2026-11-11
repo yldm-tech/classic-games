@@ -3,23 +3,22 @@
 更新时间：2026-11-10
 状态：模块化架构已完成并由自动门禁守护
 
+> 说明：本文第 2 节描述的在线服务（账号、目录、创作与 Mod、社区、互动、商业化、运营等 API）已实现并有测试，属于可选组件；当前的主机风格启动器完全在本地运行，没有接入它。产品定位见 [01-vision](./01-vision.md)，决策见 [ADR-016](./decisions.md)。
+
 ## 1. 全局视图
 
 ```text
 Godot 4.6.3 client
-  app composition root
-    ├── feature slices: screen → coordinator → store → typed API
-    ├── shared core/ui/platform
-    └── GameSession ── runtime
-                    HTTPS
-                      │
-Go 1.26 modular monolith
+  launcher（主机风格启动器，完全本地）
+    └── LauncherGameHost → GameSession ── runtime
+
+Go 1.26 modular monolith（可选的在线服务，启动器不访问）
   cmd/server → internal/app → domain modules/adapters
                       │
                 GORM + SQLite(dev)/PostgreSQL(prod)
 ```
 
-Classic Games 保留一个 Godot 客户端和一个 Go 模块化单体。当前不拆微服务：跨域事务、部署规模和团队规模都不支持由网络边界带来的额外复杂度。业务边界通过目录、接口、装配和自动检查落实。
+Classic Games 保留一个 Godot 客户端和一个 Go 模块化单体，两者之间没有网络调用。当前不拆微服务：跨域事务、部署规模和团队规模都不支持由网络边界带来的额外复杂度。业务边界通过目录、接口、装配和自动检查落实。
 
 ### 1.1 仓库布局
 
@@ -46,7 +45,7 @@ apps/cli ──→ packages/sdk ──HTTP──→ apps/server
          └─→ packages/dsl
 apps/mcp ──→ packages/sdk ──HTTP──→ apps/server
          └─→ packages/dsl
-apps/client ──HTTP──→ apps/server        （GDScript 侧另有一份同语义的补丁实现）
+apps/client                              （不访问 apps/server；GDScript 侧另有一份与 packages/dsl 同语义的补丁实现）
 apps/web ──构建期读取──→ docs/、packages/schemas、apps/client/runtime 的 baseline
 ```
 
@@ -95,48 +94,41 @@ Gin/GORM/第三方 SDK 只属于 adapter 或 app 装配层。跨模块调用经�
 
 ## 3. 客户端
 
-客户端采用单向 feature slice：
+客户端是主机风格的启动器，主场景是 `apps/client/launcher/launcher.tscn`：固定 1920×1080 画布，键盘、手柄、鼠标都能操作，另有 PC 模式。
 
 ```text
-Screen intent → Coordinator → Feature API / GameSession / Platform port
-                                ↓
-                           ApiResult
-                                ↓
-Store state ─────────────────→ Screen render
+输入事件 → LauncherRoot（翻译成动作名）→ 当前屏幕 handle_action
+LauncherStore（user://launcher.json）──→ 屏幕渲染
+LauncherGameHost → GameSession → runtime
 ```
 
-- `apps/client/app/app_root.gd` 是应用装配根。
-- `ScreenRegistry` 负责 screen 创建与查找，`ChromeController` 负责顶栏、底栏和 toast 等全局 chrome。
-- `apps/client/core/http/http_client.gd` 只处理 transport、认证 header、JSON 与错误信封。
-- URL 只能属于对应 feature 的 typed API gateway。
-- screen 不直接使用 `HTTPRequest`/`HttpClient`，store 不发网络请求，coordinator 不操作具体 UI 节点。
-- feature 之间不 import 对方 screen；跨 feature 跳转通过 app router/registry 和稳定 payload。
+- `apps/client/launcher/launcher_root.gd` 是启动器的外壳与组合根，负责屏幕注册与切换、顶部导航、toast 和输入分发。
+- 启动器完全本地：不登录、不发网络请求，全部进度保存在唯一的本地存档 `user://launcher.json`（`launcher_store.gd`）。
+- 游戏目录是数据驱动的（`launcher_catalog.gd`），随附三款游戏，分别运行 `shooter`、`survivor`、`tower_defense` 三个运行时的基线 DSL。
+- 游戏只经 `launcher_game_host.gd` 启动，它是启动器里唯一使用运行时的地方。
 
-七个业务域均位于 `apps/client/features/<domain>`，遵循相同的 API/store/coordinator/screen 所有权。应用只有 `AppRoot` 一个组合根；账号切换会推进 session epoch、取消旧 transport、清空所有 account-scoped store/screen，并在当前回调栈退出后重建依赖图，防止跨账号迟到响应和节点生命周期竞态。
+屏幕、设置、游戏流程与 PC 模式的细节见 [16-client-architecture](./16-client-architecture.md)。
 
-## 4. Shell 与 Runtime
+## 4. 启动器与 Runtime
 
-Shell 与 Runtime 继续被视为两个进程，只经 `apps/client/runtime/game_session.gd` 交换数据：
+启动器与 Runtime 只经 `apps/client/runtime/game_session.gd` 交换数据：
 
 ```gdscript
-GameSession.start_game({"runtime": "shooter@1.0.0", "mod": effective_dsl})
+session.start_run(GameSession.baseline_payload("shooter@1.0.0"))
 signal game_ended(result)
 signal game_error(error)
 ```
 
-Runtime 不读 Shell 状态或 UI 节点；Shell 不访问游戏 scene 内部。DSL 和结果是唯一业务载荷。该边界是未来替换某端 Shell 而保留游戏运行时的逃生口。
+Runtime 不读启动器的状态或 UI 节点；启动器不访问游戏 scene 内部。DSL 和结果是唯一业务载荷。这条边界让宿主界面可以整体替换而不改动游戏运行时。
 
 ## 5. 公共能力
 
-公共代码只有在至少两个业务域使用且不携带业务语义时才进入共享层：
+启动器内部的公共代码不携带单个屏幕的语义：
 
-- `core/http`：transport 和统一 `ApiResult`。
-- `ui/theme`：设计 token 与 Theme。
-- `ui/components`：无业务 Button、Card、Input、VirtualList。
-- `ui/patterns`：AsyncContent、EmptyState、PagedList、ConfirmSheet。
-- `platform`：支付、分享、推送、文件选择等平台端口。
-
-游戏、订单、用户、创作等语义组件保留在 feature 内，避免形成新的“公共杂物间”。
+- `launcher_tokens.gd`：设计 token（颜色、字号、间距、动效时长）。
+- `launcher_widgets.gd`、`launcher_controls.gd`：文本、容器等小工厂与可交互控件。
+- `launcher_input.gd`：输入动作名、事件到动作的翻译、按键覆盖。
+- `apps/client/i18n`：文案表，是启动器在 `launcher/` 与 `runtime/game_session.gd` 之外唯一依赖的目录。
 
 ## 6. 架构门禁
 
@@ -144,9 +136,8 @@ Runtime 不读 Shell 状态或 UI 节点；Shell 不访问游戏 scene 内部。
 
 ```bash
 make ci GODOT=/Applications/Godot.app/Contents/MacOS/Godot
-GODOT=/Applications/Godot.app/Contents/MacOS/Godot scripts/spike-integration.sh
 make ci-web
 git diff --check
 ```
 
-`make ci` 覆盖五个 Go 模块的 gofmt、`go mod tidy`、vet/test（workspace 与 `GOWORK=off` 各一遍）、CLI 与 MCP 的编译、七模块装配与完整路由归属、Godot 版本锁定、测试 runner fail-closed、客户端依赖边界、全部 feature/app 契约、runtime spike、UI 和启动；`scripts/spike-integration.sh` 是真实 server-client 集成；`make ci-web` 是官网的类型检查、构建与断链检查。`scripts/check-architecture.sh` 额外拒绝旧客户端入口、页面/状态/协调器中的 endpoint、越界 transport、跨 feature screen import、分散 migration、业务进程生命周期和陈旧架构状态文档，并守住仓库级模块边界：CLI/MCP 不得依赖后端模块，`packages/*` 不得依赖应用模块，后端不得保留私有的 DSL 实现，内部文档目录不得入库。
+`make ci` 覆盖五个 Go 模块的 gofmt、`go mod tidy`、vet/test（workspace 与 `GOWORK=off` 各一遍）、CLI 与 MCP 的编译、七模块装配与完整路由归属、Godot 版本锁定、测试 runner fail-closed、客户端依赖边界、runtime spike，以及启动器的无头测试（存档与首页、设置、游戏库与成就、主场景启动、PC 模式、游戏流程）；`make ci-web` 是官网的类型检查、构建与断链检查。`scripts/check-architecture.sh` 额外拒绝分散 migration、业务进程生命周期和陈旧架构状态文档，并守住仓库级模块边界：CLI/MCP 不得依赖后端模块，`packages/*` 不得依赖应用模块，后端不得保留私有的 DSL 实现，内部文档目录不得入库。

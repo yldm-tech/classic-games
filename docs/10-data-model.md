@@ -2,6 +2,8 @@
 
 本文按生产目标 PostgreSQL 描述核心表的字段级设计;[04-architecture](./04-architecture.md) 有概览。当前后端只能打开 SQLite(`gormlite`),表由 GORM `AutoMigrate` 建出,下文的 PostgreSQL 专有类型与 `ltree` 等能力要等 PostgreSQL 驱动接入后才适用。
 
+> 说明:本文描述的是在线服务(账号、Mod 与 Fork、游戏作品、社交、审核、AI 调用审计)的数据模型。在线服务已实现并有测试,属于可选组件;当前的主机风格启动器完全在本地运行,没有接入它,启动器的全部进度保存在本地存档 `user://launcher.json`,不在这些表里。产品定位见 [01-vision](./01-vision.md),决策见 [ADR-016](./decisions.md)。
+
 原则:**DSL 存补丁不存快照**、**Mod 绑 Runtime 版本**、**Fork 用邻接表起步**。
 
 ## 实体关系
@@ -75,7 +77,7 @@ users ──< games >── runtimes
 
 - 生效 DSL = baseline + 沿 parent 链逐层 apply 6902 patch。`enemies`/`drops` 是 id-keyed map,故路径稳定([05](./05-dsl-design.md))。
 - `effective_dsl` 是性能缓存,真相是 `patch` 链。
-- **入库 patch ≠ AI 单次 patch**:AI 多轮改同一草稿,客户端拿到的是每轮相对当时全量的 `dsl_patch`;只有 publish 时才把最终 `new_dsl` 与父 mod 生效 DSL 做一次 diff,得到入库的 `mods.patch`(单条、相对父级)。
+- **入库 patch ≠ AI 单次 patch**:AI 多轮改同一草稿,调用方拿到的是每轮相对当时全量的 `dsl_patch`;只有 publish 时才把最终 `new_dsl` 与父 mod 生效 DSL 做一次 diff,得到入库的 `mods.patch`(单条、相对父级)。
 
 ### games
 

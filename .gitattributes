@@ -40,8 +40,6 @@ Makefile text eol=lf
 *.pdf binary
 
 # ---- GitHub Linguist ----
-# Third-party code kept in the tree does not count towards language statistics.
-apps/client/vendor/** linguist-vendored
 # Output of `swag init`; regenerate it, never edit it by hand.
 apps/server/docs/docs.go linguist-generated
 apps/server/docs/swagger.json linguist-generated

@@ -33,14 +33,14 @@ case "${FAKE_MODE:?}" in
 	false_green)
 		;;
 	resource_leak)
-		echo 'shell_ui_test: 224 passed, 0 failed'
+		echo 'launcher_test: 224 passed, 0 failed'
 		echo 'WARNING: ObjectDB instances leaked at exit'
 		;;
 	success)
-		echo 'shell_ui_test: 224 passed, 0 failed'
+		echo 'launcher_test: 224 passed, 0 failed'
 		;;
 	wrong_version)
-		echo 'shell_ui_test: 224 passed, 0 failed'
+		echo 'launcher_test: 224 passed, 0 failed'
 		;;
 	*)
 		echo "unknown fake mode: $FAKE_MODE" >&2
@@ -58,7 +58,7 @@ run_case() {
 	local status=0
 
 	if FAKE_MODE="$name" GODOT="$FAKE_GODOT" "$RUNNER" \
-		res://shell_ui_test.gd '^shell_ui_test: [0-9]+ passed, 0 failed$' \
+		res://launcher_test.gd '^launcher_test: [0-9]+ passed, 0 failed$' \
 		>"$TMP_DIR/$name.log" 2>&1; then
 		status=0
 	else

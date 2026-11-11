@@ -5,19 +5,14 @@ import baseline from '../../../client/runtime/shooter/baseline.dsl.json';
 import golden from '../../../client/runtime/shooter/testdata/fork_expected.dsl.json';
 import forkPatch from './fork-patch.json';
 
-// The landing page shows the fork patch that the repository's own tests use: the prompt and patch come from apps/server/internal/ai/service_test.go, and the same patch is asserted against the same golden file by packages/dsl/patch_test.go and apps/client/spike_test.gd. The baseline and golden documents are imported straight from the client fixtures, and the patch copy in fork-patch.json is re-applied here at build time. If the fixtures and the copy ever disagree, the build stops instead of publishing an example that is no longer true.
+// The landing page shows a patch that the repository's own tests use: packages/dsl/patch_test.go applies the same four operations to the same baseline and asserts on the same golden file, which the GDScript implementation is tested against as well. The baseline and golden documents are imported straight from the client fixtures, and the patch copy in fork-patch.json is re-applied here at build time: if it no longer produces the golden file, the build fails instead of publishing a stale example.
 
 /** Repository paths the example is taken from, relative to the repository root. */
 export const EXAMPLE_SOURCES = {
-	prompt: 'apps/server/internal/ai/service_test.go',
 	baseline: 'apps/client/runtime/shooter/baseline.dsl.json',
 	golden: 'apps/client/runtime/shooter/testdata/fork_expected.dsl.json',
 	goTest: 'packages/dsl/patch_test.go',
-	godotTest: 'apps/client/spike_test.gd',
 } as const;
-
-/** Prompt string used by the orchestration test, verbatim. */
-export const EXAMPLE_PROMPT_ZH = '把飞机换成猫,加只鸟,删掉炮台';
 
 export type PatchOpKind = 'add' | 'remove' | 'replace';
 
@@ -56,7 +51,7 @@ const operations = forkPatch as Operation[];
 const patched = jsonPatch.applyPatch(baseline, operations, true, false).newDocument;
 
 if (!isDeepStrictEqual(patched, golden)) {
-	throw new Error(`The fork patch in src/data/fork-patch.json no longer turns ${EXAMPLE_SOURCES.baseline} into ${EXAMPLE_SOURCES.golden}. Update the copy to match the patch used in ${EXAMPLE_SOURCES.goTest}.`);
+	throw new Error(`The patch in src/data/fork-patch.json no longer turns ${EXAMPLE_SOURCES.baseline} into ${EXAMPLE_SOURCES.golden}. Update the copy to match the patch used in ${EXAMPLE_SOURCES.goTest}.`);
 }
 
 export const patchLines: PatchLine[] = operations.map((operation) => {

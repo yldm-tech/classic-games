@@ -4,18 +4,12 @@ const GameSessionScript := preload("res://runtime/game_session.gd")
 const JsonPatch := preload("res://runtime/json_patch.gd")
 const ShooterRuntime := preload("res://runtime/shooter/shooter_runtime.gd")
 const ShooterPlay := preload("res://runtime/shooter/shooter_play.gd")
-const I18n := preload("res://i18n/i18n.gd")
-const VirtualWindow := preload("res://shell/design_system/components/virtual_window.gd")
-const CreatorSession := preload("res://shell/creator_session.gd")
-const QrCode := preload("res://vendor/qrcode/qr_code.gd")
-const PlatformBridge := preload("res://platform/platform.gd")
 const ShooterContent := preload("res://runtime/shooter/shooter_content.gd")
 const WeaponController := preload("res://runtime/shooter/weapon_controller.gd")
 const BossSkillController := preload("res://runtime/shooter/boss_skill_controller.gd")
 const DropItem := preload("res://runtime/shooter/drop_item.gd")
 const NetworkMatchSession := preload("res://runtime/network_match_session.gd")
 const NetworkMatchRuntime := preload("res://runtime/network_match_runtime.gd")
-const DesktopIntegration := preload("res://platform/desktop_integration.gd")
 
 # 与服务端 patch_test.go 共用的 Fork 补丁链。
 # 用 JSON 字符串而非 GDScript 字面量:生产里补丁是 JSON 过线的,经 JSON.parse 后数字类型
@@ -378,14 +372,6 @@ func _initialize() -> void:
 	phase_host.free()
 	run.free()
 
-	# G. i18n 数字本地化(docs/18-i18n.md:4.8万 vs 48.2k,中文不加千分位)
-	_check("G zh 48200=4.8万", I18n.format_number(48200, "zh") == "4.8万")
-	_check("G zh 2100=2100(无逗号)", I18n.format_number(2100, "zh") == "2100")
-	_check("G zh 100000000=1亿", I18n.format_number(100000000, "zh") == "1亿")
-	_check("G en 48200=48.2k", I18n.format_number(48200, "en") == "48.2k")
-	_check("G en 1500000=1.5M", I18n.format_number(1500000, "en") == "1.5M")
-	_check("G en 999=999", I18n.format_number(999, "en") == "999")
-
 	# H. 玩法规则:计分 / 加速倍率 / 护盾 / 结算
 	var play := ShooterPlay.new(100)
 	play.on_kill()
@@ -401,77 +387,6 @@ func _initialize() -> void:
 	var result := play.finish(250)
 	_check("H 存活通关 cleared", result["cleared"] == true)
 	_check("H 分数 300>250 新纪录", result["new_record"] == true)
-
-	# I. 虚拟列表窗口计算(评审标记的 bug 面:渲染哪几项 + 节点池)
-	# 视口 600 / 每项 60 → 一屏 10 项,buffer 2
-	var vw := VirtualWindow.new(60.0, 600.0, 1000, 2)
-	var w0 := vw.window(0.0)
-	# 顶部:first 夹到 0,count = 10 + buffer*2 = 14
-	_check("I 顶部 first=0", w0["first"] == 0)
-	_check("I 顶部 count=14(含buffer)", w0["count"] == 14)
-	# 滚到第 100 项处(offset 6000):first = 100-2 = 98
-	var w1 := vw.window(6000.0)
-	_check("I 中部 first=98(滚动位置-buffer)", w1["first"] == 98)
-	_check("I 中部 count=14", w1["count"] == 14)
-	# 底部:offset 让 first 接近末尾,count 不越界
-	var w2 := vw.window(60.0 * 995)
-	_check("I 底部 count 不越界", w2["first"] + w2["count"] <= 1000)
-	_check("I 内容总高=60000", vw.content_height() == 60000.0)
-	_check("I 第10项 y=600", vw.item_y(10) == 600.0)
-	# 空列表
-	var empty := VirtualWindow.new(60.0, 600.0, 0)
-	_check("I 空列表 count=0", empty.window(0.0)["count"] == 0)
-
-	# J. 创作流状态机:apply 补丁预览 / 撤销 / 重做 / dirty
-	var cs := CreatorSession.new(baseline)
-	_check("J 初始非 dirty", not cs.is_dirty())
-	cs.apply_patch([{"op": "replace", "path": "/player/sprite", "value": "cat"}])
-	_check("J 改一版后 dirty", cs.is_dirty())
-	_check("J 当前 sprite=cat", cs.current()["player"]["sprite"] == "cat")
-	cs.apply_patch([{"op": "add", "path": "/enemies/bird_1",
-		"value": {"type": "bird", "behavior": "sine", "count": 5, "hp": 10, "speed": 8}}])
-	_check("J 第二步:含 bird", cs.current()["enemies"].has("bird_1"))
-	_check("J 步数=2", cs.step_count() == 2)
-	cs.undo()
-	_check("J 撤销后 bird 消失", not cs.current()["enemies"].has("bird_1"))
-	_check("J 撤销后 sprite 仍 cat", cs.current()["player"]["sprite"] == "cat")
-	cs.redo()
-	_check("J 重做后 bird 回来", cs.current()["enemies"].has("bird_1"))
-	_check("J 非法补丁被拒(状态不变)",
-		not cs.apply_patch([{"op": "replace", "path": "/nope/x", "value": 1}]) and cs.step_count() == 2)
-	var steps_before_empty: int = cs.step_count()
-	_check("J 空补丁不伪装成创作成功", not cs.apply_patch([]) and cs.step_count() == steps_before_empty)
-	var edited := cs.current().duplicate(true)
-	edited["player"]["sprite"] = "ufo"
-	edited["editor_note"] = {"enabled": true}
-	_check("J 整份 DSL 编辑可应用", cs.apply_document(edited))
-	_check("J 整份 DSL 编辑生成可撤销步骤",
-		cs.current()["player"]["sprite"] == "ufo" and cs.current().has("editor_note") and cs.step_count() == 3)
-	cs.undo()
-	_check("J 整份 DSL 编辑可撤销", cs.current()["player"]["sprite"] == "cat" and not cs.current().has("editor_note"))
-
-	# K. 真二维码：标准版本尺寸、三个定位符与 4-module quiet zone。
-	var qr := QrCode.new()
-	var qr_data := qr.get_data("https://forgeplay.app/u/%40koru")
-	_check("K QR 最小版本为 21×21", qr_data.size() >= 21 and (qr_data.size() - 17) % 4 == 0)
-	_check("K QR 左上定位符", qr_data[0][0] and qr_data[0][6] and qr_data[6][0] and qr_data[3][3])
-	var qr_image := qr.get_texture("https://forgeplay.app/u/%40koru").get_image()
-	_check("K QR quiet zone 为 4 modules", qr_image.get_width() == qr_data.size() + 8
-		and qr_image.get_pixel(0, 0) == Color.WHITE and qr_image.get_pixel(3, 3) == Color.WHITE)
-	qr.free()
-
-	# L. 平台层：分享 URL 必须正确编码，能力结果有统一结构。
-	var x_url := PlatformBridge.build_share_url("x", "https://forgeplay.app/g/a b", "猫咪 飞机")
-	_check("L X 分享参数编码", x_url.begins_with("https://twitter.com/intent/tweet?")
-		and "%20" in x_url and not "a b" in x_url)
-	var caps := PlatformBridge.capabilities()
-	_check("L 平台能力结构", caps.has("share") and caps.has("qr_scan") and caps.has("oauth"))
-	_check("L 手机端强制禁用支付",not PlatformBridge.payment_allowed("Android") and not PlatformBridge.payment_allowed("iOS"))
-	_check("L 桌面/Web 可由插件提供支付",PlatformBridge.payment_allowed("macOS") and PlatformBridge.payment_allowed("Web"))
-	DirAccess.make_dir_recursive_absolute(OS.get_user_data_dir().path_join("cache/nested"))
-	var cache_file := FileAccess.open("user://cache/nested/test.bin", FileAccess.WRITE); cache_file.store_buffer(PackedByteArray([1,2,3])); cache_file.close()
-	_check("L 缓存大小统计", PlatformBridge.cache_size_bytes() == 3)
-	_check("L 清缓存真实删除文件", PlatformBridge.clear_cache() and PlatformBridge.cache_size_bytes() == 0)
 
 	# M. 联机 Runtime：只接受单调权威快照，并把所有玩家状态投影为可见实体。
 	var network_session := NetworkMatchSession.new()
@@ -492,20 +407,6 @@ func _initialize() -> void:
 	_check("M 本地与远端实体可区分", network_runtime.get_node("Players/host").get_meta("local") and not network_runtime.get_node("Players/guest").get_meta("local"))
 	_check("M 运行时同步生命与位置", network_runtime.get_node("Players/guest").get_meta("hp") == 90 and network_runtime.get_node("Players/host").position != network_runtime.get_node("Players/guest").position)
 	network_runtime.free()
-
-	# N. 桌面集成：DSL 文件真实往返、多窗口加载 Runtime，移动端不暴露桌面能力。
-	_check("N 桌面平台识别", DesktopIntegration.is_desktop("macOS") and DesktopIntegration.is_desktop("Windows") and not DesktopIntegration.is_desktop("Android"))
-	_check("N 原生菜单动作完整", DesktopIntegration.menu_actions() == ["import_dsl", "export_dsl", "preview_window"])
-	var desktop := DesktopIntegration.new()
-	root.add_child(desktop)
-	var desktop_path := "user://desktop_roundtrip.classic-games.json"
-	_check("N DSL 文件导出成功", desktop.save_dsl(desktop_path, baseline))
-	_check("N DSL 文件无损导入", desktop.load_dsl(desktop_path) == baseline)
-	var bad_file := FileAccess.open("user://desktop_bad.classic-games.json", FileAccess.WRITE); bad_file.store_string("[]"); bad_file.close()
-	_check("N 非对象文件拒绝导入", desktop.load_dsl("user://desktop_bad.classic-games.json").is_empty())
-	var preview_window := desktop.open_preview_window("shooter@1.0.0", baseline)
-	_check("N 多窗口运行真实 Runtime", preview_window is Window and preview_window.get_node_or_null("ShooterRuntime") != null)
-	preview_window.queue_free(); desktop.queue_free()
 
 	print("\n=== spike 结果: %d passed, %d failed ===" % [_passed, _failed])
 	_finish.call_deferred(1 if _failed > 0 else 0)

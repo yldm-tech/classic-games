@@ -1,13 +1,14 @@
 ---
 import type { Locale } from '../i18n/landing.ts';
 import LandingLayout from '../layouts/LandingLayout.astro';
-import Architecture from './landing/Architecture.astro';
-import DevSurface from './landing/DevSurface.astro';
-import DslBet from './landing/DslBet.astro';
-import Flow from './landing/Flow.astro';
+import Controls from './landing/Controls.astro';
+import Developers from './landing/Developers.astro';
+import Games from './landing/Games.astro';
 import GetStarted from './landing/GetStarted.astro';
 import Hero from './landing/Hero.astro';
-import Runtimes from './landing/Runtimes.astro';
+import LauncherScreens from './landing/LauncherScreens.astro';
+import LocalAndPlanned from './landing/LocalAndPlanned.astro';
+import PcMode from './landing/PcMode.astro';
 
 interface Props {
 	locale: Locale;
@@ -18,10 +19,11 @@ const { locale } = Astro.props;
 
 <LandingLayout locale={locale}>
 	<Hero locale={locale} />
-	<Flow locale={locale} />
-	<DslBet locale={locale} />
-	<Architecture locale={locale} />
-	<Runtimes locale={locale} />
-	<DevSurface locale={locale} />
+	<Games locale={locale} />
+	<LauncherScreens locale={locale} />
+	<PcMode locale={locale} />
+	<Controls locale={locale} />
+	<LocalAndPlanned locale={locale} />
+	<Developers locale={locale} />
 	<GetStarted locale={locale} />
 </LandingLayout>

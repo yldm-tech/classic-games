@@ -15,9 +15,9 @@ html {
 body {
 	margin: 0;
 	min-height: 100vh;
-	background-color: var(--fp-bg);
-	color: var(--fp-text);
-	font-family: var(--fp-font-sans);
+	background-color: var(--cg-bg);
+	color: var(--cg-text);
+	font-family: var(--cg-font-sans);
 	font-size: 1rem;
 	line-height: 1.7;
 	-webkit-font-smoothing: antialiased;
@@ -54,21 +54,21 @@ a {
 code,
 pre,
 kbd {
-	font-family: var(--fp-font-mono);
+	font-family: var(--cg-font-mono);
 }
 
 :focus-visible {
-	outline: 2px solid var(--fp-focus);
+	outline: 2px solid var(--cg-focus);
 	outline-offset: 3px;
-	border-radius: var(--fp-radius-xs);
+	border-radius: var(--cg-radius);
 }
 
 ::selection {
-	background: var(--fp-ember-500);
-	color: var(--fp-on-accent);
+	background: var(--cg-accent);
+	color: var(--cg-on-accent);
 }
 
-.fp-sr-only {
+.cg-sr-only {
 	position: absolute;
 	width: 1px;
 	height: 1px;
@@ -80,177 +80,225 @@ kbd {
 	border: 0;
 }
 
-.fp-skip {
+.cg-skip {
 	position: absolute;
 	inset-block-start: 0.75rem;
 	inset-inline-start: 0.75rem;
 	z-index: 30;
 	padding: 0.5rem 0.9rem;
-	border-radius: var(--fp-radius-sm);
-	background: var(--fp-accent);
-	color: var(--fp-on-accent);
+	border-radius: var(--cg-radius);
+	background: var(--cg-accent);
+	color: var(--cg-on-accent);
 	font-weight: 600;
 	text-decoration: none;
 	transform: translateY(-200%);
 }
 
-.fp-skip:focus-visible {
+.cg-skip:focus-visible {
 	transform: none;
 }
 
-.fp-container {
+.cg-container {
 	width: 100%;
-	max-width: 72rem;
+	max-width: 76rem;
 	margin-inline: auto;
 	padding-inline: clamp(1.25rem, 4vw, 2.5rem);
 }
 
-/* Section scaffolding: a mono index label, a heading and a lead, then the section's own content. */
-.fp-section {
+/* Section scaffolding: a small letter-spaced label with a rule, as the launcher draws above a game title, then a heading and a lead, then the section's own content. */
+.cg-section {
 	padding-block: clamp(3.5rem, 8vw, 6.5rem);
-	border-block-start: 1px solid var(--fp-border-subtle);
+	border-block-start: 1px solid var(--cg-border-subtle);
 }
 
-.fp-section-head {
+.cg-section-head {
 	max-width: 46rem;
 	margin-block-end: clamp(2rem, 4vw, 3rem);
 }
 
-.fp-eyebrow {
-	display: inline-block;
-	margin-block-end: 0.9rem;
-	font-family: var(--fp-font-mono);
-	font-size: 0.8125rem;
-	font-weight: 500;
-	letter-spacing: 0.08em;
+.cg-eyebrow {
+	display: flex;
+	align-items: center;
+	gap: 0.9rem;
+	margin-block-end: 1rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.28em;
 	text-transform: uppercase;
-	color: var(--fp-accent-text);
+	color: var(--cg-text-muted);
 }
 
-.fp-h2 {
+.cg-eyebrow::before {
+	content: '';
+	flex: none;
+	width: 2.5rem;
+	height: 1px;
+	background: var(--cg-border-strong);
+}
+
+.cg-h2 {
 	font-size: clamp(1.625rem, 1.1rem + 2vw, 2.5rem);
-	font-weight: 700;
+	font-weight: 800;
 	line-height: 1.2;
-	letter-spacing: -0.02em;
+	letter-spacing: 0.01em;
 	text-wrap: balance;
 }
 
-.fp-phrase {
+.cg-phrase {
 	display: inline-block;
 }
 
-.fp-lead {
+.cg-lead {
 	margin-block-start: 1rem;
 	font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
-	color: var(--fp-text-secondary);
+	color: var(--cg-text-secondary);
 	text-wrap: pretty;
 }
 
-.fp-h3 {
+.cg-h3 {
 	font-size: 1.125rem;
-	font-weight: 650;
+	font-weight: 700;
 	line-height: 1.35;
-	letter-spacing: -0.005em;
 }
 
-.fp-card {
-	border: 1px solid var(--fp-border);
-	border-radius: var(--fp-radius-lg);
-	background: var(--fp-surface);
+.cg-card {
+	border: 1px solid var(--cg-border-subtle);
+	border-radius: var(--cg-radius);
+	background: var(--cg-surface);
 }
 
-.fp-path {
-	font-family: var(--fp-font-mono);
+/* A screenshot or key art image in a hairline frame. The images are 16:9 captures of the launcher's fixed canvas. */
+.cg-shot {
+	margin: 0;
+}
+
+.cg-shot img {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	border: 1px solid var(--cg-border-subtle);
+	border-radius: var(--cg-radius);
+	background: var(--cg-bg-sunken);
+}
+
+.cg-shot figcaption {
+	margin-block-start: 0.75rem;
+	font-size: 0.875rem;
+	line-height: 1.6;
+	color: var(--cg-text-muted);
+}
+
+.cg-shot figcaption strong {
+	color: var(--cg-text);
+	font-weight: 600;
+}
+
+.cg-path {
+	font-family: var(--cg-font-mono);
 	font-size: 0.8125rem;
-	color: var(--fp-text-muted);
+	color: var(--cg-text-muted);
 	overflow-wrap: anywhere;
 }
 
-.fp-chip {
+.cg-chip {
 	display: inline-flex;
 	align-items: center;
 	min-height: 1.625rem;
 	padding: 0.1rem 0.6rem;
-	border: 1px solid var(--fp-border);
-	border-radius: var(--fp-radius-xs);
-	background: var(--fp-surface-input);
-	font-family: var(--fp-font-mono);
+	border: 1px solid var(--cg-border);
+	border-radius: var(--cg-radius);
+	font-family: var(--cg-font-mono);
 	font-size: 0.8125rem;
 	line-height: 1.4;
-	color: var(--fp-text-secondary);
+	color: var(--cg-text-secondary);
 	white-space: nowrap;
 }
 
-/* Buttons keep the client's 44px minimum hit target. */
-.fp-button {
+/* A keyboard key or gamepad button name, drawn like the launcher's key caps: an outlined box at the shared radius. */
+.cg-key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.75rem;
+	min-height: 1.625rem;
+	padding: 0.05rem 0.45rem;
+	border: 1px solid var(--cg-border-strong);
+	border-radius: var(--cg-radius);
+	font-family: var(--cg-font-sans);
+	font-size: 0.75rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--cg-text);
+	white-space: nowrap;
+}
+
+/* Buttons are at least 44px tall, the launcher's BUTTON_HEIGHT. */
+.cg-button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5rem;
 	min-height: 2.75rem;
-	padding: 0.55rem 1.25rem;
+	padding: 0.55rem 1.5rem;
 	border: 1px solid transparent;
-	border-radius: var(--fp-radius-md);
+	border-radius: var(--cg-radius);
 	font-size: 1rem;
-	font-weight: 650;
+	font-weight: 700;
+	letter-spacing: 0.04em;
 	line-height: 1.3;
 	text-decoration: none;
 	transition:
-		background-color var(--fp-dur-fast) ease,
-		border-color var(--fp-dur-fast) ease,
-		transform var(--fp-dur-fast) var(--fp-ease-snap);
+		background-color var(--cg-dur-fast) ease,
+		border-color var(--cg-dur-fast) ease;
 }
 
-.fp-button-primary {
-	background: var(--fp-accent);
-	color: var(--fp-on-accent);
+.cg-button-primary {
+	background: var(--cg-accent);
+	color: var(--cg-on-accent);
 }
 
-.fp-button-primary:hover {
-	background: var(--fp-accent-hover);
+.cg-button-primary:hover {
+	background: var(--cg-accent-hover);
 }
 
-.fp-button-secondary {
-	border-color: var(--fp-border-strong);
+.cg-button-secondary {
+	border-color: var(--cg-border-strong);
 	background: transparent;
-	color: var(--fp-text);
+	color: var(--cg-text);
 }
 
-.fp-button-secondary:hover {
-	border-color: var(--fp-text-muted);
-	background: var(--fp-surface);
+.cg-button-secondary:hover {
+	border-color: var(--cg-text);
+	background: var(--cg-focus-fill);
 }
 
-.fp-button:active {
-	transform: translateY(1px);
-}
-
-.fp-link {
+.cg-link {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
-	color: var(--fp-accent-text);
+	color: var(--cg-text);
 	font-weight: 600;
 	text-decoration: underline;
-	text-decoration-color: transparent;
-	text-underline-offset: 0.25em;
-	transition: text-decoration-color var(--fp-dur-fast) ease;
+	text-decoration-color: var(--cg-border-strong);
+	text-underline-offset: 0.3em;
+	transition: text-decoration-color var(--cg-dur-fast) ease;
 }
 
-.fp-link:hover {
+.cg-link:hover {
 	text-decoration-color: currentColor;
 }
 
-.fp-link::after {
+.cg-link::after {
 	content: '→';
-	font-family: var(--fp-font-mono);
+	font-family: var(--cg-font-mono);
 }
 
-.fp-link[data-external]::after {
+.cg-link[data-external]::after {
 	content: '↗';
 }
 
-.fp-section-foot {
+.cg-section-foot {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.75rem 2rem;

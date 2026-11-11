@@ -37,105 +37,21 @@ report_matches() {
     fi
 }
 
-SCREEN_ROLE_PATTERN="class_name[[:space:]]+[A-Za-z0-9_]+Screen\\b|extends[[:space:]]+ScreenBase\\b|extends[[:space:]]+(preload\\()?['\"]res://ui/screen_base\\.gd['\"]"
-ARCHITECTURE_ROLE_PATTERN="class_name[[:space:]]+[A-Za-z0-9_]+(Screen|Store|Coordinator)\\b|extends[[:space:]]+ScreenBase\\b|extends[[:space:]]+(preload\\()?['\"]res://ui/screen_base\\.gd['\"]"
-SCREEN_BASE_UID=""
-if [[ -f "$CLIENT/ui/screen_base.gd.uid" ]]; then
-    SCREEN_BASE_UID="$(tr -d '[:space:]' < "$CLIENT/ui/screen_base.gd.uid")"
-fi
-
-report_matches \
-    "legacy client architecture must remain deleted:" \
-    scan_lines 'class_name[[:space:]]+(ShellRoot|ApiClient)\b|\blegacy_api\b|res://shell/shell_root\.gd|res://shell/net/api_client\.gd' \
-    "$CLIENT" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
-
-for legacy_path in "$CLIENT/shell/shell_root.gd" "$CLIENT/shell/net/api_client.gd"; do
-    if [[ -e "$legacy_path" ]]; then
-        echo "legacy client file must remain deleted: $legacy_path" >&2
+# ---- removed phone client ----
+#
+# The client is the console launcher plus the game runtimes (docs/16-client-architecture.md). The portrait phone app it replaced was removed as a whole; neither its directories nor references to them may come back. Dependency directions between the directories that exist are checked by check-client-boundaries.sh.
+for removed_path in app features shell ui main.gd main.tscn; do
+    if [[ -e "$CLIENT/$removed_path" ]]; then
+        echo "the removed phone client must stay removed: $CLIENT/$removed_path" >&2
         FAILED=1
     fi
 done
 
-# Each scan result is captured before the loop instead of streamed from `< <(...)`: an abort inside a process
-# substitution would kill only that subshell, leaving the loop with no input and the guard reporting success.
-role_sources="$({
-    find "$CLIENT" -type f \( -name '*_screen.gd' -o -name '*_store.gd' -o -name '*_coordinator.gd' \) -print
-    scan_files "$ARCHITECTURE_ROLE_PATTERN" "$CLIENT" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
-    if [[ -n "$SCREEN_BASE_UID" ]]; then
-        scan_files_literal "$SCREEN_BASE_UID" "$CLIENT" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
-    fi
-} | sort -u)"
-while IFS= read -r source; do
-    [[ -z "$source" ]] && continue
-    if scan_hit '(/api/|https?://)' "$source"; then
-        echo "screens, stores, and coordinators must not own URL strings: $source" >&2
-        FAILED=1
-    fi
-done <<< "$role_sources"
-
-HTTP_CLIENT_UID=""
-if [[ -f "$CLIENT/core/http/http_client.gd.uid" ]]; then
-    HTTP_CLIENT_UID="$(tr -d '[:space:]' < "$CLIENT/core/http/http_client.gd.uid")"
-fi
-http_sources="$({
-    scan_files '\bHttpClient\b|res://core/http/http_client\.gd' "$CLIENT" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
-    if [[ -n "$HTTP_CLIENT_UID" ]]; then
-        scan_files_literal "$HTTP_CLIENT_UID" "$CLIENT" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
-    fi
-} | sort -u)"
-while IFS= read -r source; do
-    [[ -z "$source" ]] && continue
-    case "$source" in
-        "$CLIENT"/core/http/*|"$CLIENT"/features/*/*_api.gd|"$CLIENT"/app/app_root.gd|*_test.gd|*_test.tscn|*_test.tres) continue ;;
-    esac
-    echo "HttpClient is only allowed in core HTTP, feature APIs, and AppRoot: $source" >&2
-    FAILED=1
-done <<< "$http_sources"
-
-FEATURES="$CLIENT/features"
-if [[ -d "$FEATURES" ]]; then
-    while IFS= read -r -d '' source; do
-        relative="${source#"$FEATURES"/}"
-        source_feature="${relative%%/*}"
-        imports="$(scan_only 'res://features/[^/]+/[^"]*_screen\.gd' "$source")"
-        while IFS= read -r import; do
-            [[ -z "$import" ]] && continue
-            target="${import#res://features/}"
-            target_feature="${target%%/*}"
-            if [[ "$target_feature" != "$source_feature" ]]; then
-                echo "feature $source_feature imports screen from feature $target_feature: $source" >&2
-                FAILED=1
-            fi
-        done <<< "$imports"
-    done < <(find "$FEATURES" -type f \( -name '*.gd' -o -name '*.tscn' -o -name '*.tres' \) -print0)
-
-    feature_screens="$({
-        find "$FEATURES" -type f -name '*_screen.gd' -print
-        scan_files "$SCREEN_ROLE_PATTERN" "$FEATURES" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
-        if [[ -n "$SCREEN_BASE_UID" ]]; then
-            scan_files_literal "$SCREEN_BASE_UID" "$FEATURES" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
-        fi
-    } | sort -u)"
-    while IFS= read -r target_screen; do
-        [[ -z "$target_screen" ]] && continue
-        uid_file="$target_screen.uid"
-        [[ -f "$uid_file" ]] || continue
-        target_uid="$(tr -d '[:space:]' < "$uid_file")"
-        [[ -n "$target_uid" ]] || continue
-        target_relative="${target_screen#"$FEATURES"/}"
-        target_feature="${target_relative%%/*}"
-        consumers="$(scan_files_literal "$target_uid" "$FEATURES" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}")"
-        while IFS= read -r consumer; do
-            [[ -z "$consumer" ]] && continue
-            consumer_relative="${consumer#"$FEATURES"/}"
-            consumer_feature="${consumer_relative%%/*}"
-            if [[ "$consumer_feature" != "$target_feature" ]]; then
-                echo "feature $consumer_feature imports screen UID from feature $target_feature: $consumer" >&2
-                FAILED=1
-            fi
-        done <<< "$consumers"
-    done <<< "$feature_screens"
-fi
+SCAN_CLIENT=("${SCAN_GD_SCENES[@]}" --include='project.godot')
+report_matches \
+    "the client must not reference the removed phone client:" \
+    scan_lines 'res://(app|features|shell|ui)/|res://main\.(gd|tscn)|\b(AppState|AppRoot|ScreenBase)\b' \
+    "$CLIENT" "${SCAN_CLIENT[@]}" "${SCAN_PRUNE[@]}"
 
 while IFS= read -r -d '' source; do
     if scan_hit '\.AutoMigrate\(' "$source" && [[ "$source" != "$SERVER_INTERNAL/app/migrations.go" ]]; then

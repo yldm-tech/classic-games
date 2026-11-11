@@ -92,35 +92,23 @@ jobs:
         run: make script-test
       - name: Verify client architecture boundaries
         run: make boundary-test
-      - name: Verify completed modular architecture
+      - name: Verify repository architecture
         run: make architecture-test
       # Publishing a repository publishes its history, so a public repository must never have held the internal notes on any ref. The job checks out the full history (fetch-depth: 0) for this step. It is skipped while the repository is private, where the notes are part of the existing history.
       - name: Verify no internal documentation in public history
         if: ${{ !github.event.repository.private }}
         run: make publish-check
-      - name: Run HTTP boundary tests
-        run: make http-test GODOT=godot
-      - name: Run identity slice tests
-        run: make identity-test GODOT=godot
-      - name: Run catalog slice tests
-        run: make catalog-test GODOT=godot
-      - name: Run creation slice tests
-        run: make creation-test GODOT=godot
-      - name: Run community slice tests
-        run: make community-test GODOT=godot
-      - name: Run engagement slice tests
-        run: make engagement-test GODOT=godot
-      - name: Run commerce slice tests
-        run: make commerce-test GODOT=godot
-      - name: Run operations slice tests
-        run: make operations-test GODOT=godot
-      - name: Run shared pattern tests
-        run: make patterns-test GODOT=godot
-      - name: Run application root tests
-        run: make app-test GODOT=godot
-      - name: Run Phase 0 spike
+      - name: Run runtime tests
         run: make spike GODOT=godot
-      - name: Run shell UI tests
-        run: make ui-test GODOT=godot
+      - name: Run console launcher tests
+        run: make launcher-test GODOT=godot
+      - name: Run launcher settings tests
+        run: make settings-test GODOT=godot
+      - name: Run library and achievements screen tests
+        run: make library-test GODOT=godot
       - name: Launch main scene
         run: make launch-test GODOT=godot
+      - name: Run launcher PC mode tests
+        run: make pc-mode-test GODOT=godot
+      - name: Run game flow tests
+        run: make game-flow-test GODOT=godot

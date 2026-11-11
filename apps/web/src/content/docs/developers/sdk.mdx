@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../config/site.ts';
 
 `github.com/yldm-tech/classic-games/packages/sdk` 是 Classic Games 后端 HTTP API 的类型化 Go 客户端，源码在 <a href={repoDir('packages/sdk')}>packages/sdk</a>。它只依赖标准库，`classic-games` CLI 和 `classic-games-mcp` 服务都用它访问后端。
 
+:::note[可选的在线服务]
+后端以及构建在它之上的工具都是可选组件。经典厅的启动器不发网络请求，也不使用后端、CLI、MCP 服务或 SDK；不运行它们也能玩全部游戏。
+:::
+
 :::note
 完整的方法列表和类型说明以 <a href={repoFile('packages/sdk/README.md')}>packages/sdk/README.md</a> 和源码里的文档注释为准。
 :::

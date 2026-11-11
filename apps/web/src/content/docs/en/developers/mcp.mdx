@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../../config/site.ts';
 
 `classic-games-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Its source is in <a href={repoDir('apps/mcp')}>apps/mcp</a> (Go module `github.com/yldm-tech/classic-games/apps/mcp`), built on the official MCP Go SDK. It lets an MCP-capable AI assistant read schemas, validate and patch DSL, and fork, edit and publish mods through the backend.
 
+:::note[Optional online service]
+The backend and the tools built on it are optional. The Classic Games launcher makes no network requests and does not use the backend, the CLI, the MCP server or the SDK; every game can be played without them.
+:::
+
 :::note
 For client configuration files, the behaviour of each tool and the security notes, see <a href={repoFile('apps/mcp/README.md')}>apps/mcp/README.md</a>.
 :::

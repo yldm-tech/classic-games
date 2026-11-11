@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../config/site.ts';
 
 `classic-games` 是 Classic Games 的命令行工具，源码在 <a href={repoDir('apps/cli')}>apps/cli</a>（Go 模块 `github.com/yldm-tech/classic-games/apps/cli`）。它基于 [Go SDK](/developers/sdk/) 访问后端，并复用 `packages/dsl` 里的补丁、迁移与校验代码，所以和后端对同一份 DSL 得出同样的结论。
 
+:::note[可选的在线服务]
+后端以及构建在它之上的工具都是可选组件。经典厅的启动器不发网络请求，也不使用后端、CLI、MCP 服务或 SDK；不运行它们也能玩全部游戏。
+:::
+
 :::note
 本页列出命令结构。每个命令的全部参数、输出格式和完整示例以 <a href={repoFile('apps/cli/README.md')}>apps/cli/README.md</a> 和 `classic-games <命令组> <命令> --help` 为准。
 :::
@@ -76,4 +80,4 @@ classic-games mods publish <mod-id> --title "Cat Shooter"
 
 ## 和 AI 的关系
 
-`classic-games ai generate` 不会在本机调用模型。它把请求交给后端，由后端调用模型、应用补丁、按 Schema 校验，再把补丁和新的 DSL 一起返回。这与客户端走的是同一条链路，见 [AI Prompt 工程](/docs/12-ai-prompt/)。每次调用都计入每日配额，用 `classic-games ai quota` 查看。
+`classic-games ai generate` 不会在本机调用模型。它把请求交给后端，由后端调用模型、应用补丁、按 Schema 校验，再把补丁和新的 DSL 一起返回。这条链路的说明见 [AI Prompt 工程](/docs/12-ai-prompt/)。每次调用都计入每日配额，用 `classic-games ai quota` 查看。

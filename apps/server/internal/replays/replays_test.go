@@ -3,6 +3,7 @@ package replays
 import (
 	"github.com/yldm-tech/classic-games/apps/server/internal/storage"
 	"testing"
+	"time"
 )
 
 func TestReplayPersistAndValidate(t *testing.T) {
@@ -22,6 +23,10 @@ func TestReplayPersistAndValidate(t *testing.T) {
 	}
 	if first.ID == "" {
 		t.Fatal("missing id")
+	}
+	// The first replay is made an hour old. Left at "now" it is microseconds older than the second, and SQLite cannot order that reliably: timestamps are stored as RFC 3339 text with trailing zeros of the fraction trimmed, so "…06.213Z" sorts after "…06.21304Z" although it is the earlier instant, and Latest then returns the first replay (about one run in a hundred).
+	if e = db.Model(&Replay{}).Where("id = ?", first.ID).Update("created_at", first.CreatedAt.Add(-time.Hour)).Error; e != nil {
+		t.Fatal(e)
 	}
 	frames[1].Score = 20
 	second, e := s.Create("g", "u", 1000, frames)
