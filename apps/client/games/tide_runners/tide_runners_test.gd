@@ -28,6 +28,7 @@ func _initialize() -> void:
 	_test_first_boss_by_shooting()
 	_test_tower()
 	_test_full_clear()
+	_test_whole_run()
 	_test_two_players()
 	_test_determinism()
 	print("tide_runners_test: %d passed, %d failed" % [_passed, _failed])
@@ -426,7 +427,7 @@ func _test_troopers() -> void:
 		game.advance(0.25)
 		topped = topped or (trooper["ground"] and is_equal_approx(float(trooper["y"]), 192.0))
 	_check("a trooper hops onto a block that stands between it and a diver", topped)
-	_check("and comes down the far side to where it has a shot", float(trooper["x"]) < 192.0 and is_equal_approx(float(trooper["y"]), 224.0) and absf(float(trooper["x"]) - float(game.heroes[0]["x"])) <= 72.0 and not trooper["dead"])
+	_check("and comes down the far side to where it has a shot", float(trooper["x"]) < 192.0 and is_equal_approx(float(trooper["y"]), 224.0) and absf(float(trooper["x"]) - float(game.heroes[0]["x"])) <= 90.0 and not trooper["dead"])
 	game.free()
 	# From a hanging pallet (x 256 to 352, five tiles up) it steps down onto the dry deck below instead of standing at the edge out of reach.
 	game = _quiet(2)
@@ -594,6 +595,44 @@ func _test_full_clear() -> void:
 	_check("clearing the last stage clears the run", results.size() == 1 and results[0]["cleared"] == true and results[0]["defeated"] == false)
 	if results.size() == 1:
 		_check("the result carries what the achievements read", results[0]["bosses_down"] == 2 and results[0]["continues_used"] == 0 and results[0]["difficulty"] == 2 and results[0]["stage"] == 3 and results[0]["player_count"] == 1 and int(results[0]["score"]) > 0 and not game.audio.music_playing)
+	game.free()
+
+## Break every part of the waking boss that is open, until it is gone or `seconds` have passed.
+func _break_boss(game: Main, seconds: float) -> void:
+	for wait in int(seconds / 0.1):
+		if game.boss.is_empty() or game.boss["dead"] or game.mode != Main.MODE_PLAY:
+			return
+		for entry: Dictionary in game.boss["parts"]:
+			if entry["alive"] and entry["vuln"]:
+				Bosses.hit(game, game.boss, Vector2(float(entry["x"]), float(entry["y"])), 2.0, 60, 0)
+		game.advance(0.1)
+
+## One run from the first stage to the result, through every stage change: the divers are carried to each arena, the bosses are fought there.
+func _test_whole_run() -> void:
+	var game := _start(1, 31)
+	var results: Array[Dictionary] = []
+	game.finished.connect(func(result: Dictionary) -> void: results.append(result))
+	var stages: Array = []
+	for index in Levels.STAGE_COUNT:
+		stages.append(int(game.snapshot()["stage"]))
+		game.spawned.fill(1)
+		game.zone_t.fill(1000000.0)
+		game.lock_index = 99
+		game.foes.clear()
+		_safe(game)
+		if game.world.vertical:
+			_put(game, 0, 200.0, float(game.world.def["boss_row"]) * 16.0)
+		else:
+			game.cam.x = float(game.world.def["boss_col"]) * 16.0
+			_put(game, 0, game.cam.x + 80.0, 224.0)
+		game.advance(3.0)
+		_break_boss(game, 40.0)
+		for wait in 120:
+			if not results.is_empty() or int(game.snapshot()["stage"]) != stages[index]:
+				break
+			game.advance(0.1)
+	_check("a run goes through the three stages in order", stages == [1, 2, 3])
+	_check("beating the third boss clears the run with all three counted", results.size() == 1 and results[0]["cleared"] == true and results[0]["bosses_down"] == 3 and results[0]["stage"] == 3 and results[0]["continues_used"] == 0 and results[0]["deaths"] == 0 and int(results[0]["score"]) >= 3 * 7000)
 	game.free()
 
 func _test_two_players() -> void:

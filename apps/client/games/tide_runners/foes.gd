@@ -294,7 +294,9 @@ static func _troop(g: Variant, world: World, foe: Dictionary, target: Dictionary
 	var level := absf(float(target["y"]) - y) < 52.0
 	# It closes in until it has a shot. On the open stages a diver above or below it, or behind a block, has to be walked to: a trooper that only waited there could neither hit nor be hit, and stalled an ambush. The tower's deck guards hold their deck.
 	var sight := world.vertical or level and not world.box_hits(minf(x, float(target["x"])) + 6.0, y - 12.0, maxf(x, float(target["x"])) - 6.0, y - 10.0)
-	if float(foe["a"]) <= 0.0 and (absf(dx) > 70.0 or (not sight and absf(dx) > 12.0)):
+	# Each one stops a little nearer or farther than the next, so several of them do not end up standing in the same spot looking like one.
+	var reach := 70.0 + float(int(foe["id"]) % 3) * 9.0
+	if float(foe["a"]) <= 0.0 and (absf(dx) > reach or (not sight and absf(dx) > 12.0)):
 		var next_x := x + face * 30.0 * dt
 		var ahead := next_x + face * 8.0
 		# A ledge only stops it over water; onto dry ground below it steps off.
