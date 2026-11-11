@@ -122,7 +122,7 @@ func is_running() -> bool:
 func is_finished() -> bool:
 	return _finished
 
-## End the run. `outcome` is OUTCOME_CLEARED (won), OUTCOME_DEFEATED (lost) or OUTCOME_TIMED_OUT (the game's own time limit ran out without a win or a loss). `extra` adds or replaces result fields. The simulation stops; the last frame stays on screen under the result.
+## End the run. `outcome` is OUTCOME_CLEARED (won), OUTCOME_DEFEATED (lost) or OUTCOME_TIMED_OUT (the game's own time limit ran out without a win or a loss). `extra` adds or replaces result fields. The simulation stops at once: no further _game_step or _game_frame is called, and the last frame stays on screen under the result, so anything the player should see before the result (a death animation) has to play before finish() is called. Only the first call of a run counts, and a call from inside _game_start does nothing.
 func finish(outcome: StringName, extra: Dictionary = {}) -> void:
 	if not is_running():
 		return
@@ -154,9 +154,11 @@ func start(config: Dictionary) -> void:
 	_fixed.reset()
 	_finished = false
 	_paused = false
-	_started = true
+	# The run is live only once _game_start has returned: a finish() called while the run is still being built does nothing, so a host never hears of an end before the start.
+	_started = false
 	var normalised := {"options": options, "players": players, "seed": int(config.get("seed", 1)), "locale": locale, "stage_size": stage_size}
 	_game_start(normalised)
+	_started = true
 
 ## Freeze or resume. Held controls are let go on pause, so nothing stays pressed across it.
 func set_paused(paused: bool) -> void:

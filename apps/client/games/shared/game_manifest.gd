@@ -72,6 +72,8 @@ static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 	_check_players(errors, manifest.get("players"))
 	_check_colors(errors, "colors", manifest.get("colors"), ["title", "shadow", "glow"])
 	_check_colors(errors, "art", manifest.get("art"), ["top", "bottom", "primary", "secondary"])
+	_check_keys(errors, "colors", manifest.get("colors"), ["title", "shadow", "glow"])
+	_check_keys(errors, "art", manifest.get("art"), ["top", "bottom", "primary", "secondary", "image", "motif"])
 	if manifest.get("art") is Dictionary:
 		var art: Dictionary = manifest["art"]
 		if art.has("image"):
@@ -108,6 +110,14 @@ static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 				if not _is_number(tuning[key]):
 					errors.append("tuning.%s: must be a number" % str(key))
 	return errors
+
+## Report every key of an object that the schema does not know, so a misspelt field fails instead of being silently ignored.
+static func _check_keys(errors: PackedStringArray, field: String, value: Variant, allowed: Array) -> void:
+	if not value is Dictionary:
+		return
+	for key: Variant in value:
+		if not str(key) in allowed:
+			errors.append("%s.%s: unknown field" % [field, str(key)])
 
 static func is_id(value: String) -> bool:
 	return value != "" and value == value.to_lower() and value.is_valid_identifier() and not value.begins_with("_")
@@ -180,6 +190,7 @@ static func _check_stage(errors: PackedStringArray, value: Variant) -> void:
 			errors.append("stage.size: [%d, %d] must be 1920x1080 divided by a whole number (960x540, 640x360, 480x270, 384x216, 320x180 ...)" % [width, height])
 	if (value as Dictionary).has("pixel_art") and not value["pixel_art"] is bool:
 		errors.append("stage.pixel_art: must be true or false")
+	_check_keys(errors, "stage", value, ["size", "pixel_art"])
 
 static func _check_players(errors: PackedStringArray, value: Variant) -> void:
 	if not value is Dictionary or not _is_int((value as Dictionary).get("min")) or not _is_int((value as Dictionary).get("max")):
@@ -191,6 +202,9 @@ static func _check_players(errors: PackedStringArray, value: Variant) -> void:
 		errors.append("players: needs 1 <= min <= max <= %d" % MAX_PLAYERS)
 	if (value as Dictionary).has("join_in_progress") and not value["join_in_progress"] is bool:
 		errors.append("players.join_in_progress: must be true or false")
+	elif bool((value as Dictionary).get("join_in_progress", false)) and high <= low:
+		errors.append("players.join_in_progress: needs max greater than min, there is nobody to join otherwise")
+	_check_keys(errors, "players", value, ["min", "max", "join_in_progress"])
 
 static func _check_achievements(errors: PackedStringArray, value: Variant, players: Variant) -> void:
 	if not value is Array:
@@ -214,6 +228,7 @@ static func _check_achievements(errors: PackedStringArray, value: Variant, playe
 			errors.append("%s.icon: must be one of %s" % [at, ", ".join(PackedStringArray(ICONS))])
 		_check_text(errors, at + ".name", item.get("name"))
 		_check_text(errors, at + ".desc", item.get("desc"))
+		_check_keys(errors, at, item, ["id", "icon", "name", "desc", "when"])
 		var when: Variant = (item as Dictionary).get("when")
 		if not when is Dictionary:
 			errors.append("%s.when: must be an object ({} unlocks on any finished run)" % at)
@@ -281,6 +296,7 @@ static func _check_controls(errors: PackedStringArray, value: Variant, kind: Str
 					_check_text(errors, "%s.%s" % [at, field], item[field])
 			if (item as Dictionary).has("performs") and not _is_strings(item["performs"]):
 				errors.append("%s.performs: must be a list of command names" % at)
+			_check_keys(errors, at, item, ["id", "name", "actions", "glyphs", "pad", "mouse", "performs"])
 
 static func _check_cells(errors: PackedStringArray, field: String, value: Variant) -> void:
 	if not value is Array:
@@ -296,6 +312,7 @@ static func _check_cells(errors: PackedStringArray, field: String, value: Varian
 		var fields: Variant = (item as Dictionary).get("fields")
 		if not _is_strings(fields) or (fields as Array).is_empty() or (fields as Array).size() > 2:
 			errors.append("%s.fields: must name one or two snapshot fields" % at)
+		_check_keys(errors, at, item, ["label", "fields"])
 
 static func _check_meter(errors: PackedStringArray, field: String, value: Variant, needs_label: bool) -> void:
 	if not value is Dictionary:
@@ -303,9 +320,10 @@ static func _check_meter(errors: PackedStringArray, field: String, value: Varian
 		return
 	for key in ["field", "max"]:
 		if not (value as Dictionary).get(key) is String or value[key] == "":
-			errors.append("%s.%s: must name a snapshot field" % [field, key])
+			errors.append("%s.%s: must be the name of a snapshot field (a string, not a number: the game reports the maximum in its snapshot)" % [field, key])
 	if needs_label or (value as Dictionary).has("label"):
 		_check_text(errors, field + ".label", value.get("label"))
+	_check_keys(errors, field, value, ["field", "max", "label"])
 
 static func _check_hud(errors: PackedStringArray, value: Variant) -> void:
 	if not value is Dictionary:
@@ -318,7 +336,8 @@ static func _check_hud(errors: PackedStringArray, value: Variant) -> void:
 	else:
 		for key in ["field", "total"]:
 			if (clock as Dictionary).has(key) and (not clock[key] is String or clock[key] == ""):
-				errors.append("hud.clock.%s: must name a snapshot field" % key)
+				errors.append("hud.clock.%s: must be the name of a snapshot field (a string, not a number)" % key)
+		_check_keys(errors, "hud.clock", clock, ["mode", "field", "total"])
 	if hud.has("vital"):
 		_check_meter(errors, "hud.vital", hud["vital"], true)
 	if hud.has("boss"):
@@ -363,6 +382,7 @@ static func _check_options(errors: PackedStringArray, value: Variant, kind: Stri
 			else:
 				for label_index in (labels as Array).size():
 					_check_text(errors, "%s.labels[%d]" % [at, label_index], labels[label_index])
+		_check_keys(errors, at, item, ["id", "name", "note", "values", "default", "labels", "path"])
 		if kind == KIND_DSL:
 			if not (item as Dictionary).get("path") is String or not str(item["path"]).begins_with("/"):
 				errors.append("%s.path: must be a JSON pointer into the runtime's DSL" % at)

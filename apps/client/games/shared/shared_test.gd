@@ -18,9 +18,12 @@ class Probe:
 	var steps := 0
 	var frames := 0
 	var journal: Array[String] = []
+	var hasty := false
 
 	func _game_start(config: Dictionary) -> void:
 		journal.append("start:%d:%d" % [int(config["players"]), int(config["seed"])])
+		if hasty:
+			finish(OUTCOME_DEFEATED)
 
 	func _game_step(_delta: float) -> void:
 		steps += 1
@@ -265,6 +268,10 @@ func _test_module() -> void:
 
 	module.start({})
 	_check("a module can be started again with defaults", module.is_running() and module.player_count() == 1 and module.score == 0 and is_zero_approx(module.elapsed) and module.journal.back() == "start:1:1")
+	module.hasty = true
+	results.clear()
+	module.start({})
+	_check("finish() from inside _game_start does nothing: a run cannot end before it began", module.is_running() and results.is_empty())
 	module.free()
 
 # ---- manifest ----
@@ -328,6 +335,18 @@ func _test_manifest_schema() -> void:
 		"site.caption: unknown field": func(m: Dictionary) -> void: m["site"] = {"caption": "x"},
 		"site.art_alt: must be": func(m: Dictionary) -> void: m["site"] = {"art_alt": {"zh": "只有中文"}},
 		"tuning.cooldown: must be a number": func(m: Dictionary) -> void: m["tuning"] = {"cooldown": "ten"},
+		"players.join_in_progres: unknown field": func(m: Dictionary) -> void: m["players"]["join_in_progres"] = true,
+		"players.join_in_progress: needs max greater than min": func(m: Dictionary) -> void: m["players"] = {"min": 2, "max": 2, "join_in_progress": true},
+		"colors.outline: unknown field": func(m: Dictionary) -> void: m["colors"]["outline"] = "FFFFFF",
+		"art.picture: unknown field": func(m: Dictionary) -> void: m["art"]["picture"] = "key_art.png",
+		"achievements[0].title: unknown field": func(m: Dictionary) -> void: m["achievements"][0]["title"] = "x",
+		"controls[0].keys: unknown field": func(m: Dictionary) -> void: m["controls"][0]["keys"] = ["W"],
+		"hud.clock.feild: unknown field": func(m: Dictionary) -> void: m["hud"]["clock"]["feild"] = "time_left",
+		"hud.vital.max: must be the name of a snapshot field (a string, not a number": func(m: Dictionary) -> void: m["hud"]["vital"]["max"] = 3,
+		"hud.vital.colour: unknown field": func(m: Dictionary) -> void: m["hud"]["vital"]["colour"] = "FF0000",
+		"hud.stats[0].field: unknown field": func(m: Dictionary) -> void: m["hud"]["stats"][0]["field"] = "kills",
+		"hud.clock.total: must be the name of a snapshot field": func(m: Dictionary) -> void: m["hud"]["clock"]["total"] = 60,
+		"options[0].lables: unknown field": func(m: Dictionary) -> void: m["options"][0]["lables"] = [],
 	}
 	for expected: String in cases:
 		var errors := _errors_with(cases[expected])
@@ -362,6 +381,7 @@ func _test_manifest_schema() -> void:
 		"controls[0].actions: unknown field": func(m: Dictionary) -> void: m["controls"][0]["actions"] = ["ui_up"],
 		"options[0].path: only a dsl game has one": func(m: Dictionary) -> void: m["options"][0]["path"] = "/x",
 		"runtime: unknown field": func(m: Dictionary) -> void: m["runtime"] = "shooter@1.0.0",
+		"stage.pixelart: unknown field": func(m: Dictionary) -> void: m["stage"]["pixelart"] = true,
 	}
 	for expected: String in module_cases:
 		var broken := module.duplicate(true)
