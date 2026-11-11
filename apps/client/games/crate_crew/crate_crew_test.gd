@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_losing()
 	_test_two_players()
 	_test_join_and_leave()
+	_test_lift_belt_and_door()
 	_test_first_boss()
 	_test_last_boss_clears_the_game()
 	_test_determinism()
@@ -282,6 +283,63 @@ func _test_join_and_leave() -> void:
 	_check("the run goes on with one player", game.is_running() and int(game.snapshot()["phase"]) == World.P_PLAY)
 	game.free()
 
+func _test_lift_belt_and_door() -> void:
+	# The pipe shaft's first flag stands by a lift that climbs twelve tiles. Run and jump onto it while it is still low.
+	var game := _start(1, 8, {"stage": 2, "flag": 1, "difficulty": 1})
+	var lift: Dictionary = game.world.lifts[0]
+	var bottom := float(lift["y"])
+	for index in 60 * 12:
+		game.advance(STEP)
+		if float(lift["dy"]) > 0.0 and float(lift["y"]) > bottom - 20.0:
+			break
+	_check("a lift travels on its own and comes back", float(lift["dy"]) > 0.0 and game.world.stage_time > 5.0)
+	game.feed(0, &"right", 1.0)
+	for index in 60 * 3:
+		game.feed(0, &"a", 1.0 if float(_hero(game, 0)["x"]) > 200.0 else 0.0)
+		game.advance(STEP)
+		if float(_hero(game, 0)["x"]) > 250.0:
+			break
+	game.feed(0, &"right", 0.0)
+	game.feed(0, &"a", 0.0)
+	game.advance(2.5)
+	var rider := _hero(game, 0)
+	_check("a robot standing on a lift rides up with it", bool(rider["ground"]) and is_equal_approx(float(rider["y"]), float(lift["y"])) and float(rider["y"]) < bottom - 60.0 and int(rider["energy"]) == 4)
+	game.free()
+	# The foundry opens with a belt that carries whatever stands on it.
+	game = _start(1, 8, {"stage": 3, "difficulty": 1})
+	var bug: Dictionary = game.world.foes[0]
+	game.feed(0, &"right", 1.0)
+	for index in 60 * 10:
+		game.feed(0, &"a", 1.0 if absf(float(bug["x"]) - float(_hero(game, 0)["x"])) < 30.0 else 0.0)
+		game.advance(STEP)
+		if float(_hero(game, 0)["x"]) > 330.0 and bool(_hero(game, 0)["ground"]):
+			break
+	game.feed(0, &"right", 0.0)
+	game.feed(0, &"a", 0.0)
+	game.advance(STEP)
+	var before := float(_hero(game, 0)["x"])
+	game.advance(0.15)
+	_check("a belt carries a robot that stands still on it", float(_hero(game, 0)["x"]) > before + 4.0 and float(_hero(game, 0)["x"]) < before + 6.0)
+	game.free()
+	# From the foundry's last flag, run to the exit door.
+	game = _start(1, 8, {"stage": 3, "flag": 2, "difficulty": 1})
+	var score_before := int(game.snapshot()["score"])
+	game.feed(0, &"right", 1.0)
+	for index in 60 * 90:
+		var hero := _hero(game, 0)
+		var danger := false
+		for foe: Dictionary in game.world.foes:
+			var ahead := float(foe["x"]) - float(hero["x"])
+			danger = danger or (int(foe["state"]) == 0 and ahead > -10.0 and ahead < 34.0 and absf(float(foe["y"]) - float(hero["y"])) < 30.0)
+		game.feed(0, &"a", 1.0 if danger else 0.0)
+		game.advance(STEP)
+		if int(game.snapshot()["stage"]) != 3 or not game.is_running():
+			break
+	var after := game.snapshot()
+	_check("reaching the exit door clears the stage and the next one begins", after["stage"] == 4 and int(game.audio.played.get("stage_clear", 0)) == 1 and int(after["score"]) >= score_before + 500 and after["bosses_beaten"] == 0)
+	_check("the next stage starts with full energy and its own tune", after["players"][0]["energy"] == after["players"][0]["max_energy"] and game.audio.music_playing and int(game.audio.played.get("stage_start", 0)) == 2)
+	game.free()
+
 # ---- bosses, fought through the controls ----
 
 ## Presses for one step of a boss fight: fetch something to throw, keep clear of the machine, throw when it lines up.
@@ -503,7 +561,8 @@ func _test_stages_can_be_walked() -> void:
 			grounded = grounded and (under != Levels.EMPTY or on_crate)
 			if str(object["inside"]) == "cog":
 				cogs += 1
-		_check("stage %d: every crate stands on something and exactly one hides a golden cog" % (stage + 1), grounded and cogs == 1)
+				grounded = grounded and seen.has(Vector2i(int(at.x / 16.0), int(at.y / 16.0) - 1))
+		_check("stage %d: every crate stands on something and exactly one, within reach, hides a golden cog" % (stage + 1), grounded and cogs == 1)
 	_check("two stages end in a boss room and two at a door", not (Levels.new().build(1)["boss"] as Dictionary).is_empty() and not (Levels.new().build(3)["boss"] as Dictionary).is_empty() and Levels.new().build(0)["door"] is Vector2 and Levels.new().build(2)["door"] is Vector2)
 
 func _test_art_and_sound() -> void:

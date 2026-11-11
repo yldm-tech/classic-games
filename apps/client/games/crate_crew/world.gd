@@ -382,8 +382,8 @@ func _step_lifts() -> void:
 		var to: Vector2 = lift["to"]
 		var period := float(lift["period"])
 		var along := fmod(stage_time, period) / period
-		# A smooth there-and-back: ease in and out at both ends.
-		var eased := 0.5 - 0.5 * cos(along * TAU)
+		# There and back with a wait at each end, so there is time to step on and off.
+		var eased := smoothstep(0.1, 0.4, along) - smoothstep(0.6, 0.9, along)
 		var at := from.lerp(to, eased)
 		lift["dx"] = at.x - float(lift["x"])
 		lift["dy"] = at.y - float(lift["y"])

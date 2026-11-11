@@ -68,6 +68,10 @@ func advance(delta: float) -> void:
 			_spark(from, (mouth - from) * 1.6, 0.0, 0.6, Color("c9c2d6"), 1.0)
 		if float(world.boss.get("shake", 0.0)) > 0.0:
 			_shake = maxf(_shake, 1.2)
+	if world != null:
+		for object in world.objects:
+			if int(object["state"]) == World.O_THROWN and _random.chance(0.5):
+				_spark(Vector2(float(object["x"]), float(object["y"]) - float(object["tall"]) * 0.5 + _random.float_range(-4.0, 4.0)), Vector2.ZERO, 0.0, 0.18, Color("f4f1e8"), 1.0)
 	for particle in _particles:
 		particle["life"] = float(particle["life"]) - delta
 		particle["vy"] = float(particle["vy"]) + float(particle["g"]) * delta
@@ -195,15 +199,19 @@ func _draw() -> void:
 		draw_rect(Rect2(roundf(float(particle["x"])), roundf(float(particle["y"])), size, size), particle["color"])
 	for popup in _popups:
 		_text(str(popup["text"]), Vector2(float(popup["x"]), float(popup["y"])), 8, Color("ffd75e"))
-	# A hint shows only while a robot stands near it, so two never crowd each other.
+	# One hint at a time: the one nearest to a robot, and only while that robot stands by it.
+	var hint_key := ""
+	var hint_x := 0.0
+	var hint_distance := 44.0
 	for hint: Dictionary in world.level.get("hints", []):
 		var at: Vector2 = hint["at"]
-		var near := false
 		for hero in world.heroes:
-			if int(hero["state"]) != World.H_OUT and absf(float(hero["x"]) - at.x) < 44.0:
-				near = true
-		if near:
-			_plate(Texts.of(str(hint["key"]), locale), Vector2(at.x, camera.y + 78.0), 10, Color("f4f1e8"))
+			if int(hero["state"]) != World.H_OUT and absf(float(hero["x"]) - at.x) < hint_distance:
+				hint_distance = absf(float(hero["x"]) - at.x)
+				hint_key = str(hint["key"])
+				hint_x = at.x
+	if hint_key != "" and world.phase == World.P_PLAY:
+		_plate(Texts.of(hint_key, locale), Vector2(clampf(hint_x, camera.x + 100.0, camera.x + VIEW.x - 100.0), camera.y + 80.0), 10, Color("f4f1e8"))
 	draw_set_transform(Vector2.ZERO)
 	_draw_banners()
 	if _flash > 0.0:

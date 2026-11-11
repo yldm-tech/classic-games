@@ -210,9 +210,8 @@ func _pipe_shaft() -> void:
 	_gears(4, 69, 2)
 	_shelf(8, 68, 5)
 	_flag(9, 67)
-	_foe("hopper", 11, 67)
 	# A long ride up with flyers crossing it.
-	_lift(15, 68, 15, 56, 2, 7.0)
+	_lift(15, 68, 15, 56, 2, 8.0)
 	_foe("drone", 12, 63, 1, 5)
 	_foe("drone", 14, 59, -1, 5)
 	_shelf(20, 62, 4)
@@ -220,6 +219,7 @@ func _pipe_shaft() -> void:
 	_fill(1, 56, 12, 1)
 	_spikes(2, 55, 2)
 	_foe("bug", 6, 55)
+	_foe("hopper", 11, 55)
 	_crate(8, 55)
 	_crate(9, 55, "gears")
 	_shelf(15, 54, 3)

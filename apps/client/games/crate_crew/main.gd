@@ -30,7 +30,6 @@ func _game_start(config: Dictionary) -> void:
 	Sounds.define_all(audio)
 	_music = ""
 	_play_music("stage%d" % (world.stage % 2))
-	world.events.clear()
 
 func _game_step(delta: float) -> void:
 	world.step([input(0), input(1)], delta)
