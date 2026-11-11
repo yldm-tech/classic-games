@@ -20,13 +20,13 @@ const HERO_FRAMES := ["idle_0", "idle_1", "run_0", "run_1", "run_2", "run_3", "r
 const RUN_FPS := 15.0
 const CARRY_RUN_FPS := 11.0
 ## How long a crate takes from the floor to the paws, and how long something let go takes to settle from the paws onto the path the simulation gives it.
-const LIFT_SPAN := 0.2
+const LIFT_SPAN := 0.24
 const DRIFT_SPAN := 0.12
 ## How long the throwing pose is held, and how much of it is the wind-up.
 const THROW_SPAN := 0.24
 const WIND_UP := 0.05
 ## A carried thing sinks this far into the paws, so the fingers lie over its bottom edge.
-const HOLD_SINK := 0.7
+const HOLD_SINK := 0.4
 ## Where a carried thing rests when a frame names no spot of its own, from the feet.
 const HOLD_DEFAULT := Vector2(0.0, -22.0)
 ## The pictures of the two pick-ups the simulation still calls by their old names.
@@ -819,7 +819,7 @@ func _pose(hero: Dictionary) -> Dictionary:
 		frame = "hurt"
 	elif bool(hero["hide"]):
 		frame = "duck"
-	elif carrying and float(look["lift_time"]) > LIFT_SPAN * 0.4:
+	elif carrying and float(look["lift_time"]) > LIFT_SPAN * 0.3:
 		frame = "lift"
 	elif float(look["pose_time"]) > 0.0 and not carrying:
 		if str(look["pose"]) == "throw_up":
@@ -868,7 +868,8 @@ func _held_spot(hero: Dictionary, pose: Dictionary) -> Vector2:
 	var rising := float(look["lift_time"]) / LIFT_SPAN
 	if rising > 0.0:
 		var from: Vector2 = look["lift_from"]
-		var along := 1.0 - rising * rising
+		# Slow off the floor while the squirrel still bends over it, then quickly up.
+		var along := (1.0 - rising) * (1.0 - rising)
 		spot = from.lerp(spot, along) - Vector2(0.0, sin(along * PI) * 2.0)
 	return spot
 
@@ -915,13 +916,16 @@ func _draw_hero(hero: Dictionary) -> void:
 	# The load goes behind the squirrel so that its paws lie over the bottom edge; a crate it hides under comes down in front of it and leaves the eyes peeking out.
 	if not hiding:
 		_draw_held(hero, spot)
-	_put(sheet, str(pose["frame"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), tint, float(hero["stun"]) > 0.2)
+	_put(sheet, str(pose["frame"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), tint)
 	if hiding:
 		_draw_held(hero, spot)
 	if world.stage_time < 4.0 and world.phase == World.P_PLAY:
 		# Its name, and with two players a marker in its scarf colour, while the stage is new.
-		var top := Vector2(x, y - 30.0 + sin(_clock * 8.0) * 1.0)
+		var top := Vector2(x, y - (50.0 if hero["carry"] != null or int(hero["lifting"]) >= 0 else 31.0) + sin(_clock * 8.0) * 1.0)
 		var fade := clampf(4.0 - world.stage_time, 0.0, 1.0)
+		# Side by side, the second name steps above the first.
+		if slot == 1 and int(world.heroes[0]["state"]) == World.H_NORMAL and absf(float(world.heroes[0]["x"]) - x) < 26.0:
+			top.y -= 9.0
 		var ink := Color(0.1, 0.08, 0.14, fade)
 		var color: Color = HERO_COLORS[slot]
 		if players > 1:

@@ -52,7 +52,7 @@
 	],
 	"site": {
 		"screenshot": "site_screenshot.jpg",
-		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：灯光下的工具台上，青色机器人把木箱举过头顶，橙色机器人站在它身旁，前方一只紫色甲虫机器人正爬过来。", "en": "Crate Crew with two players: on the lamp-lit workbench the teal robot holds a wooden crate over its head with the orange robot beside it, and a purple beetle robot crawls towards them."},
-		"art_alt": {"zh": "《搬箱小队》主视觉：两个小维修机器人在巨大的工坊里合力举起一只木箱。", "en": "Crate Crew key art: two small repair robots lifting a wooden crate together in an enormous workshop."}
+		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：灯光下的工具台上，围青色围巾的红松鼠小枫把木箱举过头顶，围橙色围巾的棕松鼠大栗跟在它身旁，前方一只紫色甲虫机器正爬过来。", "en": "Crate Crew with two players: on the lamp-lit workbench Fenn, the red squirrel with the teal scarf, holds a wooden crate over its head with Tug, the brown squirrel with the orange scarf, beside it, and a purple beetle machine crawls towards them."},
+		"art_alt": {"zh": "《搬箱小队》主视觉：两只小松鼠在巨大的工坊里合力举起一只木箱，身后的暗处是一台瞪着黄眼睛的紫色吸尘巨兽。", "en": "Crate Crew key art: two small squirrels lifting a wooden crate together in an enormous workshop, with a purple vacuum machine with glowing yellow eyes looming in the dark behind them."}
 	}
 }
