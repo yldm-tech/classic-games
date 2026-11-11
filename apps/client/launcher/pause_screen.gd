@@ -44,7 +44,8 @@ func build() -> void:
 	scrim.color = T.deep(T.A_SCRIM_PAUSE)
 	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(W.fill(scrim))
-	add_child(W.fill(C.GradientRect.new([[0.0, T.deep(0.7)], [0.45, T.deep(0.0)], [1.0, T.deep(0.0)]], true)))
+	# Darker on the left under the menu, as in the design, and again on the right, where the controls table is small text over the frozen stage.
+	add_child(W.fill(C.GradientRect.new([[0.0, T.deep(0.7)], [0.45, T.deep(0.0)], [0.5, T.deep(0.0)], [0.6, T.deep(0.6)], [1.0, T.deep(0.6)]], true)))
 
 	var header := W.hbox(18)
 	header.name = "Header"

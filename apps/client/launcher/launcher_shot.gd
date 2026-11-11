@@ -53,6 +53,7 @@ func _initialize() -> void:
 	shell.store = store
 	viewport.add_child(shell)
 	await process_frame
+	(shell.screen(LauncherRoot.GAME) as LauncherGameScreen).pause_on_focus_loss = false
 	if screen_id != "home":
 		shell.go(StringName(screen_id), {"game": _env("LAUNCHER_SHOT_GAME", "shooter")})
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
@@ -65,7 +66,9 @@ func _initialize() -> void:
 	Engine.time_scale = 1.0
 	# Let the screen fade, the backdrop cross-fade and the card resize finish.
 	await create_timer(1.2).timeout
-	await RenderingServer.frame_post_draw
+	# A window that is covered, minimised or on another desktop is never drawn, so waiting for frame_post_draw would hang there. Force the frames instead: one for the nested viewports (blur, game stage), one for the canvas that shows them.
+	RenderingServer.force_draw()
+	RenderingServer.force_draw()
 	var image := viewport.get_texture().get_image()
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var path := out_dir.path_join(file_name + ".png")

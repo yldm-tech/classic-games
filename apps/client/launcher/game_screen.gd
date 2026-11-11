@@ -27,6 +27,8 @@ var game_id := ""
 var phase := PHASE_PLAYING
 var result_row := RESULT_RETRY
 var hud_visible := true
+## Whether the run pauses when the window loses focus. The screenshot tool turns it off, because its window is never the focused one for long.
+var pause_on_focus_loss := true
 var tower_index := 0
 ## Where the next tower goes, in stage coordinates.
 var cursor_at := Vector2(GameSession.STAGE_SIZE) / 2.0
@@ -62,9 +64,6 @@ var _shield_ready_at := 0.0
 var _last_mouse := Vector2.ZERO
 
 func build() -> void:
-	var top := C.GradientRect.new([[0.0, T.deep(0.65)], [1.0, T.deep(0.0)]])
-	top.size = Vector2(T.CANVAS.x, 160)
-	add_child(top)
 	_stage_click = C.Pressable.new()
 	_stage_click.name = "StageClick"
 	_stage_click.mouse_default_cursor_shape = Control.CURSOR_ARROW
@@ -91,6 +90,9 @@ func _build_hud() -> void:
 	_hud.name = "Hud"
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(W.fill(_hud))
+	var top := C.GradientRect.new([[0.0, T.deep(0.65)], [1.0, T.deep(0.0)]])
+	top.size = Vector2(T.CANVAS.x, 160)
+	_hud.add_child(top)
 
 	var left := W.vbox(8)
 	left.name = "Player"
@@ -240,8 +242,9 @@ func on_exit() -> void:
 	shell.game_host.clear_stage()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and shell != null:
-		open_pause()
+	# The notification is propagated through the whole tree, which cannot be changed while that is going on, so the pause screen is opened right after it.
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and shell != null and pause_on_focus_loss:
+		open_pause.call_deferred()
 
 func _start(id: String) -> void:
 	game_id = id
@@ -551,6 +554,10 @@ func _show_result(result: Dictionary, record: Dictionary) -> void:
 	var unlocked: Array = record.get("unlocked", [])
 	if unlocked.is_empty():
 		return
+	# The list sits on the right, where the frozen stage is only lightly dimmed; darken that side so the small text stays readable.
+	var shade := C.GradientRect.new([[0.0, T.deep(0.0)], [0.55, T.deep(0.0)], [0.68, T.deep(0.6)], [1.0, T.deep(0.6)]], true)
+	_result.add_child(W.fill(shade))
+	_result.move_child(shade, 2)
 	var aside := W.vbox(6)
 	aside.name = "Unlocked"
 	aside.position = Vector2(T.CANVAS.x - T.MARGIN - T.SIDE_PANEL_WIDTH, T.PAUSE_COLUMN_TOP)
