@@ -132,60 +132,16 @@ import: ## Godot 导入资源、预热缓存(需本机装 Godot 4.6)
 	$(GODOT) --headless --path $(CLIENT_DIR) --import
 
 .PHONY: spike
-spike: ## 跑 Phase 0 headless spike,退出码即门禁(同 CI)
+spike: ## 跑运行时 headless 测试(DSL 补丁与迁移、三个运行时的加载与玩法规则、联机快照),退出码即门禁(同 CI)
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://spike_test.gd '^=== spike 结果: [0-9]+ passed, 0 failed ===$$'
 
-.PHONY: ui-test
-ui-test: ## 跑 shell UI 断言(同 CI)
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://shell_ui_test.gd '^shell_ui_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: http-test
-http-test: ## 跑客户端 HTTP 边界契约
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://core/http/http_contract_test.gd '^http_contract_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: identity-test
-identity-test: ## 跑 identity 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/identity/identity_test.gd '^identity_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: catalog-test
-catalog-test: ## 跑 catalog 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/catalog/catalog_test.gd '^catalog_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: creation-test
-creation-test: ## 跑 creation 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/creation/creation_test.gd '^creation_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: community-test
-community-test: ## 跑 community 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/community/community_test.gd '^community_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: engagement-test
-engagement-test: ## 跑 engagement 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/engagement/engagement_test.gd '^engagement_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: commerce-test
-commerce-test: ## 跑 commerce 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/commerce/commerce_test.gd '^commerce_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: operations-test
-operations-test: ## 跑 operations 垂直切片行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://features/operations/operations_test.gd '^operations_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: patterns-test
-patterns-test: ## 跑共享 UI pattern 行为测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://ui/patterns/patterns_test.gd '^patterns_test: [0-9]+ passed, 0 failed$$'
-
-.PHONY: app-test
-app-test: ## 跑应用组合根、屏幕注册和 chrome 测试
-	GODOT="$(GODOT)" scripts/run-godot-test.sh res://app/app_test.gd '^app_test: [0-9]+ passed, 0 failed$$'
-
 .PHONY: boundary-test
-boundary-test: ## 验证客户端依赖方向及检查器自身契约
+boundary-test: ## 验证客户端依赖方向(启动器只经 GameSession 进入运行时、启动器不联网)及检查器自身契约
 	bash scripts/tests/check-client-boundaries_test.sh
 	scripts/check-client-boundaries.sh
 
 .PHONY: architecture-test
-architecture-test: ## 验证仓库级架构、迁移与死代码边界
+architecture-test: ## 验证仓库级架构:已移除的手机端不得回归、Go 模块边界、后端迁移与进程生命周期、公开文档
 	bash scripts/tests/check-architecture_test.sh
 	scripts/check-architecture.sh
 
@@ -213,10 +169,6 @@ pc-mode-test: ## 跑启动器 PC 模式测试(筛选排序、模式切换、详�
 game-flow-test: ## 跑游戏流程测试(游戏菜单、局内 HUD 与输入、暂停、结算、每局只记录一次)
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/game_flow_test.gd '^game_flow_test: [0-9]+ passed, 0 failed$$'
 
-.PHONY: screenshot
-screenshot: ## 渲染关键屏并写出 PNG(需 X11,不进 CI)
-	GODOT="$(GODOT)" scripts/run-screenshot-verify.sh
-
 .PHONY: launcher-shot
 launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played)
 	GODOT="$(GODOT)" scripts/run-launcher-shot.sh $(SCREEN) $(STATE)
@@ -234,7 +186,7 @@ publish-check: ## 公开前门禁:任何 ref 的历史都不得含内部文档(�
 # ---- aggregate ----
 
 .PHONY: ci
-ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test http-test identity-test catalog-test creation-test community-test engagement-test commerce-test operations-test patterns-test app-test spike ui-test launcher-test settings-test library-test launch-test pc-mode-test game-flow-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
+ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test spike launcher-test settings-test library-test launch-test pc-mode-test game-flow-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
 
 .PHONY: ci-web
 ci-web: web-install web-check web-build ## 本地复现官网 CI 门禁(需 Node 与 pnpm)

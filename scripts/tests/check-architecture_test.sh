@@ -11,8 +11,7 @@ trap 'rm -rf "$TASK_TMP"' EXIT
 fixture() {
 	local dir
 	dir="$(mktemp -d "$TASK_TMP/fixture.XXXXXX")"
-	mkdir -p "$dir/apps/client/app" "$dir/apps/client/core/http" \
-		"$dir/apps/client/features/identity" "$dir/apps/client/features/catalog" \
+	mkdir -p "$dir/apps/client/launcher" "$dir/apps/client/runtime" \
 		"$dir/apps/server/internal/app" "$dir/apps/server/internal/catalog" \
 		"$dir/apps/server/cmd/server" "$dir/apps/cli/internal/cli" "$dir/apps/mcp/internal/server" \
 		"$dir/packages/dsl" "$dir/packages/sdk" "$dir/docs"
@@ -58,78 +57,40 @@ expect_fail_with() {
 	fi
 }
 
-case_dir="$(fixture)"
-printf '%s\n' 'class_name ShellRoot' > "$case_dir/apps/client/app/app_root.gd"
-expect_fail "legacy client class" "$case_dir"
+REMOVED_PATH="the removed phone client must stay removed:"
+REMOVED_REFERENCE="the client must not reference the removed phone client:"
 
-case_dir="$(fixture)"
-printf '%s\n' 'const API := preload("res://shell/net/api_client.gd")' > "$case_dir/apps/client/app/app_root.gd"
-expect_fail "legacy client path" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'var legacy_api' > "$case_dir/apps/client/app/app_root.gd"
-expect_fail "legacy compatibility seam" "$case_dir"
-
-for suffix in screen store coordinator; do
+for removed in app features shell ui; do
 	case_dir="$(fixture)"
-	printf '%s\n' 'var endpoint := "/api/v1/games"' > "$case_dir/apps/client/features/catalog/catalog_${suffix}.gd"
-	expect_fail "endpoint in $suffix" "$case_dir"
+	mkdir -p "$case_dir/apps/client/$removed"
+	expect_fail_with "phone client directory $removed is back" "$case_dir" "$REMOVED_PATH"
+done
+
+for removed in main.gd main.tscn; do
+	case_dir="$(fixture)"
+	: > "$case_dir/apps/client/$removed"
+	expect_fail_with "phone client entry $removed is back" "$case_dir" "$REMOVED_PATH"
 done
 
 case_dir="$(fixture)"
-printf '%s\n' 'var link := "https://example.test/resource"' > "$case_dir/apps/client/features/catalog/catalog_screen.gd"
-expect_fail "external URL in screen" "$case_dir"
+printf '%s\n' 'const Tokens := preload("res://shell/design_system/theme/tokens.gd")' > "$case_dir/apps/client/launcher/launcher_tokens.gd"
+expect_fail_with "import from a removed directory" "$case_dir" "$REMOVED_REFERENCE"
 
 case_dir="$(fixture)"
-printf '%s\n' 'class_name RogueScreen' 'extends ScreenBase' 'var endpoint := "/api/v1/games"' > "$case_dir/apps/client/features/catalog/rogue.gd"
-expect_fail "URL in nonconventional screen filename" "$case_dir"
+printf '%s\n' '[ext_resource type="Script" path="res://features/catalog/home_screen.gd" id="1"]' > "$case_dir/apps/client/launcher/launcher.tscn"
+expect_fail_with "scene uses a script from a removed directory" "$case_dir" "$REMOVED_REFERENCE"
 
 case_dir="$(fixture)"
-printf '%s\n' 'extends "res://ui/screen_base.gd"' 'var endpoint := "/api/v1/games"' > "$case_dir/apps/client/features/catalog/rogue.gd"
-expect_fail "URL in path-extended screen" "$case_dir"
+printf '%s\n' 'func locale() -> String:' '	return AppState.locale' > "$case_dir/apps/client/launcher/launcher_root.gd"
+expect_fail_with "read of the removed AppState autoload" "$case_dir" "$REMOVED_REFERENCE"
 
 case_dir="$(fixture)"
-printf '%s\n' "extends 'res://ui/screen_base.gd'" 'var endpoint := "/api/v1/games"' > "$case_dir/apps/client/features/catalog/rogue.gd"
-expect_fail "URL in single-quoted path screen" "$case_dir"
+printf '%s\n' '[autoload]' 'AppState="*res://shell/state/app_state.gd"' > "$case_dir/apps/client/project.godot"
+expect_fail_with "project registers the removed autoload" "$case_dir" "$REMOVED_REFERENCE"
 
 case_dir="$(fixture)"
-mkdir -p "$case_dir/apps/client/ui"
-printf '%s\n' 'uid://screen-base' > "$case_dir/apps/client/ui/screen_base.gd.uid"
-printf '%s\n' 'extends preload("uid://screen-base")' 'var endpoint := "/api/v1/games"' > "$case_dir/apps/client/features/catalog/rogue.gd"
-expect_fail "URL in ScreenBase UID screen" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'var transport: HttpClient' > "$case_dir/apps/client/features/catalog/catalog_mapper.gd"
-expect_fail "HttpClient outside core APIs and composition root" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' '[ext_resource path="res://core/http/http_client.gd" type="Script" id="1"]' > "$case_dir/apps/client/features/catalog/catalog_view.tscn"
-expect_fail "HttpClient resource outside feature API" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'uid://http-client' > "$case_dir/apps/client/core/http/http_client.gd.uid"
-printf '%s\n' 'const Transport := preload("uid://http-client")' > "$case_dir/apps/client/features/catalog/catalog_mapper.gd"
-expect_fail "HttpClient UID outside feature API" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'const Other := preload("res://features/catalog/catalog_screen.gd")' > "$case_dir/apps/client/features/identity/login_screen.gd"
-expect_fail "cross-feature screen import" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' '[ext_resource path="res://features/catalog/catalog_screen.gd" type="Script" id="1"]' > "$case_dir/apps/client/features/identity/login_screen.tscn"
-expect_fail "cross-feature screen resource" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'extends Control' > "$case_dir/apps/client/features/catalog/catalog_screen.gd"
-printf '%s\n' 'uid://catalog-screen' > "$case_dir/apps/client/features/catalog/catalog_screen.gd.uid"
-printf '%s\n' 'const Other := preload("uid://catalog-screen")' > "$case_dir/apps/client/features/identity/login_screen.gd"
-expect_fail "cross-feature screen UID" "$case_dir"
-
-case_dir="$(fixture)"
-printf '%s\n' 'class_name RogueScreen' 'extends ScreenBase' > "$case_dir/apps/client/features/catalog/rogue.gd"
-printf '%s\n' 'uid://rogue-screen' > "$case_dir/apps/client/features/catalog/rogue.gd.uid"
-printf '%s\n' 'const Other := preload("uid://rogue-screen")' > "$case_dir/apps/client/features/identity/login_screen.gd"
-expect_fail "cross-feature semantic screen UID" "$case_dir"
+printf '%s\n' '[application]' 'run/main_scene="res://main.tscn"' > "$case_dir/apps/client/project.godot"
+expect_fail_with "project points at the removed main scene" "$case_dir" "$REMOVED_REFERENCE"
 
 case_dir="$(fixture)"
 printf '%s\n' 'package catalog' 'func migrate() { db.AutoMigrate() }' > "$case_dir/apps/server/internal/catalog/repository.go"
@@ -250,9 +211,8 @@ printf '%s\n' 'package catalog' 'import "github.com/yldm-tech/classic-games/pack
 expect_pass "monorepo module boundaries" "$case_dir"
 
 case_dir="$(fixture)"
-printf '%s\n' 'class_name HttpClient' > "$case_dir/apps/client/core/http/http_client.gd"
-printf '%s\n' 'var transport: HttpClient' 'var endpoint := "/api/v1/auth/guest"' > "$case_dir/apps/client/features/identity/identity_api.gd"
-printf '%s\n' 'var identity_http: HttpClient' > "$case_dir/apps/client/app/app_root.gd"
+printf '%s\n' '[application]' 'run/main_scene="res://launcher/launcher.tscn"' > "$case_dir/apps/client/project.godot"
+printf '%s\n' 'class_name LauncherRoot' 'const Strings := preload("res://i18n/strings.gd")' > "$case_dir/apps/client/launcher/launcher_root.gd"
 printf '%s\n' 'package main' 'func main() { log.Fatal(app.Run()) }' > "$case_dir/apps/server/cmd/server/main.go"
 expect_pass "completed architecture boundaries" "$case_dir"
 
