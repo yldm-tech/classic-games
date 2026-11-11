@@ -1,0 +1,190 @@
+{
+	"schema": 1,
+	"id": "ok_solo",
+	"kind": "dsl",
+	"runtime": "survivor@1.0.0",
+	"name": {
+		"zh": "合格单人",
+		"en": "OK SOLO"
+	},
+	"initials": "hgdr",
+	"genre": {
+		"zh": "生存动作",
+		"en": "SURVIVAL ACTION"
+	},
+	"tagline": {
+		"zh": "和一份坏清单放在同一个目录里的好清单。",
+		"en": "A valid manifest that shares a directory with a broken one."
+	},
+	"players": {
+		"min": 1,
+		"max": 1
+	},
+	"colors": {
+		"title": "F1FFE4",
+		"shadow": "2F7D3A",
+		"glow": "8CE678"
+	},
+	"art": {
+		"motif": "swarm",
+		"top": "04110A",
+		"bottom": "14532D",
+		"primary": "8CE678",
+		"secondary": "FDE047"
+	},
+	"achievements": [
+		{
+			"id": "first_watch",
+			"icon": "bolt",
+			"name": {
+				"zh": "第一夜",
+				"en": "First Watch"
+			},
+			"desc": {
+				"zh": "完成一局，无论胜负。",
+				"en": "Finish a run, win or lose."
+			},
+			"when": {}
+		},
+		{
+			"id": "until_dawn",
+			"icon": "cup",
+			"name": {
+				"zh": "守到天亮",
+				"en": "Until Dawn"
+			},
+			"desc": {
+				"zh": "存活到计时结束。",
+				"en": "Survive until the timer runs out."
+			},
+			"when": {
+				"cleared": true
+			}
+		},
+		{
+			"id": "level_three",
+			"icon": "star",
+			"name": {
+				"zh": "渐入佳境",
+				"en": "Warmed Up"
+			},
+			"desc": {
+				"zh": "单局升到 3 级。",
+				"en": "Reach level 3 in a single run."
+			},
+			"when": {
+				"min": {
+					"level": 3
+				}
+			}
+		},
+		{
+			"id": "thirty_down",
+			"icon": "shield",
+			"name": {
+				"zh": "三十个",
+				"en": "Thirty Down"
+			},
+			"desc": {
+				"zh": "单局击倒 30 个敌人。",
+				"en": "Defeat 30 enemies in a single run."
+			},
+			"when": {
+				"min": {
+					"kills": 30
+				}
+			}
+		}
+	],
+	"how": {
+		"zh": "武器自动攻击，你只管走位。拾取敌人掉落的经验球升级，每次升级依次强化伤害、攻速、弹数和移速。撑到倒计时结束即通关；生命归零则失败。",
+		"en": "The weapon attacks by itself; you move. Collect the orbs enemies drop to level up, and each level strengthens damage, attack speed, projectile count and movement speed in turn. Survive until the countdown ends to clear; you lose when your HP reaches zero."
+	},
+	"controls": [
+		{
+			"id": "move",
+			"name": {
+				"zh": "移动",
+				"en": "Move"
+			},
+			"actions": [
+				"ui_up",
+				"ui_down",
+				"ui_left",
+				"ui_right"
+			],
+			"glyphs": [],
+			"pad": {
+				"zh": "左摇杆 / 十字键",
+				"en": "Left stick / D-pad"
+			},
+			"performs": [
+				"move"
+			]
+		},
+		{
+			"id": "hud",
+			"name": {
+				"zh": "显示 / 隐藏界面",
+				"en": "Show / hide HUD"
+			},
+			"actions": [
+				"launcher_y"
+			],
+			"glyphs": [
+				"launcher_y"
+			]
+		},
+		{
+			"id": "pause",
+			"name": {
+				"zh": "暂停",
+				"en": "Pause"
+			},
+			"actions": [
+				"launcher_menu",
+				"launcher_back"
+			],
+			"glyphs": [
+				"launcher_menu",
+				"launcher_back"
+			]
+		}
+	],
+	"hud": {
+		"clock": {
+			"mode": "countdown",
+			"total": "duration",
+			"field": "elapsed"
+		},
+		"vital": {
+			"field": "hp",
+			"max": "max_hp",
+			"label": {
+				"zh": "生命",
+				"en": "HP"
+			}
+		},
+		"stats": [
+			{
+				"label": {
+					"zh": "等级",
+					"en": "Level"
+				},
+				"fields": [
+					"level"
+				]
+			},
+			{
+				"label": {
+					"zh": "击倒",
+					"en": "Defeated"
+				},
+				"fields": [
+					"kills"
+				]
+			}
+		]
+	},
+	"options": []
+}

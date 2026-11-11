@@ -104,7 +104,7 @@ LauncherGameHost → GameSession → runtime
 
 - `apps/client/launcher/launcher_root.gd` 是启动器的外壳与组合根，负责屏幕注册与切换、顶部导航、toast 和输入分发。
 - 启动器完全本地：不登录、不发网络请求，全部进度保存在唯一的本地存档 `user://launcher.json`（`launcher_store.gd`）。
-- 游戏目录是数据驱动的（`launcher_catalog.gd`），随附三款游戏，分别运行 `shooter`、`survivor`、`tower_defense` 三个运行时的基线 DSL。
+- 游戏目录在启动时从 `apps/client/games/<id>/game.json` 发现：每款游戏是一个自足的目录，加一款游戏不改共享文件（[20-adding-a-game](./20-adding-a-game.md)）。随附三款游戏，分别运行 `shooter`、`survivor`、`tower_defense` 三个运行时的基线 DSL；不经 DSL 的游戏是继承 `GameModule` 的游戏模块，同样经 `GameSession` 运行。
 - 游戏只经 `launcher_game_host.gd` 启动，它是启动器里唯一使用运行时的地方。
 
 屏幕、设置、游戏流程与 PC 模式的细节见 [16-client-architecture](./16-client-architecture.md)。

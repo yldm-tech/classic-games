@@ -19,7 +19,7 @@
 
 ### 客户端(Godot)
 
-客户端是主机风格启动器加三个游戏运行时([16-client-architecture](./16-client-architecture.md)),不联网,所以它的测试全部是 headless 的本地测试,不需要后端。每个测试是一个 `extends SceneTree` 的脚本,经 `scripts/run-godot-test.sh` 运行:先校验 Godot 精确版本并导入资源,再跑脚本;进程退出码非零、出现脚本解析或加载错误、退出时有泄漏的对象或资源、没有打印约定的成功摘要,任何一条都算失败。
+客户端是主机风格启动器、三个 DSL 运行时和 `games/` 下由清单描述的游戏([16-client-architecture](./16-client-architecture.md)),不联网,所以它的测试全部是 headless 的本地测试,不需要后端。每个测试是一个 `extends SceneTree` 的脚本,经 `scripts/run-godot-test.sh` 运行:先校验 Godot 精确版本并导入资源,再跑脚本;进程退出码非零、出现脚本解析或加载错误、退出时有泄漏的对象或资源、没有打印约定的成功摘要、超过时限(每个 Godot 进程 600 秒,`GODOT_TEST_TIMEOUT` 可改;脚本在调用 `quit()` 之前出错时引擎不会自己退出,没有时限就会把整条门禁挂住),任何一条都算失败。
 
 | 测试 | 目标 | 内容 |
 |---|---|---|
@@ -30,14 +30,24 @@
 | `launcher/game_flow_test.gd` | `make game-flow-test` | 游戏菜单、局内 HUD 与输入、暂停、结算、每局只记录一次 |
 | `launcher/pc_mode_test.gd` | `make pc-mode-test` | PC 模式:筛选排序、模式切换、详情页与游戏库、键鼠操作、开局与返回 |
 | `launcher/launch_test.gd` | `make launch-test` | 等主场景 ready 后验证装配并显式释放 |
+| `games/shared/shared_test.gd` | `make games-test` | 游戏支持库:确定性随机数、固定步、每位玩家的输入状态、合成音效与音乐、`GameModule` 基类、清单 schema 的每条规则、游戏发现 |
+| `games/<id>/*_test.gd` | `make games-test` | 每款模块游戏自带的测试:直接加载入口脚本,用固定种子和 `advance()` 确定性地推进 |
+| `testing/module_contract_test.gd` | `make games-test` | 宿主一侧的模块契约:`GameSession` 发现游戏、报告无效清单、用夹具模块跑完整一局(选项与人数、每位玩家的控制、暂停、加入与退出、快照、分数、每种结束方式、同种子重放) |
+| `testing/module_flow_test.gd` | `make games-test` | 玩家一侧的模块契约,经启动器:首页、游戏库、PC 模式显示真实人数,游戏菜单的人数与设备行,两套键盘方案和手柄的输入归属,HUD 的第二个玩家角,暂停归属,中途加入、退出与手柄拔出(单人和双人),像素舞台与平滑舞台的视口设置,结算与只记录一次,中途退出不解锁成就,无效清单的提示 |
+| `testing/manifest_check_test.gd` | `make games-test` | 清单检查自身:把它作为子进程跑在 `testing/unfit_games/`(每个目录清单有效、恰好有一种不合格:没有测试、测试放在子目录、缺 `ASSETS.md`、素材没登记、入口重定义了 `_process`、入口不是 `GameModule`、HUD 点名的字段快照里没有、双人游戏只报了一个座位、官网截图不存在)上,要求每一种都失败并说出原因,夹具游戏则通过 |
+| `games/shared/manifest_check.gd` | `make games-check` | 清单检查:每个游戏目录(含测试夹具)的清单有效、模块入口能加载并继承 `GameModule` 且没有重定义基类的方法、用默认选项和最多人数启动一步后快照里有 HUD 点名的每个字段、目录顶层有自带测试、官网截图存在、`ASSETS.md` 记了每个素材文件 |
 
-两条结构性门禁不跑 Godot,只扫描源码:`make boundary-test`(依赖方向、启动器不联网)与 `make architecture-test`(已移除的手机应用壳不得回归,另含后端与 Go 模块的规则)。两个检查器都先跑自测(`scripts/tests/`),用最小的违例样本证明每条规则确实会失败。
+`make games-test` 不列出测试:`scripts/run-game-tests.sh` 找出每个 `games/*/*_test.gd`、`testing/*_test.gd` 和 `testing/games/*/*_test.gd`,逐个交给同一个 fail-closed 的 runner,要求各自打印 `<文件名>: N passed, 0 failed`;一个测试也没找到算失败。所以加一款游戏就加上了它的测试,不需要改 Makefile 或 CI。模块契约的测试对象是两个夹具模块 `testing/games/fixture_duo/`(双人、像素舞台、卷轴)和 `testing/games/fixture_arena/`(单人、平滑舞台、成就读取 `finish()` 附带的字段),它们不在随附的目录里,也不随导出发布。只有游戏目录顶层的 `*_test.gd` 会被运行;放在子目录里的由 `make games-check` 报错。
 
-`make launcher-shot SCREEN=<屏幕> STATE=<played|fresh>` 把启动器的某一屏渲染成 1920×1080 的 PNG,供人工查看视觉效果([19-design-system](./19-design-system.md))。它需要真实的渲染器,不在 `make ci` 里。
+`make export-test` 导出一个资源包(不需要导出模板),在一个空目录里从包内运行游戏发现,要求源码树里的每款游戏都能在包里找到且清单有效,并且 `testing/` 不在包里。
+
+两条结构性门禁不跑 Godot,只扫描源码:`make boundary-test`(依赖方向、启动器不联网、游戏目录只引用自己和 `games/shared/` 且不碰宿主的东西;任何一棵树都不得用 `uid://`、上级目录的相对路径或运行时拼出来的 `res://` 绕开按路径的检查)与 `make architecture-test`(已移除的手机应用壳不得回归,另含后端与 Go 模块的规则)。两个检查器都先跑自测(`scripts/tests/`),用最小的违例样本证明每条规则确实会失败。
+
+`make launcher-shot SCREEN=<屏幕> STATE=<played|fresh>` 把启动器的某一屏渲染成 1920×1080 的 PNG,供人工查看视觉效果([19-design-system](./19-design-system.md))。它也能启动任何游戏模块、按脚本给每位玩家输入若干秒再截图(`LAUNCHER_SHOT_GAME`、`LAUNCHER_SHOT_PLAYERS`、`LAUNCHER_SHOT_INPUT`,用法见 [20-adding-a-game](./20-adding-a-game.md) 第 7 节)。它需要真实的渲染器,不在 `make ci` 里。
 
 ## 跨平台验证
 
-`apps/client/export_presets.cfg` 保留 Web、Windows、macOS、Android、iOS 五个导出预设,`scripts/export-all.sh` 依次导出。CI 目前不做导出,也没有真机矩阵;启动器按 16:9 的固定画布设计,面向键盘、手柄和鼠标,在桌面平台上开发和验证。发布某个平台之前需要在该平台上人工确认:
+`apps/client/export_presets.cfg` 保留 Web、Windows、macOS、Android、iOS 五个导出预设,`scripts/export-all.sh` 依次导出。CI 只导出资源包来验证游戏发现(`make export-test`),不做各平台的完整导出,也没有真机矩阵;启动器按 16:9 的固定画布设计,面向键盘、手柄和鼠标,在桌面平台上开发和验证。发布某个平台之前需要在该平台上人工确认:
 
 - 能启动、不黑屏,首页、游戏库、成就、设置可达,三款游戏能开始并结算;
 - 手柄的按键与摇杆、键盘改键、鼠标悬停与点击;
@@ -64,7 +74,8 @@
 | `apps/cli` | 完整命令树对内存后端和仓库里的真实 baseline/schema | `make cli-test` |
 | `apps/mcp` | 真实 MCP 客户端会话经内存传输驱动工具与资源,另有 stdio 子进程与 HTTP 传输 | `make mcp-test` |
 | `apps/client` | Godot headless:运行时(`spike_test.gd`)与启动器的六个测试 | `make spike`、`make launcher-test`、`make library-test`、`make settings-test`、`make game-flow-test`、`make pc-mode-test`、`make launch-test` |
-| `scripts/tests` | 门禁脚本自身的 fail-closed 契约(测试 runner、两个架构检查器) | `make script-test`、`make boundary-test`、`make architecture-test` |
+| `apps/client/games`、`apps/client/testing` | 游戏支持库、每款游戏自带的测试、模块契约测试、清单检查、导出包内的游戏发现 | `make games-test`、`make games-check`、`make export-test` |
+| `scripts/tests` | 门禁脚本自身的 fail-closed 契约(测试 runner、游戏测试的发现脚本、两个架构检查器) | `make script-test`、`make boundary-test`、`make architecture-test` |
 | `apps/web` | 类型检查、构建、文档同步与两道断链检查 | `make ci-web` |
 
 `make ci` 把 Go 与 Godot 的门禁全部跑一遍,其中 Go 模块在 workspace 和 `GOWORK=off` 两种模式下各跑一次;`scripts/spike-integration.sh` 起真实后端并经 HTTP 核对它与客户端运行时文件的一致性(见上文),不在 `make ci` 里。`packages/sdk` 与 `apps/cli` 另有对真实后端的 e2e 测试(`TestE2E`),需要设置 `CLASSIC_GAMES_SDK_E2E_URL` / `CLASSIC_GAMES_CLI_E2E_URL` 才运行,不在 `make ci` 里。
@@ -76,5 +87,5 @@
 - 后端:`go vet` 与 `go test`。
 - Go 模块:gofmt、`go.mod` / `go.sum` 整洁、workspace 与 `GOWORK=off` 两种模式下的 vet 和测试、CLI 与 MCP 可编译。
 - 官网:类型检查、构建与断链检查。
-- 客户端:测试 runner 与检查器的自测、依赖边界、仓库架构、运行时测试、启动器的六个测试;仓库公开后另查任何 ref 的历史都不含内部文档。
+- 客户端:测试 runner 与检查器的自测、依赖边界、仓库架构、运行时测试、启动器的六个测试、清单检查、自动发现的游戏测试、导出包内的游戏发现;仓库公开后另查任何 ref 的历史都不含内部文档。
 - 失败一律根因分析,不跳过、不注释掉测试。

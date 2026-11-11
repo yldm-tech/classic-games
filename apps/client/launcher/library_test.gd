@@ -30,6 +30,8 @@ var _passed := 0
 var _failed := 0
 
 func _initialize() -> void:
+	# These tests assert exact shelves, counts and orders, so they pin the three games they were written against: a game added under games/ must not change what they see.
+	LauncherCatalog.limit_to(["shooter", "survivor", "tower_defense"])
 	_test_grid_steps()
 	_test_search_matching()
 	await _test_library_fresh()

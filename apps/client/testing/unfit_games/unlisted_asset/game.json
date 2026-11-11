@@ -1,0 +1,63 @@
+{
+	"schema": 1,
+	"id": "unlisted_asset",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {
+		"size": [
+			480,
+			270
+		],
+		"pixel_art": true
+	},
+	"name": {
+		"zh": "不合格样例",
+		"en": "UNFIT SAMPLE"
+	},
+	"initials": "bhgyl",
+	"genre": {
+		"zh": "测试夹具",
+		"en": "TEST FIXTURE"
+	},
+	"tagline": {
+		"zh": "清单有效，目录不合格。",
+		"en": "A valid manifest in a directory that is not fit to ship."
+	},
+	"players": {
+		"min": 1,
+		"max": 1
+	},
+	"colors": {
+		"title": "FFFFFF",
+		"shadow": "000000",
+		"glow": "8899AA"
+	},
+	"art": {
+		"top": "000000",
+		"bottom": "111111",
+		"primary": "FFFFFF",
+		"secondary": "FF0000"
+	},
+	"achievements": [],
+	"how": {
+		"zh": "只给清单检查的测试用。",
+		"en": "For the tests of the manifest check only."
+	},
+	"controls": [
+		{
+			"id": "move",
+			"name": {
+				"zh": "移动",
+				"en": "Move"
+			},
+			"inputs": [
+				"move"
+			]
+		}
+	],
+	"hud": {
+		"clock": {
+			"mode": "none"
+		}
+	}
+}

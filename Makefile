@@ -169,13 +169,26 @@ pc-mode-test: ## 跑启动器 PC 模式测试(筛选排序、模式切换、详�
 game-flow-test: ## 跑游戏流程测试(游戏菜单、局内 HUD 与输入、暂停、结算、每局只记录一次)
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/game_flow_test.gd '^game_flow_test: [0-9]+ passed, 0 failed$$'
 
+.PHONY: games-check
+games-check: ## 校验每个游戏目录(games/*/ 与测试夹具):清单 schema、模块入口、自带测试、ASSETS.md 覆盖全部素材
+	GODOT="$(GODOT)" GAME_CHECK_ROOTS="res://games,res://testing/games" scripts/run-godot-test.sh res://games/shared/manifest_check.gd '^manifest_check: [0-9]+ games, 0 problems$$'
+
+.PHONY: games-test
+games-test: ## 自动发现并跑每个游戏目录的 *_test.gd 与模块契约测试(新增游戏无需改 Makefile 或 CI)
+	GODOT="$(GODOT)" scripts/run-game-tests.sh
+
+.PHONY: export-test
+export-test: ## 导出资源包并在包内运行游戏发现(验证导出版里 res://games 仍可枚举、清单在包内、测试夹具不随包发布)
+	GODOT="$(GODOT)" scripts/check-export-discovery.sh
+
 .PHONY: launcher-shot
-launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played)
+launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played;局内截图用 SCREEN=game 加 LAUNCHER_SHOT_GAME / LAUNCHER_SHOT_PLAYERS / LAUNCHER_SHOT_INPUT)
 	GODOT="$(GODOT)" scripts/run-launcher-shot.sh $(SCREEN) $(STATE)
 
 .PHONY: script-test
 script-test: ## 测试构建/测试脚本自身的 fail-closed 契约
 	bash scripts/tests/run-godot-test_test.sh
+	bash scripts/tests/run-game-tests_test.sh
 	bash scripts/tests/check-public-history_test.sh
 
 # Not part of `make ci`: it needs the full history of every ref and fails by design on a history that ever held the internal notes. CI runs it once the repository is public.
@@ -186,7 +199,7 @@ publish-check: ## 公开前门禁:任何 ref 的历史都不得含内部文档(�
 # ---- aggregate ----
 
 .PHONY: ci
-ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test spike launcher-test settings-test library-test launch-test pc-mode-test game-flow-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
+ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test spike launcher-test settings-test library-test launch-test pc-mode-test game-flow-test games-check games-test export-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
 
 .PHONY: ci-web
 ci-web: web-install web-check web-build ## 本地复现官网 CI 门禁(需 Node 与 pnpm)

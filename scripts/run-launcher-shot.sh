@@ -3,7 +3,13 @@
 #
 #   scripts/run-launcher-shot.sh [screen] [state]
 #
-# screen defaults to "home", state to "played" ("fresh" renders an empty profile). The remaining knobs are environment variables read by apps/client/launcher/launcher_shot.gd: LAUNCHER_SHOT_ACTIONS, LAUNCHER_SHOT_LOCALE, LAUNCHER_SHOT_NAME. The PNG goes to LAUNCHER_SHOT_DIR (default ~/screenshots/classic-games/console-launcher).
+# screen defaults to "home", state to "played" ("fresh" renders an empty profile). The remaining knobs are environment variables read by apps/client/launcher/launcher_shot.gd: LAUNCHER_SHOT_ACTIONS, LAUNCHER_SHOT_LOCALE, LAUNCHER_SHOT_NAME and the rest listed at the top of that file. The PNG goes to LAUNCHER_SHOT_DIR (default ~/screenshots/classic-games/console-launcher).
+#
+# A game in play, with scripted input for each player (a game module; see docs/20-adding-a-game.md):
+#
+#   LAUNCHER_SHOT_GAME=<id> LAUNCHER_SHOT_PLAYERS=2 LAUNCHER_SHOT_INPUT="2:right+a/left;1:/a" scripts/run-launcher-shot.sh game
+#
+# LAUNCHER_SHOT_GAMES_ROOT=res://testing/games does the same for the test fixture module (LAUNCHER_SHOT_GAME=fixture_duo).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

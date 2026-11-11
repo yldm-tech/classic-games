@@ -27,6 +27,29 @@ const REPEATING: Array[StringName] = [UP, DOWN, LEFT, RIGHT]
 const REPEAT_DELAY := 0.4
 const REPEAT_INTERVAL := 0.1
 
+## The keyboard side of a game module's per-player controls: two schemes of InputMap actions, "game_p<scheme>_<control>", defined in project.godot and rebindable like the launcher's own. Which scheme (or gamepad) drives which player is LauncherPlayers' business.
+const GAME_SCHEMES: Array[int] = [1, 2]
+const GAME_ACTION_FMT := "game_p%d_%s"
+
+static func game_action(scheme: int, control: StringName) -> StringName:
+	return StringName(GAME_ACTION_FMT % [scheme, control])
+
+## The ten actions of one keyboard scheme, in GameSession.CONTROLS order.
+static func game_actions(scheme: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for control in GameSession.CONTROLS:
+		out.append(game_action(scheme, control))
+	return out
+
+static func all_game_actions() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for scheme in GAME_SCHEMES:
+		out.append_array(game_actions(scheme))
+	return out
+
+static func is_game_action(action: StringName) -> bool:
+	return String(action).begins_with("game_p")
+
 ## Text drawn inside a glyph for an action. MENU and VIEW are drawn as icons, so they have no entry.
 const GLYPH_TEXT := {ACCEPT: "A", BACK: "B", X: "X", Y: "Y", LB: "LB", RB: "RB", LT: "LT", RT: "RT"}
 

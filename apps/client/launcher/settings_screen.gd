@@ -19,14 +19,17 @@ const GENERAL := &"general"
 const DISPLAY := &"display"
 const AUDIO := &"audio"
 const CONTROLS := &"controls"
+const PLAYERS := &"players"
+## The launcher actions that still act while a game module is being played: the two that pause and the PC mode switch. Their keys and the players' keys must never be the same key, or playing would pause or leave the game.
+const LIVE_IN_GAME: Array[StringName] = [In.MENU, In.BACK, In.PC_MODE]
 const SAVES := &"saves"
 const ABOUT := &"about"
-const CATEGORIES: Array[StringName] = [GENERAL, DISPLAY, AUDIO, CONTROLS, SAVES, ABOUT]
+const CATEGORIES: Array[StringName] = [GENERAL, DISPLAY, AUDIO, CONTROLS, PLAYERS, SAVES, ABOUT]
 ## The LauncherSettings keys each category edits; "restore this page's defaults" resets exactly these.
 const CATEGORY_KEYS := {
 	GENERAL: [S.LANG, S.CLOCK_24H, S.DEFAULT_MODE],
 	DISPLAY: [S.WINDOW_MODE, S.VSYNC, S.MAX_FPS],
-	AUDIO: [S.VOLUME_MASTER, S.VOLUME_MUSIC, S.AUDIO_MUTE],
+	AUDIO: [S.VOLUME_MASTER, S.VOLUME_MUSIC, S.VOLUME_SFX, S.AUDIO_MUTE],
 }
 
 const TOP := 160.0
@@ -188,6 +191,7 @@ func _rows_for(id: StringName) -> Array[Dictionary]:
 		AUDIO:
 			out.append(_row(S.VOLUME_MASTER, SC.KIND_SLIDER, {"key": S.VOLUME_MASTER}))
 			out.append(_row(S.VOLUME_MUSIC, SC.KIND_SLIDER, {"key": S.VOLUME_MUSIC}))
+			out.append(_row(S.VOLUME_SFX, SC.KIND_SLIDER, {"key": S.VOLUME_SFX}))
 			out.append(_toggle(S.AUDIO_MUTE))
 		CONTROLS:
 			for action in In.ALL:
@@ -196,6 +200,16 @@ func _rows_for(id: StringName) -> Array[Dictionary]:
 					"id": "bind_" + name, "kind": SC.KIND_ACTION, "action": action,
 					"label": t("launcher.settings.action.%s" % name),
 					"help": func() -> String: return tf("launcher.settings.binding_help_fmt", [key_names(In.keycodes(action)), pad_names(action)]),
+					"button": t("launcher.settings.rebind"),
+					"value": func() -> String: return key_names(In.keycodes(action)),
+					"run": func() -> void: begin_capture(action),
+				})
+		PLAYERS:
+			for action in In.all_game_actions():
+				out.append({
+					"id": "bind_" + String(action), "kind": SC.KIND_ACTION, "action": action,
+					"label": action_label(action),
+					"help": func() -> String: return tf("launcher.settings.game_binding_help_fmt", [key_names(In.keycodes(action)), pad_names(action)]),
 					"button": t("launcher.settings.rebind"),
 					"value": func() -> String: return key_names(In.keycodes(action)),
 					"run": func() -> void: begin_capture(action),
@@ -214,6 +228,16 @@ func _rows_for(id: StringName) -> Array[Dictionary]:
 			out.append(_info("license", func() -> String: return "Apache-2.0"))
 			out.append(_info("art", func() -> String: return t("launcher.settings.art_value")))
 			out.append(_info("repo", func() -> String: return REPOSITORY))
+			out.append(_info("games", func() -> String: return tf("launcher.settings.games_fmt", [LauncherCatalog.all().size()])))
+			# A game whose manifest is invalid is not in the catalog. It is listed here with what is wrong, so its author can see why.
+			for problem in LauncherCatalog.problems():
+				var errors: PackedStringArray = problem["errors"]
+				out.append({
+					"id": "problem_%s" % problem["id"], "kind": SC.KIND_INFO,
+					"label": tf("launcher.settings.game_problem_fmt", [problem["id"]]),
+					"help": "\n".join(errors),
+					"value": func() -> String: return tf("launcher.settings.game_problem_value_fmt", [errors.size()]),
+				})
 	return out
 
 func _row(id: String, kind: StringName, extra: Dictionary = {}, help_args: Array = []) -> Dictionary:
@@ -494,16 +518,23 @@ static func _apply_values(target: LauncherRoot, values: Dictionary) -> void:
 # ---- restore defaults ----
 
 func can_reset() -> bool:
-	return CATEGORY_KEYS.has(category_id()) or category_id() == CONTROLS
+	return CATEGORY_KEYS.has(category_id()) or category_id() in [CONTROLS, PLAYERS]
 
 ## Put the current category back to its defaults (X). The toast offers an undo that restores what was there.
 func reset_page() -> void:
 	var target := shell
-	if category_id() == CONTROLS:
+	if category_id() in [CONTROLS, PLAYERS]:
+		# Each of the two pages resets its own keys: the interface's or the players'.
 		var previous := shell.store.bindings()
-		_replace_bindings(target, {})
+		var kept := {}
+		for action: String in previous:
+			if In.is_game_action(StringName(action)) != (category_id() == PLAYERS):
+				kept[action] = previous[action]
+		# A key this page gets back by default may since have been given to the other side of the pause boundary (Menu moved off M, then a player key put on M). Keeping that override would leave one key that both plays and pauses, so both pages go back to their defaults, which never clash.
+		var both := _clashes_across_pause(kept)
+		_replace_bindings(target, {} if both else kept)
 		_sync()
-		target.toast(t("launcher.settings.reset_controls_done"), Callable(get_script(), "_replace_bindings").bind(target, previous))
+		target.toast(t("launcher.settings.reset_controls_both" if both else "launcher.settings.reset_controls_done"), Callable(get_script(), "_replace_bindings").bind(target, previous))
 		return
 	var before := {}
 	var defaults := {}
@@ -541,6 +572,18 @@ static func key_names(codes: Array) -> String:
 ## The gamepad inputs of an action as the project defines them, e.g. "A" or "十字键 ↑ / 左摇杆 ↑". They are fixed; this is a reference.
 func pad_names(action: StringName) -> String:
 	var names := PackedStringArray()
+	if In.is_game_action(action):
+		# A game control's gamepad side is fixed by position (LauncherPlayers.PAD_BUTTONS and the left stick), whichever gamepad the player holds.
+		var control := StringName(String(action).get_slice("_", 2))
+		for button: int in LauncherPlayers.PAD_BUTTONS:
+			if LauncherPlayers.PAD_BUTTONS[button] == control:
+				names.append(_button_name(button as JoyButton))
+		match control:
+			&"up": names.append(_axis_name(JOY_AXIS_LEFT_Y, -1.0))
+			&"down": names.append(_axis_name(JOY_AXIS_LEFT_Y, 1.0))
+			&"left": names.append(_axis_name(JOY_AXIS_LEFT_X, -1.0))
+			&"right": names.append(_axis_name(JOY_AXIS_LEFT_X, 1.0))
+		return " / ".join(names)
 	for event in InputMap.action_get_events(action):
 		if event is InputEventJoypadButton:
 			names.append(_button_name((event as InputEventJoypadButton).button_index))
@@ -577,6 +620,10 @@ func _axis_name(axis: JoyAxis, direction: float) -> String:
 	return tf("launcher.settings.pad.axis_fmt", [int(axis)])
 
 func action_label(action: StringName) -> String:
+	if In.is_game_action(action):
+		# "game_p2_up" is player 2's "up".
+		var parts := String(action).split("_")
+		return tf("launcher.settings.player_action_fmt", [parts[1].trim_prefix("p").to_int(), t("launcher.settings.game_action.%s" % parts[2])])
 	return t("launcher.settings.action.%s" % String(action).trim_prefix("launcher_"))
 
 func is_capturing() -> bool:
@@ -609,7 +656,12 @@ func capture_key(code: int) -> void:
 		shell.toast(t("launcher.settings.capture_invalid"))
 		return
 	var action := _capturing
-	var holder := key_holder(code)
+	# The keys that pause a game and the keys players play with must stay apart, or a player's button would also pause. Neither side may take a key of the other.
+	var reserved := reserved_holder(action, code)
+	if reserved != &"":
+		shell.toast(tf("launcher.settings.capture_reserved_fmt", [key_names([code]), action_label(reserved)]))
+		return
+	var holder := key_holder(code, action)
 	_close_overlay()
 	zone = ZONE_ROWS
 	if holder == &"" or holder == action:
@@ -627,9 +679,46 @@ func capture_key(code: int) -> void:
 		_bind(action, code, holder)
 	_open_dialog("Conflict", t("launcher.settings.conflict_title"), body, [], [[t("launcher.settings.cancel"), _close_dialog], [t("launcher.settings.replace"), replace]], 0)
 
-## The action whose keyboard keys include `code`, or &"".
-func key_holder(code: int) -> StringName:
-	for action in In.ALL:
+## The action whose keyboard keys include `code`, or &"", among the actions that can clash with `for_action`: the launcher's own for a launcher action, both players' for a game action. A launcher key and a game key may be the same key (the arrows move the focus in a menu and a player in a game); they are never live at the same time.
+func key_holder(code: int, for_action: StringName = &"") -> StringName:
+	var group: Array[StringName] = In.all_game_actions() if In.is_game_action(for_action) else In.ALL
+	for action in group:
+		if In.keycodes(action).has(code):
+			return action
+	return &""
+
+## Whether, with these stored overrides and defaults for everything else, some key would belong both to a launcher action that is live during a game and to a player's control.
+static func _clashes_across_pause(bindings: Dictionary) -> bool:
+	var live := {}
+	for action in LIVE_IN_GAME:
+		for code: int in _codes_with(bindings, action):
+			live[code] = true
+	for action in In.all_game_actions():
+		for code: int in _codes_with(bindings, action):
+			if live.has(code):
+				return true
+	return false
+
+## The keys an action would have under these stored overrides: its override when that holds a usable key, its project default otherwise (what LauncherInput.apply_bindings does).
+static func _codes_with(bindings: Dictionary, action: StringName) -> Array:
+	var stored: Variant = bindings.get(String(action))
+	if stored is Array:
+		var codes: Array = []
+		for code: Variant in stored:
+			if (code is int or code is float) and int(code) > 0:
+				codes.append(int(code))
+		if not codes.is_empty():
+			return codes
+	return In.default_keycodes(action)
+
+## The action on the other side of the pause boundary that already uses `code`, or &"": a launcher action that stays live during a game (LIVE_IN_GAME) for a game action, a game action for one of those.
+func reserved_holder(for_action: StringName, code: int) -> StringName:
+	var others: Array[StringName] = LIVE_IN_GAME.duplicate()
+	if for_action in others:
+		others = In.all_game_actions()
+	elif not In.is_game_action(for_action):
+		return &""
+	for action in others:
 		if In.keycodes(action).has(code):
 			return action
 	return &""

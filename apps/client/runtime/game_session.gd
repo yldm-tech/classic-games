@@ -3,10 +3,17 @@ extends Node
 
 const JsonPatch := preload("res://runtime/json_patch.gd")
 const RuntimeLoaderScript := preload("res://runtime/runtime_loader.gd")
+const Registry := preload("res://games/shared/game_registry.gd")
+const Manifest := preload("res://games/shared/game_manifest.gd")
+const ModuleBase := preload("res://games/shared/game_module.gd")
+const PlayerInput := preload("res://games/shared/game_input.gd")
 
 ## Shell↔Runtime 的唯一通信边界(见 docs/04-architecture.md、16-client-architecture.md)。
 ## Shell 只通过本节点与游戏运行时交互,绝不伸手进游戏 scene 内部;
 ## Runtime 也绝不读 Shell 的全局状态/UI/用户数据。守住这条边界,架构逃生口才有效。
+##
+## A session hosts either of two kinds of game. A DSL game is one of the built-in runtimes (runtime/<name>/) configured by a DSL document. A game module is a directory under games/ whose entry script extends GameModule (games/shared/game_module.gd). The host sees the same life cycle, snapshot and signals for both; what differs is how the player's input arrives: a DSL game takes commands through perform(), a module takes per-player controls through set_control().
+## The session is also the host's only way to learn which games exist: catalog() returns the manifests found under games/.
 
 ## Emitted when a game run finishes. result: { score, duration, cleared, ... }
 ## After start_run the result is the final snapshot(): the runtime summary plus play_seconds (active seconds, pauses excluded), timed_out, aborted (the host ended it) and runtime_ref.
@@ -26,6 +33,15 @@ signal paused_changed(paused: bool)
 ## Logical size of the stage every runtime draws into, centred on its own origin. A host puts this node inside a SubViewport of exactly this size and scales the viewport, never the runtime.
 const STAGE_SIZE := Vector2i(960, 540)
 const BASELINE_PATH := "res://runtime/%s/baseline.dsl.json"
+## Where the games live. catalog() takes another root so tests can point it at a fixture directory.
+const GAMES_ROOT := Registry.GAMES_ROOT
+const KIND_MODULE := Manifest.KIND_MODULE
+const KIND_DSL := Manifest.KIND_DSL
+## Local players a run can have, and the logical controls each of them has (GameInput.CONTROLS).
+const MAX_PLAYERS := ModuleBase.MAX_PLAYERS
+const CONTROLS := PlayerInput.CONTROLS
+const DIRECTIONS := PlayerInput.DIRECTIONS
+const BUTTONS := PlayerInput.BUTTONS
 
 var _run: Node
 var _running := false
@@ -36,6 +52,28 @@ var _runtime_ref := ""
 ## The effective DSL of the live run and the vitals it started with, kept for the HUD fields snapshot() derives from them.
 var _dsl: Dictionary = {}
 var _initial: Dictionary = {}
+## The mounted game module (null while a DSL runtime or nothing is mounted), its stage and the result it finished with.
+var _module: GameModule
+var _stage: Dictionary = {}
+var _module_result: Dictionary = {}
+
+# ---- catalog ----
+
+## Every game found under `root`: { games: [entry], problems: [{ id, path, errors }] }. An entry is a validated manifest (games/shared/game_manifest.gd lists the fields) plus `dir`, `entry_path` for a module and `art.image_path` when it has a picture. Games with an invalid manifest are left out of `games` and described in `problems`.
+static func catalog(root: String = GAMES_ROOT) -> Dictionary:
+	return Registry.catalog(root)
+
+## Read the games directory again on the next catalog() call.
+static func forget_catalog() -> void:
+	Registry.forget()
+
+## How a game's stage maps to the canvas: { size: Vector2i (logical pixels), pixel_art: bool, scale: int (canvas pixels per stage pixel), centered: bool }. A DSL runtime draws around its own origin in STAGE_SIZE (centered); a module draws from the top left in the size its manifest declares.
+static func stage_for(entry: Dictionary) -> Dictionary:
+	if str(entry.get("kind", "")) == KIND_MODULE:
+		var spec := Manifest.stage(entry)
+		spec["centered"] = false
+		return spec
+	return {"size": STAGE_SIZE, "pixel_art": false, "scale": Manifest.CANVAS.x / STAGE_SIZE.x, "centered": true}
 
 ## Start a game run.
 ## payload 两种形态:
@@ -76,10 +114,13 @@ static func baseline_payload(runtime_ref: String) -> Dictionary:
 		return {}
 	return {"runtime": runtime_ref, "mod": parsed}
 
-## Start a live run: the runtime stays mounted under this node and keeps simulating until it clears, is defeated, runs out of time, or the host calls end_run. Same payload forms as start_game.
+## Start a live run: the runtime stays mounted under this node and keeps simulating until it clears, is defeated, runs out of time, or the host calls end_run. Same payload forms as start_game, plus form C for a game module:
+##   C 游戏模块:  { "game": <catalog entry of kind "module">, "options": { id: value }, "players": 1 | 2, "seed": int, "locale": "zh" | "en" }
 ## Returns false after emitting game_error when the run cannot start.
 func start_run(payload: Dictionary) -> bool:
 	_drop_run()
+	if payload.get("game") is Dictionary and str((payload["game"] as Dictionary).get("kind", "")) == KIND_MODULE:
+		return _start_module(payload)
 	var runtime_ref: String = str(payload.get("runtime", ""))
 	var dsl: Dictionary = _resolve_dsl(payload)
 	if dsl.is_empty():
@@ -107,6 +148,94 @@ func start_run(payload: Dictionary) -> bool:
 	game_started.emit({"runtime": runtime_ref, "stage_size": STAGE_SIZE})
 	return true
 
+func _start_module(payload: Dictionary) -> bool:
+	var entry: Dictionary = payload["game"]
+	var path := str(entry.get("entry_path", ""))
+	var script: Variant = load(path) if path != "" and ResourceLoader.exists(path) else null
+	if not script is GDScript or not (script as GDScript).can_instantiate():
+		game_error.emit({"code": "MODULE_NOT_FOUND", "msg": "%s: entry script cannot be loaded (%s)" % [entry.get("id", ""), path]})
+		return false
+	var node: Variant = (script as GDScript).new()
+	if not node is ModuleBase:
+		if node is Node:
+			(node as Node).free()
+		game_error.emit({"code": "MODULE_INVALID", "msg": "%s: entry script must extend GameModule" % entry.get("id", "")})
+		return false
+	_module = node
+	_run = node
+	_runtime_ref = str(entry.get("id", ""))
+	_stage = stage_for(entry)
+	_module_result = {}
+	_running = true
+	_paused = false
+	_play_seconds = 0.0
+	_last_score = 0
+	_module.name = "Module"
+	if bool(_stage["pixel_art"]):
+		_module.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_module.finished.connect(_on_module_finished)
+	_module.score_changed.connect(_on_module_score)
+	add_child(_module)
+	var seed_value := int(payload.get("seed", 0))
+	_module.start({
+		"options": payload.get("options", {}),
+		"players": clampi(int(payload.get("players", 1)), 1, MAX_PLAYERS),
+		"seed": seed_value if seed_value != 0 else int(Time.get_ticks_usec() & 0x7FFFFFFF) | 1,
+		"locale": str(payload.get("locale", "zh")),
+		"stage_size": _stage["size"],
+	})
+	game_started.emit({"runtime": _runtime_ref, "stage_size": _stage["size"]})
+	return true
+
+func _on_module_finished(result: Dictionary) -> void:
+	if _running:
+		_module_result = result
+		_finish(false)
+
+func _on_module_score(score: int) -> void:
+	_last_score = score
+	score_changed.emit(score)
+
+## Whether the mounted run is a game module (per-player controls) rather than a DSL runtime (commands).
+func is_module() -> bool:
+	return is_instance_valid(_module)
+
+## The stage of the mounted run, see stage_for. Empty when nothing is mounted.
+func stage() -> Dictionary:
+	if is_instance_valid(_module):
+		return _stage
+	return {"size": STAGE_SIZE, "pixel_art": false, "scale": Manifest.CANVAS.x / STAGE_SIZE.x, "centered": true} if is_instance_valid(_run) else {}
+
+# ---- per-player input and players (game modules) ----
+
+## Write one logical control of one player of the live module: slot 0 is player one, `control` is one of CONTROLS, strength is 0 .. 1 (keys and buttons are 0 or 1). The host decides which device drives which slot. Returns false when no module is being played.
+func set_control(slot: int, control: StringName, strength: float) -> bool:
+	if not _running or _paused or not is_instance_valid(_module):
+		return false
+	_module.feed(slot, control, strength)
+	return true
+
+## Let go of every control of every player (focus lost, a device unplugged).
+func release_controls() -> void:
+	if is_instance_valid(_module):
+		_module.release_inputs()
+
+## Slots being played in the live module, e.g. [0, 1]. A DSL run always has the one player [0].
+func active_players() -> Array[int]:
+	if is_instance_valid(_module):
+		return _module.active_players()
+	var out: Array[int] = []
+	if is_instance_valid(_run):
+		out.append(0)
+	return out
+
+## Add or remove a player of the live module. Both return false when nothing changed (not a module, not running, slot taken or free, or the last player).
+func add_player(slot: int) -> bool:
+	return _running and is_instance_valid(_module) and _module.join(slot)
+
+func remove_player(slot: int) -> bool:
+	return _running and is_instance_valid(_module) and _module.leave(slot)
+
 func is_running() -> bool:
 	return _running
 
@@ -118,14 +247,24 @@ func set_paused(paused: bool) -> void:
 	if not _running or paused == _paused:
 		return
 	_paused = paused
+	if is_instance_valid(_module):
+		_module.set_paused(paused)
 	_run.process_mode = Node.PROCESS_MODE_DISABLED if paused else Node.PROCESS_MODE_INHERIT
 	paused_changed.emit(paused)
 
 ## Current state of the live run for a HUD: the runtime's own summary (score, cleared, defeated and runtime-specific fields such as kills, level, gold, base_hp, time_left) plus play_seconds and hp where the runtime has a player. Empty when nothing is mounted.
 ## Also carries what the runtime keeps on its nodes rather than in its summary: max_hp next to hp, base_hp_max next to base_hp, shield_hits and boost for a runtime with a shield, boss_hp / boss_max_hp while a boss is alive, and `towers` ([{ id, type, cost, damage, range, cooldown }], in tower_ids order) for a runtime that places towers.
+## For a game module the snapshot is GameModule.snapshot() (score, elapsed, player_count, active_players and the game's own fields, with per-player fields in `players`) plus play_seconds, and after the module finished, its result (cleared, defeated, timed_out).
 func snapshot() -> Dictionary:
 	if not is_instance_valid(_run):
 		return {}
+	if is_instance_valid(_module):
+		var state := _module.snapshot() if _module_result.is_empty() else _module_result.duplicate(true)
+		state["score"] = int(state.get("score", 0))
+		state["play_seconds"] = _play_seconds
+		for flag in ["cleared", "defeated", "timed_out"]:
+			state[flag] = bool(state.get(flag, false))
+		return state
 	var summary: Dictionary = (_run.get_meta("summary", {}) as Dictionary).duplicate(true)
 	if _run.has_meta("score"):
 		summary["score"] = int(_run.get_meta("score"))
@@ -174,7 +313,7 @@ func end_run() -> void:
 ##   "shield"      {}                                        shooter: grant one shield hit
 ##   "place_tower" { "tower": id, "position": Vector2 }      tower_defense: stage coordinates inside STAGE_SIZE
 func perform(action: String, args: Dictionary = {}) -> bool:
-	if not _running or _paused:
+	if not _running or _paused or is_instance_valid(_module):
 		return false
 	match action:
 		"move":
@@ -200,6 +339,9 @@ func _process(delta: float) -> void:
 	if not _running or _paused or not is_instance_valid(_run):
 		return
 	_play_seconds += delta
+	# A module announces its own score changes and its own end.
+	if is_instance_valid(_module):
+		return
 	var state := snapshot()
 	var score := int(state.get("score", 0))
 	if score != _last_score:
@@ -215,6 +357,13 @@ func _finish(aborted: bool) -> void:
 	result["aborted"] = aborted
 	_running = false
 	_paused = false
+	if is_instance_valid(_module):
+		_module.release_inputs()
+		# A run the host ended falls silent at once; one that ended by itself keeps its last effect ringing over the result.
+		if aborted:
+			_module.audio.stop_all()
+		else:
+			_module.audio.stop_music()
 	_run.process_mode = Node.PROCESS_MODE_DISABLED
 	game_ended.emit(result)
 
@@ -230,6 +379,9 @@ func _drop_run() -> void:
 			remove_child(_run)
 		_run.queue_free()
 	_run = null
+	_module = null
+	_stage = {}
+	_module_result = {}
 	_dsl = {}
 	_initial = {}
 

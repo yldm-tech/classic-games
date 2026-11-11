@@ -2,6 +2,7 @@
 import homeShot from '../../assets/launcher/home-played.png';
 import Phrases from '../Phrases.astro';
 import { REPO_URL } from '../../config/site.ts';
+import { games } from '../../data/games.ts';
 import { type Locale, landing } from '../../i18n/landing.ts';
 import Shot from './Shot.astro';
 
@@ -18,7 +19,7 @@ const t = landing[locale].hero;
 		<div class="copy">
 			<p class="cg-eyebrow">{t.status}</p>
 			<h1 id="hero-title"><Phrases text={t.title} /></h1>
-			<p class="lead">{t.lead}</p>
+			<p class="lead">{t.lead(games.length)}</p>
 			<div class="actions">
 				<a class="cg-button cg-button-primary" href="#get-started">{t.primaryCta}</a>
 				<a class="cg-button cg-button-secondary" href={REPO_URL}>{t.secondaryCta}</a>

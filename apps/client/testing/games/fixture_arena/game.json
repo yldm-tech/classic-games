@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "fixture_arena",
+  "kind": "module",
+  "entry": "main.gd",
+  "stage": { "size": [640, 360], "pixel_art": false },
+  "name": { "zh": "圆场清扫", "en": "RING SWEEP" },
+  "initials": "ycqs",
+  "genre": { "zh": "竞技场", "en": "ARENA" },
+  "tagline": { "zh": "一个屏幕，清掉所有游荡的光点", "en": "One screen, clear every drifting spark" },
+  "players": { "min": 1, "max": 1 },
+  "colors": { "title": "FFE8F0", "shadow": "2A0E1C", "glow": "E85890" },
+  "art": { "top": "3A1028", "bottom": "12060E", "primary": "E85890", "secondary": "70E0C0" },
+  "achievements": [
+    { "id": "swept", "icon": "cup", "name": { "zh": "清场", "en": "Swept" }, "desc": { "zh": "清掉所有光点", "en": "Clear every spark" }, "when": { "cleared": true } },
+    { "id": "untouched", "icon": "shield", "name": { "zh": "毫发无伤", "en": "Untouched" }, "desc": { "zh": "不被碰到就清场", "en": "Clear the ring without being touched" }, "when": { "cleared": true, "max": { "hits_taken": 0 } } },
+    { "id": "marksman", "icon": "bolt", "name": { "zh": "弹无虚发", "en": "Marksman" }, "desc": { "zh": "命中率不低于 80% 清场", "en": "Clear the ring with 80% accuracy or better" }, "when": { "cleared": true, "min": { "accuracy": 80 } } }
+  ],
+  "how": { "zh": "移动并朝面对的方向射击，清掉全部光点即通关；被碰到三次则失败。", "en": "Move and fire the way you face. Clear every spark to win; three touches lose the run." },
+  "controls": [
+    { "id": "move", "name": { "zh": "移动", "en": "Move" }, "inputs": ["move"] },
+    { "id": "fire", "name": { "zh": "射击", "en": "Fire" }, "inputs": ["a"] }
+  ],
+  "hud": {
+    "clock": { "mode": "elapsed", "field": "elapsed" },
+    "vital": { "field": "hp", "max": "max_hp", "label": { "zh": "护盾", "en": "SHIELD" } },
+    "stats": [ { "label": { "zh": "光点", "en": "SPARKS" }, "fields": ["sparks_left", "sparks_total"] } ]
+  },
+  "options": [
+    { "id": "sparks", "name": { "zh": "光点数量", "en": "Sparks" }, "note": { "zh": "场上光点的数量", "en": "How many sparks drift in the ring" }, "values": [4, 8, 12], "default": 8 }
+  ]
+}

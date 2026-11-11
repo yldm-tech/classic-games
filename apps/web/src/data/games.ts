@@ -1,15 +1,8 @@
 import type { ImageMetadata } from 'astro';
-import catalogSource from '../../../client/launcher/launcher_catalog.gd?raw';
-import guideSource from '../../../client/launcher/launcher_game_guide.gd?raw';
-import shooterArt from '../assets/key-art/shooter.jpg';
-import survivorArt from '../assets/key-art/survivor.jpg';
-import towerDefenseArt from '../assets/key-art/tower-defense.jpg';
-import shooterShot from '../assets/launcher/game-shooter.png';
-import survivorShot from '../assets/launcher/game-survivor.png';
-import towerDefenseShot from '../assets/launcher/game-tower-defense.png';
-import type { RuntimeKey } from './runtimes.ts';
 
-// The games the landing page lists. Names, genres and taglines are the launcher's own catalog entries (apps/client/launcher/launcher_catalog.gd) and the "how it plays" paragraphs are the launcher's own guide texts (apps/client/launcher/launcher_game_guide.gd). GDScript cannot be imported as data, so the strings are copied here and every one of them is checked against the source file at build time: if the launcher's text changes, the build fails until this copy is updated.
+// The games the landing page lists, read at build time from the game manifests (apps/client/games/<id>/game.json), the same files the launcher reads at startup. Nothing is copied into apps/web: a game that is added to apps/client/games appears here on the next build, with its key art (`art.image`) and, when its manifest names one, its in-game capture (`site.screenshot`), both taken from the game's own directory. A game without either picture is still listed; Games.astro draws a panel in the game's colours instead.
+//
+// The launcher's own check (make games-check) is what decides whether a manifest is valid. This module only verifies the handful of fields the page prints, so that a mistake fails the build with a message that names the file instead of rendering "undefined".
 
 interface Bilingual {
 	zh: string;
@@ -17,92 +10,96 @@ interface Bilingual {
 }
 
 export interface GameInfo {
-	/** Catalog id, which is also the runtime name. */
-	key: RuntimeKey;
+	/** Manifest id, which is the game's directory name. */
+	key: string;
 	name: Bilingual;
 	genre: Bilingual;
 	tagline: Bilingual;
 	how: Bilingual;
-	/** Number of achievements the catalog defines for the game. */
+	/** Local players the game supports. */
+	players: { min: number; max: number };
+	/** Number of achievements the manifest defines. */
 	achievements: number;
-	/** Key art shown by the launcher, copied from apps/client/launcher/art. */
-	art: ImageMetadata;
-	/** A capture of the game running inside the launcher. */
-	shot: ImageMetadata;
+	/** The palette the launcher draws the game's placeholder art with, as CSS colours. */
+	colors: { top: string; bottom: string; title: string };
+	/** Key art shown by the launcher, when the game ships a picture. */
+	art?: ImageMetadata;
+	artAlt?: Bilingual;
+	/** A capture of the game running inside the launcher, when the game ships one for the site. */
+	shot?: ImageMetadata;
+	shotAlt?: Bilingual;
 }
 
-export const games: GameInfo[] = [
-	{
-		key: 'shooter',
-		name: { zh: '星环巡航', en: 'ORBIT PATROL' },
-		genre: { zh: '飞行射击', en: 'ARENA SHOOTER' },
-		tagline: { zh: '清空这片星域，再击落守在尽头的机甲。', en: 'Clear the sector, then bring down the mech that guards it.' },
-		how: {
-			zh: '武器自动开火，你只管走位。击落全部敌机和首领即通关；生命归零或倒计时结束，本局结束。按住加速时移动更快，击落得分翻倍。护盾抵消下一次伤害，用过后需要冷却。',
-			en: 'The weapon fires by itself; you fly. Destroy every enemy and the boss to clear. The run ends when your HP reaches zero or the countdown runs out. Holding boost makes you faster and doubles the score of each kill. The shield absorbs the next hit and then needs to recharge.',
-		},
-		achievements: 3,
-		art: shooterArt,
-		shot: shooterShot,
-	},
-	{
-		key: 'survivor',
-		name: { zh: '长夜草原', en: 'MEADOW VIGIL' },
-		genre: { zh: '生存动作', en: 'SURVIVAL ACTION' },
-		tagline: { zh: '只管走位，武器自己开火。撑过三分钟。', en: 'You move, the weapon fires itself. Last three minutes.' },
-		how: {
-			zh: '武器自动攻击，你只管走位。拾取敌人掉落的经验球升级，每次升级依次强化伤害、攻速、弹数和移速。撑到倒计时结束即通关；生命归零则失败。',
-			en: 'The weapon attacks by itself; you move. Collect the orbs enemies drop to level up, and each level strengthens damage, attack speed, projectile count and movement speed in turn. Survive until the countdown ends to clear; you lose when your HP reaches zero.',
-		},
-		achievements: 4,
-		art: survivorArt,
-		shot: survivorShot,
-	},
-	{
-		key: 'tower_defense',
-		name: { zh: '隘口守卫', en: 'GATEWATCH' },
-		genre: { zh: '塔防', en: 'TOWER DEFENSE' },
-		tagline: { zh: '沿路布下箭塔与炮台，别让一个敌人走到终点。', en: 'Line the road with towers and let nothing reach the end.' },
-		how: {
-			zh: '敌人沿道路走向终点，每漏过一个，基地就掉血。用金币在任意位置放塔，击倒敌人可以拿回金币。挡下全部波次即通关；基地生命归零则失败。',
-			en: "Enemies walk the road to its end, and each one that gets through damages the base. Spend gold to place towers anywhere; defeating enemies earns gold back. Stop every wave to clear; you lose when the base's HP reaches zero.",
-		},
-		achievements: 4,
-		art: towerDefenseArt,
-		shot: towerDefenseShot,
-	},
-];
+type Json = Record<string, unknown>;
 
-/** The text of one catalog entry: from its `"id": "<key>"` line up to the next entry or the end of the list. */
-function catalogEntry(key: string): string {
-	const start = catalogSource.indexOf(`"id": "${key}"`);
-	if (start === -1) throw new Error(`apps/client/launcher/launcher_catalog.gd has no game with id "${key}". Update src/data/games.ts.`);
-	const next = catalogSource.indexOf('"runtime":', catalogSource.indexOf('"runtime":', start) + 1);
-	return catalogSource.slice(start, next === -1 ? undefined : next);
+const manifests = import.meta.glob<Json>('../../../client/games/*/game.json', { eager: true, import: 'default' });
+// Pictures are loaded on demand, so only the two a manifest names are pulled into the build, not every sprite of every game. The glob reaches into sub-directories because a manifest may keep its key art in one (art.image is any path inside the game's directory).
+const pictures = import.meta.glob<ImageMetadata>('../../../client/games/*/**/*.{png,jpg,jpeg,webp}', { import: 'default' });
+
+function fail(file: string, message: string): never {
+	throw new Error(`${file}: ${message}. The site lists games from their manifests; fix the manifest (make games-check reports every problem).`);
 }
 
-function assertQuoted(source: string, text: string, file: string, what: string): void {
-	if (!source.includes(JSON.stringify(text))) throw new Error(`${file} no longer contains the ${what} ${JSON.stringify(text)}. Update src/data/games.ts to match the launcher.`);
+function record(file: string, value: unknown, field: string): Json {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) fail(file, `"${field}" must be an object`);
+	return value as Json;
 }
 
-const catalogIds = [...catalogSource.matchAll(/"id": "([a-z_]+)", *\n\s*"runtime":/g)].map((match) => match[1]);
-if (catalogIds.join(',') !== games.map((game) => game.key).join(',')) {
-	throw new Error(`The launcher catalog lists the games [${catalogIds.join(', ')}] but src/data/games.ts lists [${games.map((game) => game.key).join(', ')}]. Update src/data/games.ts and the landing copy.`);
+function bilingual(file: string, value: unknown, field: string): Bilingual {
+	const text = record(file, value, field);
+	if (typeof text.zh !== 'string' || text.zh.trim() === '' || typeof text.en !== 'string' || text.en.trim() === '') fail(file, `"${field}" must be { "zh": text, "en": text }`);
+	return { zh: text.zh, en: text.en };
 }
 
-for (const game of games) {
-	const entry = catalogEntry(game.key);
-	for (const field of [game.name, game.genre, game.tagline]) {
-		assertQuoted(entry, field.zh, 'apps/client/launcher/launcher_catalog.gd', `"${game.key}" text`);
-		assertQuoted(entry, field.en, 'apps/client/launcher/launcher_catalog.gd', `"${game.key}" text`);
+function color(file: string, value: unknown, field: string): string {
+	if (typeof value !== 'string' || !/^[0-9a-fA-F]{6}$/.test(value)) fail(file, `"${field}" must be a colour as RRGGBB`);
+	return `#${value}`;
+}
+
+async function picture(file: string, directory: string, name: unknown, field: string): Promise<ImageMetadata> {
+	if (typeof name !== 'string' || name === '' || name.startsWith('/') || name.includes('..') || name.includes('\\')) fail(file, `"${field}" must be a picture file inside the game's own directory`);
+	const load = pictures[`${directory}/${name}`];
+	if (load === undefined) fail(file, `"${field}" names ${name}, which is not a .png, .jpg, .jpeg or .webp file (lowercase extension) inside the game's directory`);
+	return load();
+}
+
+async function read(path: string, manifest: Json): Promise<GameInfo> {
+	const directory = path.slice(0, path.lastIndexOf('/'));
+	const folder = directory.slice(directory.lastIndexOf('/') + 1);
+	const file = `apps/client/games/${folder}/game.json`;
+	if (manifest.id !== folder) fail(file, `"id" must be the directory name "${folder}"`);
+	const players = record(file, manifest.players, 'players');
+	if (typeof players.min !== 'number' || typeof players.max !== 'number' || players.min < 1 || players.max < players.min) fail(file, '"players" must be { "min": n, "max": n }');
+	if (!Array.isArray(manifest.achievements)) fail(file, '"achievements" must be a list');
+	const art = record(file, manifest.art, 'art');
+	const titles = record(file, manifest.colors, 'colors');
+	const site = manifest.site === undefined ? {} : record(file, manifest.site, 'site');
+	const game: GameInfo = {
+		key: folder,
+		name: bilingual(file, manifest.name, 'name'),
+		genre: bilingual(file, manifest.genre, 'genre'),
+		tagline: bilingual(file, manifest.tagline, 'tagline'),
+		how: bilingual(file, manifest.how, 'how'),
+		players: { min: players.min, max: players.max },
+		achievements: manifest.achievements.length,
+		colors: { top: color(file, art.top, 'art.top'), bottom: color(file, art.bottom, 'art.bottom'), title: color(file, titles.title, 'colors.title') },
+	};
+	if (art.image !== undefined) {
+		game.art = await picture(file, directory, art.image, 'art.image');
+		if (site.art_alt !== undefined) game.artAlt = bilingual(file, site.art_alt, 'site.art_alt');
 	}
-	assertQuoted(guideSource, game.how.zh, 'apps/client/launcher/launcher_game_guide.gd', `"${game.key}" guide text`);
-	assertQuoted(guideSource, game.how.en, 'apps/client/launcher/launcher_game_guide.gd', `"${game.key}" guide text`);
-	const achievementIds = entry.match(/\{"id": "[a-z_]+", "icon":/g) ?? [];
-	if (achievementIds.length !== game.achievements) {
-		throw new Error(`The launcher catalog defines ${achievementIds.length} achievements for "${game.key}" but src/data/games.ts says ${game.achievements}. Update src/data/games.ts.`);
+	if (site.screenshot !== undefined) {
+		game.shot = await picture(file, directory, site.screenshot, 'site.screenshot');
+		if (site.screenshot_alt !== undefined) game.shotAlt = bilingual(file, site.screenshot_alt, 'site.screenshot_alt');
 	}
+	return game;
 }
+
+// Sorted by id, the order the launcher's catalog uses.
+const paths = Object.keys(manifests).sort();
+if (paths.length === 0) throw new Error('No game manifest found under apps/client/games/*/game.json. The site lists games from those files.');
+
+export const games: GameInfo[] = await Promise.all(paths.map((path) => read(path, manifests[path] as Json)));
 
 /** Total number of achievements across the catalog, as the launcher's achievements screen counts them. */
 export const achievementTotal = games.reduce((sum, game) => sum + game.achievements, 0);

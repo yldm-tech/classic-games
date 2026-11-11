@@ -26,6 +26,8 @@ var _passed := 0
 var _failed := 0
 
 func _initialize() -> void:
+	# These tests assert exact shelves, counts and orders, so they pin the three games they were written against: a game added under games/ must not change what they see.
+	LauncherCatalog.limit_to(["shooter", "survivor", "tower_defense"])
 	_test_guide_data()
 	_test_strings()
 	await _test_bindings_cover_the_runtimes()
@@ -71,7 +73,7 @@ func _test_guide_data() -> void:
 	_check("every listed control has a real keyboard key and a real gamepad binding behind it", bound)
 	_check("every game can be paused and its HUD hidden from the keyboard and the gamepad", _has_control("shooter", "pause") and _has_control("survivor", "pause") and _has_control("tower_defense", "pause") and _has_control("survivor", "hud"))
 
-	_check("keys are shown the way they are printed on a keyboard", Guide.key_labels(Guide.MOVE_ACTIONS) == PackedStringArray(["↑", "↓", "←", "→"]) and Guide.key_labels([In.ACCEPT]) == PackedStringArray(["Enter", "Space"]) and Guide.key_labels([In.MENU, In.BACK]) == PackedStringArray(["M", "Esc", "Backspace"]))
+	_check("keys are shown the way they are printed on a keyboard", Guide.key_labels(Guide.controls("shooter")[0]["actions"]) == PackedStringArray(["↑", "↓", "←", "→"]) and Guide.key_labels([In.ACCEPT]) == PackedStringArray(["Enter", "Space"]) and Guide.key_labels([In.MENU, In.BACK]) == PackedStringArray(["M", "Esc", "Backspace"]))
 	var rebound := InputEventKey.new()
 	rebound.physical_keycode = KEY_J
 	InputMap.action_add_event(In.X, rebound)
@@ -128,16 +130,15 @@ func _test_strings() -> void:
 			if str(zh[key]).count("%") != str(en[key]).count("%"):
 				paired = false
 	_check("menu, game and pause strings exist in both languages with the same placeholders", paired and count > 60)
-	var referenced := true
+	var labelled := true
 	for id in Catalog.ids():
 		var guide := Guide.of(id)
-		var keys: Array = [str((guide["vital"] as Dictionary)["label"])]
-		for stat: Dictionary in guide["stats"]:
-			keys.append(str(stat["label"]))
-		for key: String in keys:
-			if not zh.has(key):
-				referenced = false
-	_check("every string key the guide names exists", referenced)
+		var labels: Array = [guide["vital"]]
+		labels.append_array(guide["stats"])
+		for item: Dictionary in labels:
+			if Guide.text(item, "label", "zh") == "" or (item["label"] as Dictionary).get("en", "") == "":
+				labelled = false
+	_check("every HUD label a manifest names is written in both languages", labelled)
 
 ## The guide may only list a command the runtime really accepts, and must list every one it does.
 func _test_bindings_cover_the_runtimes() -> void:
@@ -390,7 +391,7 @@ func _test_hud_shooter_and_survivor() -> void:
 	shell.game_host.find_child("Player", true, false).set_meta("shield_hits", 0)
 	await _frames(2)
 	var shield: Node = game.find_child("Shield", true, false)
-	_check("a spent shield recharges before it can be used again", shield.note() == "%d 秒" % int(Guide.SHIELD_COOLDOWN) and shield.dimmed and not shield.active)
+	_check("a spent shield recharges before it can be used again", shield.note() == "%d 秒" % int(Guide.tuning("shooter", "shield_cooldown", 0.0)) and shield.dimmed and not shield.active)
 	shield.activated.emit()
 	_check("and is refused meanwhile, by button or by click", int(shell.game_host.snapshot()["shield_hits"]) == 0)
 	game._shield_ready_at = 0.0

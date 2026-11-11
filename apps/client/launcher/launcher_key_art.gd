@@ -2,9 +2,8 @@ class_name LauncherKeyArt
 extends Control
 
 ## Key art of one game, cover-fitted into this control. It is the only place that knows where a game's picture comes from.
-## Real art replaces the placeholder per game id by adding `res://launcher/art/<game id>.jpg` (16:9): texture_for() finds it and nothing else changes. Until then a procedural placeholder is drawn from the catalog entry's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
+## A game ships its picture in its own directory and names it in its manifest (`art.image`, 16:9): texture_for() finds it through the catalog and nothing else changes. A game without one gets a procedural placeholder drawn from its manifest's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
 
-const ART_PATH := "res://launcher/art/%s.jpg"
 ## Reference frame the placeholders are authored in; it is scaled to cover the control like a background image.
 const FRAME := Vector2(1600, 900)
 
@@ -29,8 +28,8 @@ func _notification(what: int) -> void:
 
 ## The finished key art of a game, or null while it only has the procedural placeholder.
 static func texture_for(id: String) -> Texture2D:
-	var path := ART_PATH % id
-	if id == "" or not ResourceLoader.exists(path):
+	var path := str((LauncherCatalog.by_id(id).get("art", {}) as Dictionary).get("image_path", ""))
+	if path == "" or not ResourceLoader.exists(path):
 		return null
 	return load(path) as Texture2D
 
@@ -58,9 +57,21 @@ func _draw() -> void:
 		"orbit": _paint_orbit(primary, secondary, bottom)
 		"swarm": _paint_swarm(primary, secondary, top)
 		"road": _paint_road(primary, secondary, top)
+		_: _paint_plain(primary, secondary)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---- placeholders ----
+
+## The placeholder of a game that names no motif (or one this file does not know): two soft lights in the game's own colours over its gradient, and a horizon line. Enough to tell games apart on a shelf until the game ships a picture.
+func _paint_plain(primary: Color, secondary: Color) -> void:
+	_glow(Vector2(1120, 380), 560.0, Color(primary, 0.36))
+	_glow(Vector2(1360, 640), 320.0, Color(secondary, 0.26))
+	draw_circle(Vector2(1120, 380), 120.0, Color(primary, 0.55))
+	draw_circle(Vector2(1120, 380), 72.0, Color(secondary, 0.8))
+	draw_line(Vector2(0, 690), Vector2(FRAME.x, 690), Color(primary, 0.35), 2.0)
+	for index in 9:
+		var x := 200.0 + 160.0 * index
+		draw_rect(Rect2(x, 700.0, 80.0, 200.0), Color(primary, 0.08 + 0.02 * (index % 3)))
 
 func _paint_orbit(primary: Color, secondary: Color, base: Color) -> void:
 	_stars(11, 110, Color(1, 1, 1, 0.8))

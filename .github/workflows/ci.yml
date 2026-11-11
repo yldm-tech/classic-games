@@ -112,3 +112,10 @@ jobs:
         run: make pc-mode-test GODOT=godot
       - name: Run game flow tests
         run: make game-flow-test GODOT=godot
+      # The game checks discover their inputs: adding a directory under apps/client/games/ adds its manifest to the check and its *_test.gd files to the run without editing this workflow.
+      - name: Validate game manifests
+        run: make games-check GODOT=godot
+      - name: Run game module tests
+        run: make games-test GODOT=godot
+      - name: Verify game discovery in an exported pack
+        run: make export-test GODOT=godot
