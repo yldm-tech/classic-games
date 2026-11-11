@@ -129,3 +129,25 @@ static func label_settings(size: int, weight: int = 400, color: Color = FG, spac
 	settings.font_size = size
 	settings.font_color = color
 	return settings
+
+# ---- library and achievements ----
+
+## Scrims over the blurred key art behind the library and the achievements screen.
+const A_SCRIM_LIBRARY := 0.78
+const A_SCRIM_ACHIEVEMENTS := 0.84
+## Library cover: 16:9 art, four to a row inside the page margins. Selected = ring plus a slight scale, idle = dimmed.
+const COVER_SIZE := Vector2(376, 212)
+const COVER_GAP := Vector2(32, 36)
+const COVER_SCALE := 1.06
+const COVER_RING_OFFSET := 4.0
+const A_COVER_IDLE := 0.7
+const FADE_COVER := 0.2
+const SIZE_TOTAL := 56
+const SIZE_DETAIL_TITLE := 48
+const SIZE_ACHIEVEMENT_TITLE := 34
+const SIZE_SEARCH_FIELD := 30
+const SIZE_CATEGORY_TAB := 22
+const SIZE_STAT_VALUE := 20
+const SIZE_COVER_NAME := 19
+const SIZE_ACHIEVEMENT_NAME := 17
+const SIZE_STAT_LABEL := 13

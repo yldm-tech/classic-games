@@ -124,5 +124,7 @@ jobs:
         run: make ui-test GODOT=godot
       - name: Run console launcher tests
         run: make launcher-test GODOT=godot
+      - name: Run library and achievements screen tests
+        run: make library-test GODOT=godot
       - name: Launch main scene
         run: make launch-test GODOT=godot

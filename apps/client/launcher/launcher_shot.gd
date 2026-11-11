@@ -9,6 +9,7 @@ extends SceneTree
 ##   LAUNCHER_SHOT_ACTIONS  comma-separated LauncherInput action names without the "launcher_" prefix, dispatched in order before the capture (e.g. "down,menu")
 ##   LAUNCHER_SHOT_LOCALE   "zh" (default) or "en"
 ##   LAUNCHER_SHOT_NAME     file name without extension, default "<screen>-<state>"
+##   LAUNCHER_SHOT_LIBRARY_EXTRA  number of synthetic entries to add to the library's grid, to look at it with more rows than the catalog fills (they have no art and exist only in this render)
 ##
 ## The launcher is mounted in a SubViewport of the canvas size, so the PNG does not depend on the size of the window or the display. The profile lives in its own file and never touches the player's real one.
 
@@ -50,6 +51,17 @@ func _initialize() -> void:
 	shell.store = store
 	viewport.add_child(shell)
 	await process_frame
+	var extra := int(_env("LAUNCHER_SHOT_LIBRARY_EXTRA", "0"))
+	if extra > 0:
+		var crowded: Array[Dictionary] = []
+		crowded.assign(LauncherCatalog.all())
+		for index in extra:
+			var sample: Dictionary = LauncherCatalog.all()[index % LauncherCatalog.all().size()].duplicate(true)
+			sample["id"] = "sample_%02d" % index
+			sample["name"] = {"zh": "样例条目 %02d" % (index + 1), "en": "SAMPLE ENTRY %02d" % (index + 1)}
+			sample["initials"] = "yltm"
+			crowded.append(sample)
+		(shell.screen(LauncherRoot.LIBRARY) as LauncherLibraryScreen).set_entries(crowded)
 	if screen_id != "home":
 		shell.go(StringName(screen_id), {"game": "shooter"})
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
