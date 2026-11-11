@@ -23,8 +23,8 @@ var progress := 0.0
 
 func _init(what: int = DUCHESS) -> void:
 	kind = what
-	hw = 14.0 if what == DUCHESS else 15.0
-	h = 24.0 if what == DUCHESS else 30.0
+	hw = 16.0 if what == DUCHESS else 15.0
+	h = 34.0 if what == DUCHESS else 30.0
 
 func enraged() -> bool:
 	return hp * 2 <= max_hp
