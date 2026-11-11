@@ -101,7 +101,9 @@ func setting(key: String, fallback: Variant = null) -> Variant:
 	return (_data["settings"] as Dictionary).get(key, fallback)
 
 func set_setting(key: String, value: Variant) -> void:
-	if (_data["settings"] as Dictionary).get(key) == value:
+	var current: Variant = (_data["settings"] as Dictionary).get(key)
+	# Compare types first: == between unrelated types (a number and a string from a hand-edited file) is a script error.
+	if typeof(current) == typeof(value) and current == value:
 		return
 	_data["settings"][key] = value
 	_commit(SECTION_SETTINGS)

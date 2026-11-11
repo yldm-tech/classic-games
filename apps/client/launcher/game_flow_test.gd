@@ -105,7 +105,7 @@ func _test_guide_data() -> void:
 	var master := AudioServer.get_bus_index(&"Master")
 	_check("volume is applied to the Master bus", not AudioServer.is_bus_mute(master) and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(master)), 0.5))
 	Guide.apply_volume(0)
-	_check("zero mutes it", AudioServer.is_bus_mute(master))
+	_check("zero is silent without touching the mute flag", not AudioServer.is_bus_mute(master) and is_zero_approx(db_to_linear(AudioServer.get_bus_volume_db(master))))
 	Guide.apply_volume(Guide.VOLUME_STEPS)
 	_check("full volume is unity gain", not AudioServer.is_bus_mute(master) and is_zero_approx(AudioServer.get_bus_volume_db(master)))
 
@@ -484,10 +484,10 @@ func _test_pause_flow() -> void:
 	shell.dispatch(In.DOWN)
 	shell.dispatch(In.DOWN)
 	var volume: Node = pause.find_child("Row2", true, false)
-	_check("the volume row shows the stored volume", pause.row == 2 and volume.value == Guide.VOLUME_DEFAULT and volume.find_child("Number", true, false).text == "8")
+	_check("the volume row shows the stored volume", pause.row == 2 and volume.value == Guide.VOLUME_DEFAULT and volume.find_child("Number", true, false).text == "10")
 	shell.dispatch(In.LEFT)
 	var master := AudioServer.get_bus_index(&"Master")
-	_check("left lowers the master volume, stores it and applies it", volume.value == 7 and int(store.setting(Guide.SETTING_MASTER_VOLUME)) == 7 and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(master)), 0.7))
+	_check("left lowers the master volume, stores it and applies it", volume.value == 9 and int(store.setting(Guide.SETTING_MASTER_VOLUME)) == 9 and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(master)), 0.9))
 	for i in 5:
 		shell.dispatch(In.RIGHT)
 	_check("right raises it and stops at full", volume.value == 10 and int(store.setting(Guide.SETTING_MASTER_VOLUME)) == 10)

@@ -169,7 +169,6 @@ const SIZE_STAT_LABEL := 13
 
 ## Tag colour of the player's HUD block.
 const PLAYER_ONE := Color("5AB4FF")
-const DIALOG_BG := Color("0C0E16")
 const HUD_CHIP_BG := Color(5.0 / 255.0, 7.0 / 255.0, 13.0 / 255.0, 0.55)
 ## Scrim over the frozen game on the pause screen and under a dialog.
 const A_SCRIM_PAUSE := 0.62
@@ -191,8 +190,6 @@ const PAUSE_COLUMN_WIDTH := 560.0
 const PAUSE_PANE_WIDTH := 760.0
 const PAUSE_ROW_HEIGHT := 58.0
 const PANE_ROW_HEIGHT := 62.0
-const DIALOG_WIDTH := 640.0
-const BUTTON_HEIGHT := 52.0
 const KEYCAP_HEIGHT := 34.0
 const METER_HEIGHT := 8.0
 const SLIDER_SEGMENT := Vector2(20, 8)
@@ -201,7 +198,6 @@ const SIZE_MENU_TITLE := 112
 const SIZE_PAUSE_TITLE := 72
 const SIZE_HUD_SCORE := 44
 const SIZE_HUD_CLOCK := 38
-const SIZE_DIALOG_TITLE := 28
 const SIZE_STAT := 26
 const SIZE_PAUSE_ROW := 25
 const SIZE_PANE_ROW := 18

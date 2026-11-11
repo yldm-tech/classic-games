@@ -278,7 +278,7 @@ class DialogButton:
 	func _init(caption: String, p_primary: bool = false) -> void:
 		super()
 		primary = p_primary
-		custom_minimum_size = Vector2(0, T.BUTTON_HEIGHT)
+		custom_minimum_size = Vector2(0, T.DIALOG_BUTTON_HEIGHT)
 		set_padding(26, 0)
 		var label := W.text(caption, T.SIZE_DIALOG_BODY, 700 if primary else 400, T.BG if primary else T.FG, 1)
 		label.name = "Label"

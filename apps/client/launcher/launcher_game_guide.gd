@@ -15,10 +15,10 @@ extends RefCounted
 
 const In := preload("res://launcher/launcher_input.gd")
 
-## Store setting holding the master volume as an integer 0..VOLUME_STEPS. Pause adjusts it and every launch applies it to the Master audio bus.
-const SETTING_MASTER_VOLUME := "master_volume"
-const VOLUME_STEPS := 10
-const VOLUME_DEFAULT := 8
+## The master volume is the Settings screen's own key (LauncherSettings.VOLUME_MASTER), an integer 0..VOLUME_STEPS. Pause adjusts the same value, so the two screens always agree.
+const SETTING_MASTER_VOLUME := LauncherSettings.VOLUME_MASTER
+const VOLUME_STEPS := LauncherSettings.VOLUME_STEPS
+const VOLUME_DEFAULT := 10
 ## Store setting prefix of a game's start options: "<prefix><game id>.<option id>".
 const SETTING_OPTION_PREFIX := "game_option."
 
@@ -218,12 +218,9 @@ static func option_patch(game_id: String, values: Dictionary) -> Array:
 # ---- volume ----
 
 static func stored_volume(store: LauncherStore) -> int:
-	var stored: Variant = store.setting(SETTING_MASTER_VOLUME, VOLUME_DEFAULT)
-	return clampi(int(stored), 0, VOLUME_STEPS) if (stored is float or stored is int) else VOLUME_DEFAULT
+	return int(LauncherSettings.value(store, SETTING_MASTER_VOLUME))
 
-## Apply a 0..VOLUME_STEPS volume to the Master bus.
+## Apply a 0..VOLUME_STEPS volume to the Master bus. Step 0 is silent through the gain alone; the bus mute flag belongs to the Settings screen's mute row and is left as it is.
 static func apply_volume(steps: int) -> void:
 	var master := AudioServer.get_bus_index(&"Master")
-	AudioServer.set_bus_mute(master, steps <= 0)
-	if steps > 0:
-		AudioServer.set_bus_volume_db(master, linear_to_db(float(steps) / float(VOLUME_STEPS)))
+	AudioServer.set_bus_volume_db(master, linear_to_db(LauncherSettings.step_gain(steps)))
