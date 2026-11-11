@@ -158,6 +158,29 @@ launcher → i18n
 - 存档页的导出把完整存档写成 `classic-games-profile-<日期>-<时间>.json`（默认在系统的「文档」文件夹）；导入从同一文件夹列出最近的导出文件，经 `LauncherStore.read_profile`（与读取存档相同的版本检查和规范化）后用 `replace_progress` 只替换进度（游玩记录、收藏、最近游玩、成就），设置和按键保持不变，并可在提示消失前撤销；清除进度前必须确认，确认框的默认焦点在「取消」。
 - 启动器目录不允许出现网址（`check-client-boundaries.sh` 的本地化约束），所以「关于」页的仓库地址只作展示，不会打开浏览器。
 
+### PC 模式
+
+F11 或长按 View 在主机模式与 PC 模式之间切换；`LauncherStore` 的设置项 `default_mode`（`"console"` 默认，或 `"pc"`）决定启动时进入哪一个。PC 模式是同一份数据的另一种布局，面向键盘和鼠标，不新增任何状态来源。
+
+```text
+apps/client/launcher/
+├── pc_mode.gd            # LauncherPcMode：标题条、侧栏、状态条、焦点与输入、菜单、进出主机屏幕
+├── pc_detail_view.gd     # 单个游戏的页面：主视觉、开始 / 游戏菜单 / 收藏 / 更多、概览与成就两个标签
+├── pc_library_view.gd    # 游戏库：排序、网格 / 列表切换、类型筛选、可滚动的卡片或行
+├── pc_library.gd         # 纯函数：分类、搜索、类型筛选与排序
+├── pc_controls.gd        # PC 模式控件：Clickable 及其派生、Menu、SearchField、Flow
+├── pc_tokens.gd          # PC 模式专用的颜色与尺寸
+└── pc_mode_test.gd
+```
+
+- 挂载：`LauncherRoot` 默认注册 `pc_mode.gd`（`register_pc_mode` 可替换，传 `null` 则没有 PC 模式）。第一次进入时实例化并调用 `setup(shell)`，此后 PC 模式开启期间每个动作都交给它的 `handle_action`，主机层（屏幕、顶部导航、背景）整体隐藏。
+- 窗口：应用运行在真实的系统窗口里，标题条只放品牌和「主机模式」按钮，不绘制最小化、最大化、关闭按钮。
+- 选中的游戏双向保持：进入 PC 模式时取首页的 `hero_id`，离开时交还给首页。
+- 借用主机屏幕：PC 模式没有自己的游戏画面、游戏菜单、完整成就页和设置页。需要它们时调用 `open_console(screen_id, args)`，切回主机模式并打开那一屏；外壳回到首页时（游戏结束、或玩家从那一屏返回）自动回到 PC 模式。玩家自己按 F11 则以玩家为准。游戏运行中不能切到 PC 模式，外壳会用 toast 说明。
+- 鼠标：控件自带悬停与按下状态；单击选中，双击开始游戏，右键打开该游戏的菜单，滚轮滚动。
+- 键盘与手柄：焦点是分区（搜索、侧栏、主区）加分区内的行列位置。Tab / Shift+Tab 换分区，方向键在分区内移动并可越过边界，Enter 激活（落在游戏上即开始），Ctrl+F 或 `/` 跳到搜索框，Esc 清空搜索，Y 收藏，M 打开游戏菜单，Q / E 在游戏页与游戏库之间切换，PageUp / PageDown 滚动。搜索框是启动器里唯一使用 Godot 自带键盘焦点的控件，因为输入文字需要它。
+- 布局用容器搭建，网格列数由可用宽度算出，所以 PC 模式的区域变窄时会重排；`set_entries` 可以换入更多条目来检验（测试和截图工具使用），目录之外的条目能列出但不能开始。
+
 ## 9. 完成态不变量
 
 - Godot 4.6.3 精确版本门禁和 fail-closed test runner；

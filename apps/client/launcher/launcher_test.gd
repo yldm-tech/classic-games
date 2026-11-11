@@ -586,6 +586,7 @@ func _test_shell_hooks() -> void:
 	shell.toast("plain")
 	_check("a toast without undo offers none", shell.toast_text() == "plain" and not shell.can_undo() and not shell.find_child("Undo", true, false).visible)
 	shell.dismiss_toast()
+	shell.register_pc_mode(null)
 	shell.dispatch(In.PC_MODE)
 	_check("without a registered PC mode F11 only says it is unavailable", shell.mode == &"console" and shell.toast_text() == "PC 模式还没有做好")
 	shell.dismiss_toast()

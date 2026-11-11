@@ -21,6 +21,10 @@ const SETTINGS_SCREEN := "res://launcher/settings_screen.gd"
 const UNAVAILABLE_SCREEN := "res://launcher/unavailable_screen.gd"
 const LIBRARY_SCREEN := "res://launcher/library_screen.gd"
 const ACHIEVEMENTS_SCREEN := "res://launcher/achievements_screen.gd"
+## The PC-mode root registered by default. A path for the same reason as the screens.
+const PC_MODE_SCRIPT := "res://launcher/pc_mode.gd"
+## Store setting that picks the mode the launcher starts in: MODE_CONSOLE (default) or MODE_PC.
+const SETTING_DEFAULT_MODE := "default_mode"
 
 const HOME := &"home"
 const LIBRARY := &"library"
@@ -102,6 +106,10 @@ func _ready() -> void:
 	_build_layers()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	go(HOME)
+	if _pc_script == null:
+		_pc_script = load(PC_MODE_SCRIPT)
+	if str(store.setting(SETTING_DEFAULT_MODE, MODE_CONSOLE)) == MODE_PC:
+		toggle_pc_mode()
 
 func _exit_tree() -> void:
 	if Input.joy_connection_changed.is_connected(_on_joy_connection_changed):
@@ -285,13 +293,21 @@ func undo() -> void:
 # ---- PC mode hook ----
 
 ## Register the PC-mode root (a Control script). It is instantiated the first time PC mode is entered, receives `shell` through a `setup(shell: LauncherRoot)` method when it has one, and gets every action through `handle_action(action) -> bool` while PC mode is on.
+## LauncherPcMode (PC_MODE_SCRIPT) is registered by default; registering another script replaces it, and null leaves the launcher without a PC mode. Call it while console mode is on.
 func register_pc_mode(script: GDScript) -> void:
 	_pc_script = script
+	if _pc_node != null and mode == MODE_CONSOLE:
+		_pc_node.queue_free()
+		_pc_node = null
 
 ## Switch between console and PC mode (F11, or holding View). Until a PC mode is registered this only says that it is not available.
+## PC mode has no view of a running game, so console mode cannot be left while a run is live; the toast says so.
 func toggle_pc_mode() -> void:
 	if _pc_script == null:
 		toast(t("launcher.pc_mode.unavailable"))
+		return
+	if mode == MODE_CONSOLE and game_host.is_running():
+		toast(t("launcher.pc.busy_game"))
 		return
 	mode = MODE_PC if mode == MODE_CONSOLE else MODE_CONSOLE
 	if mode == MODE_PC and _pc_node == null:
