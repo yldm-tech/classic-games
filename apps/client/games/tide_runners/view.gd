@@ -83,7 +83,7 @@ func draw(g: Variant) -> void:
 	for item: Dictionary in g.items:
 		if float(item["t"]) < 3.0 and int(time * 12.0) % 2 == 0:
 			continue
-		_bottom(g, "can%d" % int(item["k"]), float(item["x"]), float(item["y"]) - (0.0 if item["ground"] else 0.0) + sin(time * 5.0 + float(item["x"])) * 1.2 - 1.0, false, false)
+		_bottom(g, "can%d" % int(item["k"]), float(item["x"]), float(item["y"]) + sin(time * 5.0 + float(item["x"])) * 1.2 - 1.0, false, false)
 	_foes(g)
 	for h: Dictionary in g.heroes:
 		if h["active"]:
@@ -100,13 +100,14 @@ func draw(g: Variant) -> void:
 func _c(key: String) -> Color:
 	return Gfx.col(key)
 
+## Where a sprite of `size` goes when `left` is its left edge and `top` its top. A negative width mirrors it, and the canvas keeps a mirrored rect at the same top-left corner, so the corner must not move: shifting it by the width drew every left-facing sprite a whole sprite to the right of its body.
+static func placed(left: float, top: float, size: Vector2, flip: bool) -> Rect2:
+	return Rect2(roundf(left), roundf(top), -size.x if flip else size.x, size.y)
+
 ## Draw a sprite with its bottom centre at (x, y).
 func _bottom(g: Variant, key: String, x: float, y: float, flip: bool, white: bool) -> void:
 	var size: Vector2 = gfx.dims[key]
-	var area := Rect2(roundf(x - size.x * 0.5), roundf(y - size.y), size.x, size.y)
-	if flip:
-		area = Rect2(area.position.x + size.x, area.position.y, -size.x, size.y)
-	g.draw_texture_rect(gfx.white(key) if white else gfx.tex[key], area, false)
+	g.draw_texture_rect(gfx.white(key) if white else gfx.tex[key], placed(x - size.x * 0.5, y - size.y, size, flip), false)
 
 func _centre(g: Variant, key: String, x: float, y: float, white: bool = false) -> void:
 	var size: Vector2 = gfx.dims[key]
@@ -123,6 +124,10 @@ func _text(g: Variant, text: String, centre_x: float, baseline: float, size: int
 	for offset: Vector2 in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1), Vector2(1, 1)]:
 		g.draw_string(font, at + offset, text, HORIZONTAL_ALIGNMENT_CENTER, 480.0, size, shadow)
 	g.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, 480.0, size, colour)
+
+## The size of the small captions: Chinese needs twelve pixels to stay legible once the stage is scaled up, Latin capitals read at ten.
+func _small(g: Variant) -> int:
+	return 12 if str(g.locale) == "zh" else 10
 
 func _t(g: Variant, key: String) -> String:
 	return str(TEXT[key]["zh" if str(g.locale) == "zh" else "en"])
@@ -233,10 +238,8 @@ func _hero(g: Variant, h: Dictionary) -> void:
 		var grip: Vector2 = GUN_GRIPS[gun]
 		var size: Vector2 = gfx.dims[gun]
 		var shoulder := Vector2(x + face * 1.0, y - 11.0 + bob)
-		var area := Rect2(roundf(shoulder.x - grip.x), roundf(shoulder.y - grip.y), size.x, size.y)
-		if flip:
-			area = Rect2(roundf(shoulder.x + grip.x), area.position.y, -size.x, size.y)
-		g.draw_texture_rect(gfx.tex[prefix + gun], area, false)
+		# Facing left the gun is mirrored about the shoulder, so its grip sits the same distance the other way.
+		g.draw_texture_rect(gfx.tex[prefix + gun], placed(shoulder.x + grip.x - size.x if flip else shoulder.x - grip.x, shoulder.y - grip.y, size, flip), false)
 	if float(h["fire_t"]) > 0.0:
 		var muzzle := Heroes.muzzle(h)
 		_centre(g, "spark", muzzle.x, muzzle.y)
@@ -391,7 +394,7 @@ func _overlay(g: Variant) -> void:
 		g.draw_rect(Rect2(_origin - Vector2(8.0, 8.0), VIEW + Vector2(16.0, 16.0)), Color(1.0, 1.0, 1.0, minf(0.8, float(g.flash) * 2.0)))
 	for label: Dictionary in g.labels:
 		var at := Vector2(float(label["x"]) - _origin.x, float(label["y"]) - _origin.y)
-		_text(g, _t(g, str(label["key"])), clampf(at.x, 40.0, 440.0), at.y, 10, _c("f"))
+		_text(g, _t(g, str(label["key"])), clampf(at.x, 40.0, 440.0), at.y, _small(g), _c("f"))
 	_weapon_tags(g)
 	if float(g.go_t) > 0.0 and int(time * 5.0) % 2 == 0:
 		_centre(g, "arrow", _origin.x + 440.0, _origin.y + 128.0)
@@ -399,21 +402,21 @@ func _overlay(g: Variant) -> void:
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 52.0), Color(_c("0"), 0.72))
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 1.0), _c("8"))
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 151.0, 496.0, 1.0), _c("8"))
-		_text(g, _t(g, "stage") % (int(g.stage_index) + 1), 240.0, 119.0, 10, _c("9"))
+		_text(g, _t(g, "stage") % (int(g.stage_index) + 1), 240.0, 119.0, _small(g), _c("9"))
 		_text(g, str(Levels.NAMES[int(g.stage_index)]["zh" if zh else "en"]), 240.0, 142.0, 18, _c("5"))
 	elif bool(g.boss_started) and float(g.warn_t) > 0.0:
 		var pulse := 0.5 + 0.5 * sin(time * 12.0)
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 52.0), Color(_c("a"), 0.55 + 0.25 * pulse))
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 2.0), _c("d"))
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 150.0, 496.0, 2.0), _c("d"))
-		_text(g, _t(g, "warning"), 240.0, 119.0, 10, _c("e"))
+		_text(g, _t(g, "warning"), 240.0, 119.0, _small(g), _c("e"))
 		_text(g, str(Levels.BOSS_NAMES[int(g.stage_index)]["zh" if zh else "en"]), 240.0, 142.0, 18, _c("f"))
 	elif int(g.mode) == 1:
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 52.0), Color(_c("0"), 0.72))
 		var last := int(g.stage_index) + 1 >= Levels.STAGE_COUNT
 		_text(g, _t(g, "clear"), 240.0, 122.0 if last else 132.0, 18, _c("f"))
 		if last:
-			_text(g, _t(g, "final"), 240.0, 143.0, 10, _c("9"))
+			_text(g, _t(g, "final"), 240.0, 144.0, _small(g), _c("9"))
 	elif int(g.mode) == 2:
 		g.draw_rect(Rect2(_origin.x - 8.0, _origin.y + 100.0, 496.0, 52.0), Color(_c("0"), 0.72))
 		_text(g, _t(g, "continue" if int(g.continues) > 0 else "over"), 240.0, 133.0, 18, _c("f"))
@@ -436,4 +439,4 @@ func _weapon_tags(g: Variant) -> void:
 			_centre(g, "b_rivet", left + 10.0, top + 7.0)
 		else:
 			g.draw_texture_rect_region(gfx.tex["ico%d" % weapon], Rect2(left + 7.0, top + 4.0, 6.0, 6.0), Rect2(0, 0, 6, 6))
-		g.draw_string(font, Vector2(left + 18.0, top + 11.0), _t(g, "w%d" % weapon), HORIZONTAL_ALIGNMENT_LEFT, 92.0, 10, _c("5"))
+		g.draw_string(font, Vector2(left + 18.0, top + (12.0 if _small(g) == 12 else 11.0)), _t(g, "w%d" % weapon), HORIZONTAL_ALIGNMENT_LEFT, 92.0, _small(g), _c("5"))

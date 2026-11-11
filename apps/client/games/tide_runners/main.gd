@@ -13,7 +13,7 @@ const View := preload("res://games/tide_runners/view.gd")
 
 const VIEW := Vector2(480.0, 270.0)
 const START_LIVES := [5, 3, 2]
-const CONTINUES := [3, 2, 1]
+const CONTINUES := [4, 3, 2]
 const PACE := [1.25, 1.0, 0.8]
 const SHOT_SPEED := [0.85, 1.0, 1.15]
 const BOSS_SCALE := [0.85, 1.0, 1.15]
@@ -99,6 +99,7 @@ func _game_start(config: Dictionary) -> void:
 		var h := Heroes.make(slot, start_lives)
 		h["active"] = is_player_active(slot)
 		h["out"] = not is_player_active(slot)
+		h["seen"] = is_player_active(slot)
 		heroes.append(h)
 	if _camera == null:
 		_camera = Camera2D.new()
@@ -285,6 +286,11 @@ func _step_flow(delta: float) -> void:
 				else:
 					finish(OUTCOME_CLEARED)
 		MODE_OVER:
+			# A diver who joins while the run waits to continue keeps it going, and no continue is spent.
+			for h in heroes:
+				if h["active"] and not h["out"]:
+					mode = MODE_PLAY
+					return
 			mode_t -= delta
 			if mode_t > 0.0:
 				return
@@ -696,11 +702,15 @@ func _step_fx(delta: float) -> void:
 
 # ---- contract ----
 
+## A first join starts with full lives. A diver who left and comes back keeps the score and the lives they left with, so leaving is not a way to refill; with none left they wait for the next stage or continue like anyone else who is out.
 func _game_player_joined(slot: int) -> void:
-	var h := Heroes.make(slot, start_lives)
+	var h := heroes[slot]
 	h["active"] = true
-	heroes[slot] = h
-	respawn(h)
+	if not h["seen"]:
+		h["seen"] = true
+		h["lives"] = start_lives
+	if int(h["lives"]) > 0:
+		respawn(h)
 
 func _game_player_left(slot: int) -> void:
 	var h := heroes[slot]

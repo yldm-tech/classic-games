@@ -24,6 +24,8 @@ const GRAVITY := 520.0
 const STREAM_CAP := 6
 const WAVE_CAP := 5
 const PASSIVE := ["carrier", "crate"]
+const TROOP_HOP := 290.0
+const TROOP_HOP_DRIFT := 46.0
 
 static func spawn(g: Variant, kind: String, x: float, y: float, extra: int = 0) -> Dictionary:
 	var spec: Array = KINDS[kind]
@@ -276,18 +278,32 @@ static func _scut(g: Variant, world: World, foe: Dictionary, dt: float) -> void:
 
 static func _troop(g: Variant, world: World, foe: Dictionary, target: Dictionary, dt: float) -> void:
 	_fall(world, foe, dt)
-	if target.is_empty() or not foe["ground"]:
+	if target.is_empty():
 		return
 	var x: float = foe["x"]
 	var y: float = foe["y"]
+	if not foe["ground"]:
+		# Mid-hop: keep drifting the way it faces so it clears the block it jumped at.
+		var drift := x + int(foe["face"]) * TROOP_HOP_DRIFT * dt
+		if not world.box_hits(drift - 5.0, y - 15.0, drift + 5.0, y - 1.0):
+			foe["x"] = drift
+		return
 	var dx := float(target["x"]) - x
 	foe["face"] = 1 if dx > 0.0 else -1
 	var face: int = foe["face"]
-	if float(foe["a"]) <= 0.0 and absf(dx) > 70.0:
+	var level := absf(float(target["y"]) - y) < 52.0
+	# It closes in until it has a shot. On the open stages a diver above or below it, or behind a block, has to be walked to: a trooper that only waited there could neither hit nor be hit, and stalled an ambush. The tower's deck guards hold their deck.
+	var sight := world.vertical or level and not world.box_hits(minf(x, float(target["x"])) + 6.0, y - 12.0, maxf(x, float(target["x"])) - 6.0, y - 10.0)
+	if float(foe["a"]) <= 0.0 and (absf(dx) > 70.0 or (not sight and absf(dx) > 12.0)):
 		var next_x := x + face * 30.0 * dt
 		var ahead := next_x + face * 8.0
-		var ledge := world.landing(ahead - 1.0, ahead + 1.0, y, y + 6.0, false) == INF
-		if not ledge and not world.box_hits(next_x - 5.0, y - 15.0, next_x + 5.0, y - 1.0):
+		# A ledge only stops it over water; onto dry ground below it steps off.
+		var ledge := world.landing(ahead - 1.0, ahead + 1.0, y, y + 6.0, false) == INF and world.landing(ahead - 1.0, ahead + 1.0, y, float(g.drown_line()) - 2.0, false) == INF
+		if world.box_hits(next_x - 5.0, y - 15.0, next_x + 5.0, y - 1.0):
+			# A block in the way: hop it.
+			foe["vy"] = -TROOP_HOP
+			foe["ground"] = false
+		elif not ledge:
 			foe["x"] = next_x
 			foe["b"] = float(foe["b"]) + dt
 	if float(foe["t"]) <= 0.0 and absf(dx) < 230.0 and absf(float(target["y"]) - y) < 52.0 and g.in_view(x, y, 0.0):

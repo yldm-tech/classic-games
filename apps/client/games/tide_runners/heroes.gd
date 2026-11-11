@@ -22,7 +22,7 @@ static func make(slot: int, lives: int) -> Dictionary:
 	return {
 		"slot": slot, "active": false, "x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "ground": false, "face": 1, "aim": Vector2i(1, 0),
 		"prone": false, "drop_t": 0.0, "alive": false, "dead_t": 0.0, "inv": 0.0, "weapon": 0, "cd": 0.0, "lives": lives, "score": 0,
-		"out": true, "shield": false, "anim": 0.0, "fire_t": 0.0, "next_life": 20000, "moving": false,
+		"out": true, "shield": false, "anim": 0.0, "fire_t": 0.0, "next_life": 20000, "moving": false, "seen": false,
 	}
 
 static func height(h: Dictionary) -> float:

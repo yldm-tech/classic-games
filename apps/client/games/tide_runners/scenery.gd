@@ -302,7 +302,8 @@ static func _shaft_pipes(gfx: Variant) -> Image:
 	gfx._rect(image, 150, 150, 142, 8, "6")
 	gfx._rect(image, 150, 150, 142, 2, "7")
 	gfx._rect(image, 150, 157, 142, 1, "0")
-	gfx._ball(image, 222, 154, 9, "c", "b", "a")
+	# The valve wheel is the pipes' own green: red is kept for things that hurt.
+	gfx._ball(image, 222, 154, 9, "8", "7", "6")
 	gfx._ball(image, 222, 154, 3, "j", "h", "g")
 	return image
 

@@ -9,6 +9,7 @@ const Foes := preload("res://games/tide_runners/foes.gd")
 const Bosses := preload("res://games/tide_runners/bosses.gd")
 const World := preload("res://games/tide_runners/world.gd")
 const Sounds := preload("res://games/tide_runners/sounds.gd")
+const View := preload("res://games/tide_runners/view.gd")
 
 const STEP := GameModule.STEP
 
@@ -22,6 +23,8 @@ func _initialize() -> void:
 	_test_aim_and_weapons()
 	_test_hits_and_lives()
 	_test_foes_and_score()
+	_test_troopers()
+	_test_view()
 	_test_first_boss_by_shooting()
 	_test_tower()
 	_test_full_clear()
@@ -101,6 +104,12 @@ func _test_stage_data() -> void:
 				crossable = false
 				push_error("stage %d: a gap wider than four tiles ends at column %d" % [index, column])
 	_check("no gap is wider than a jump", crossable)
+	# A lobbed limpet cannot reach the first boss's cannon arm from the ground, so the last courier before that arena brings something that fires straight.
+	var last_canister := 0
+	for entry: Array in Levels.stage(0)["spawns"]:
+		if entry[0] == "carrier":
+			last_canister = int(entry[3])
+	_check("the last courier before the first boss does not bring the limpet", last_canister != 0 and last_canister != 3)
 	_check("the tunes parse into notes", Sounds.notes("D5:.5 -:1").size() == 2 and is_equal_approx(float(Sounds.notes("D5:.5")[0][1]), 0.5) and (Sounds.boss_music()["voices"] as Array).size() == 3)
 
 func _stands(world: World, column: int, row: int) -> bool:
@@ -149,14 +158,14 @@ func _reachable(world: World, column: int, row: int) -> Dictionary:
 func _test_start() -> void:
 	var game := _start(1, 3)
 	var first := game.snapshot()
-	_check("a run starts on stage one of three with full lives and the rivet gun", first["stage"] == 1 and first["stages_total"] == 3 and first["players"][0]["lives"] == 3 and first["players"][0]["max_lives"] == 3 and first["players"][0]["weapon"] == 0 and first["continues"] == 2)
+	_check("a run starts on stage one of three with full lives and the rivet gun", first["stage"] == 1 and first["stages_total"] == 3 and first["players"][0]["lives"] == 3 and first["players"][0]["max_lives"] == 3 and first["players"][0]["weapon"] == 0 and first["continues"] == 3)
 	_check("the snapshot lists both seats and the second is empty in a solo run", (first["players"] as Array).size() == 2 and first["players"][1]["alive"] == false and first["player_count"] == 1)
 	_check("no boss bar before the boss", not first.has("boss_hp"))
 	_check("the stage tune is playing and every effect is defined", game.audio.music_playing and game.audio.has_sound("shot3") and game.audio.has_sound("fanfare"))
 	game.free()
 	var easy := _start(1, 3, {"difficulty": 0})
 	var hard := _start(1, 3, {"difficulty": 2})
-	_check("difficulty sets lives and continues", easy.snapshot()["players"][0]["lives"] == 5 and easy.snapshot()["continues"] == 3 and hard.snapshot()["players"][0]["lives"] == 2 and hard.snapshot()["continues"] == 1 and hard.snapshot()["difficulty"] == 2)
+	_check("difficulty sets lives and continues", easy.snapshot()["players"][0]["lives"] == 5 and easy.snapshot()["continues"] == 4 and hard.snapshot()["players"][0]["lives"] == 2 and hard.snapshot()["continues"] == 2 and hard.snapshot()["difficulty"] == 2)
 	easy.free()
 	hard.free()
 
@@ -397,6 +406,62 @@ func _test_foes_and_score() -> void:
 	_check("beating the wave frees the camera", game.lock.is_empty() and float(game.snapshot()["camera_x"]) > locked)
 	game.free()
 
+## A stage with nothing in it but what the test puts there: no placed machines, no streams, no ambush.
+func _quiet(stage: int) -> Main:
+	var game := _start(1, 21, {"_stage": stage})
+	game.spawned.fill(1)
+	game.zone_t.fill(1000000.0)
+	game.lock_index = 99
+	game.foes.clear()
+	_safe(game)
+	return game
+
+func _test_troopers() -> void:
+	# The dockyard opens with a container two tiles high from x 192 to 256. A trooper beyond it has to come over it: one that waited there could neither hit nor be hit, and held an ambush shut.
+	var game := _quiet(2)
+	var trooper: Dictionary = Foes.spawn(game, "troop", 330.0, 224.0)
+	trooper["ground"] = true
+	var topped := false
+	for wait in 60:
+		game.advance(0.25)
+		topped = topped or (trooper["ground"] and is_equal_approx(float(trooper["y"]), 192.0))
+	_check("a trooper hops onto a block that stands between it and a diver", topped)
+	_check("and comes down the far side to where it has a shot", float(trooper["x"]) < 192.0 and is_equal_approx(float(trooper["y"]), 224.0) and absf(float(trooper["x"]) - float(game.heroes[0]["x"])) <= 72.0 and not trooper["dead"])
+	game.free()
+	# From a hanging pallet (x 256 to 352, five tiles up) it steps down onto the dry deck below instead of standing at the edge out of reach.
+	game = _quiet(2)
+	trooper = Foes.spawn(game, "troop", 320.0, 144.0)
+	trooper["ground"] = true
+	game.advance(15.0)
+	_check("a trooper on a ledge over dry ground steps down to reach a diver", is_equal_approx(float(trooper["y"]), 224.0) and float(trooper["x"]) < 192.0 and not trooper["dead"])
+	game.free()
+	# The first gap in the dock is at x 592 to 640, with water under it: there it stays on its side.
+	game = _quiet(2)
+	game.cam.x = 300.0
+	_put(game, 0, 500.0, 224.0)
+	trooper = Foes.spawn(game, "troop", 700.0, 224.0)
+	trooper["ground"] = true
+	game.advance(8.0)
+	_check("a trooper does not walk off a ledge into the water", not trooper["dead"] and float(trooper["x"]) >= 640.0 and float(trooper["x"]) < 660.0 and is_equal_approx(float(trooper["y"]), 224.0))
+	game.free()
+	# The tower's deck guards keep to their deck however far below the diver is.
+	game = _quiet(1)
+	var hero: Dictionary = game.heroes[0]
+	var deck := float(hero["y"]) - 192.0
+	trooper = Foes.spawn(game, "troop", float(hero["x"]) + 40.0, deck)
+	trooper["ground"] = true
+	var guard_x := float(trooper["x"])
+	game.advance(3.0)
+	_check("a tower guard does not walk to a diver it cannot see", is_equal_approx(float(trooper["x"]), guard_x))
+	game.free()
+
+func _test_view() -> void:
+	# The canvas mirrors a rect of negative width in place, so a sprite facing left has to keep the corner it has facing right.
+	var size := Vector2(16.0, 20.0)
+	var right := View.placed(100.0, 50.0, size, false)
+	var left := View.placed(100.0, 50.0, size, true)
+	_check("a mirrored sprite is drawn over the same pixels as the unmirrored one", left.position == right.position and is_equal_approx(left.size.x, -size.x) and is_equal_approx(left.size.y, size.y) and right.size == size)
+
 func _test_first_boss_by_shooting() -> void:
 	var game := _start(1, 9, {"_boss": 1})
 	_safe(game)
@@ -569,6 +634,36 @@ func _test_two_players() -> void:
 	_check("the second player can leave again", game.leave(1) and game.snapshot()["player_count"] == 1 and game.snapshot()["players"][1]["alive"] == false and (game.snapshot()["players"] as Array).size() == 2)
 	game.advance(1.0)
 	_check("the run goes on for the diver who stayed", game.is_running() and game.snapshot()["players"][0]["alive"] == true)
+	# Coming back is not a refill: the diver keeps the score and the lives they left with.
+	game.join(1)
+	game.add_score(1, 500)
+	game.heroes[1]["lives"] = 2
+	game.leave(1)
+	game.advance(0.5)
+	game.join(1)
+	var back := game.snapshot()
+	_check("a diver who left and comes back keeps score and lives", back["players"][1]["score"] == 500 and back["players"][1]["lives"] == 2 and back["players"][1]["alive"] == true and back["score"] == int(back["players"][0]["score"]) + 500)
+	game.heroes[1]["lives"] = 0
+	game.leave(1)
+	game.join(1)
+	_check("a diver who left with no lives comes back out", game.snapshot()["player_count"] == 2 and game.snapshot()["players"][1]["alive"] == false and game.snapshot()["players"][1]["lives"] == 0)
+	game.free()
+
+	# A diver who joins while the run waits to continue keeps it going, and the continue is not spent.
+	game = _start(1, 15, {"_lives": 1, "_continues": 1})
+	game.spawned.fill(1)
+	game.zone_t.fill(1000000.0)
+	game.advance(0.3)
+	var ended: Array[Dictionary] = []
+	game.finished.connect(func(result: Dictionary) -> void: ended.append(result))
+	game.foe_shot(float(game.heroes[0]["x"]) - 20.0, 213.0, 200.0, 0.0, "orb")
+	game.advance(2.0)
+	var waiting: bool = game.mode == Main.MODE_OVER and game.snapshot()["players"][0]["alive"] == false
+	game.join(1)
+	game.heroes[1]["inv"] = 1000000.0
+	game.advance(4.0)
+	var kept := game.snapshot()
+	_check("joining while the run waits to continue keeps it going without spending one", waiting and ended.is_empty() and kept["continues"] == 1 and kept["continues_used"] == 0 and kept["players"][1]["alive"] == true and kept["players"][0]["alive"] == false)
 	game.free()
 
 	# Two divers face a tougher boss than one.
