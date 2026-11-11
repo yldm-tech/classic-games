@@ -120,6 +120,9 @@ apps/client/launcher/
 ├── launcher_game_host.gd             # 经 GameSession 运行游戏并把结果写入存档
 ├── launcher_format.gd                # 分数、时长、「今天/昨天」等显示格式
 ├── home_screen.gd / game_screen.gd / unavailable_screen.gd
+├── library_screen.gd / achievements_screen.gd  # 游戏库（分类、排序、搜索、封面网格）与成就
+├── launcher_scroll_grid.gd           # 按整行滚动的等大单元格网格，游戏库封面与成就列表共用
+├── library_test.gd                   # 游戏库与成就屏的无头测试（make library-test）
 └── launcher_test.gd / launch_test.gd / launcher_shot.gd
 ```
 
@@ -135,6 +138,11 @@ launcher → i18n
 - 焦点由屏幕自己持有（分区名 + 序号），控件只负责外观并发出 `hovered` / `activated`，不使用 Godot 自带的键盘焦点。
 - 屏幕上关于玩家的一切（游玩时长、上次游玩、最高分、收藏、最近游玩、成就）都读自 `LauncherStore`，只有真实游玩和真实操作会写入；没有记录时如实显示空状态。
 - 游戏只经 `LauncherGameHost` 启动。它是外壳的一层而不是屏幕，游戏屏与暂停屏在它上面切换时舞台保持挂载。
+- 页内标签用 LB/RB，顶层标签用 LT/RT：游戏库的分类和成就屏的筛选都吃掉 LB/RB，其余屏幕不处理时 LB/RB 仍回落到外壳。
+- 网格类屏幕用 `LauncherScrollGrid`：屏幕持有焦点序号，网格只负责摆放、把指定单元格滚进可视行、画右侧位置条；`LauncherScrollGrid.step()` 统一四个方向的边界行为（左右到行尾停住，向下落到较短的末行时取其最后一格）。会滚动的单元格用自己的 `pointed` 信号（真实鼠标移动）而不是 `hovered` 来接管焦点，否则网格滚动时停在原地的指针会把焦点抢走。
+- 游戏库的数据入口是 `LauncherLibraryScreen.entries`（默认取自 `LauncherCatalog.all()`，`set_entries()` 可整体替换），分类只有全部、最近游玩、收藏和目录里出现的类型；搜索按拼音首字母或英文名的词首匹配。
+- 文本输入是「屏幕不读 `InputEvent`」的唯一例外：游戏库的搜索层打开期间，其根节点在 `_input` 里先于外壳取走字母键和退格键当作文字，其余按键照常翻译成动作；手柄用同一层上的屏幕键盘。
+- 成就屏只显示目录定义的成就及其真实解锁时间，存档里目录已不再定义的解锁记录不计数；没有稀有度和排行榜。
 
 ## 9. 完成态不变量
 
