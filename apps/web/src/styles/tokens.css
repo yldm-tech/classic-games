@@ -1,99 +1,65 @@
-/* Design tokens shared by the landing page and the Starlight docs. Values follow the client token source in apps/client/shell/design_system/theme/tokens.gd so the site and the app read as one product. Where a client token does not reach WCAG AA for body text on the web (the muted text colours and white-on-ember), the site uses the nearest value that does and says so next to the token. */
+/* Design tokens shared by the landing page and the Starlight docs. The dark theme follows the launcher's token source in apps/client/launcher/launcher_tokens.gd (background, foreground and its alpha steps, panel colours, the single 4px radius, motion durations), so the site and the launcher read as one product. The launcher has no light theme; the light values here are the same scale inverted, for readers who prefer light docs. */
 
 :root {
-	/* Brand ramps, identical in both themes. */
-	--fp-ember-400: #ff6b33;
-	--fp-ember-500: #ff4d1a;
-	--fp-ember-600: #e83a0b;
-	--fp-ember-700: #bf2d06;
-	--fp-volt-300: #d6ff66;
-	--fp-volt-400: #c8ff3d;
-	--fp-volt-500: #a8e61a;
-	--fp-volt-600: #84bf0a;
-
-	/* System font stacks only: no font files are downloaded, and CJK text falls through to the platform's own Chinese face. */
-	--fp-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	/* System font stacks only: no font files are downloaded, and CJK text falls through to the platform's own Chinese face. The order follows the launcher's LATIN_FAMILIES and CJK_FAMILIES. */
+	--fp-font-sans: Inter, 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', 'Noto Sans SC', 'Noto Sans CJK SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', Roboto, Arial, sans-serif;
 	--fp-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-	/* Radii from the client scale. */
-	--fp-radius-xs: 6px;
-	--fp-radius-sm: 10px;
-	--fp-radius-md: 14px;
-	--fp-radius-lg: 18px;
-	--fp-radius-xl: 24px;
-	--fp-radius-pill: 999px;
+	/* The launcher uses one radius everywhere (RADIUS). */
+	--fp-radius: 4px;
 
-	/* Motion from the client scale; nothing on the site runs longer than 360ms. */
-	--fp-dur-fast: 120ms;
-	--fp-dur-med: 220ms;
-	--fp-dur-slow: 360ms;
-	--fp-ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+	/* Motion from the launcher: FADE_ROW, RESIZE_CARD and FADE_SCREEN. Nothing on the site runs longer. */
+	--fp-dur-fast: 150ms;
+	--fp-dur-med: 250ms;
+	--fp-dur-slow: 300ms;
 
-	/* Dark theme is the default, as in the client. */
+	/* Dark theme is the default, as in the launcher. BG, FG, DEEP, PANEL, CARD_BG and DIALOG_BG are the launcher's own constants; text and rules are FG at the launcher's alpha steps (A_BODY 0.75, A_MUTED 0.6, A_CHIP_BORDER 0.35, A_RULE 0.18, A_HAIRLINE 0.12). */
 	color-scheme: dark;
-	--fp-bg: #0f0d0e;
-	--fp-bg-sunken: #0a0809;
-	--fp-surface: #1c1819;
-	--fp-surface-raised: #252021;
-	--fp-surface-input: #161314;
-	--fp-text: #f2edec;
-	--fp-text-secondary: #b3a9aa;
-	/* Client text_muted is #6b6162 (3.2:1 on bg_app); lifted to 5.8:1 for running text on the web. */
-	--fp-text-muted: #948a8b;
-	--fp-accent: var(--fp-ember-500);
-	--fp-accent-hover: var(--fp-ember-400);
-	--fp-accent-text: var(--fp-ember-400);
-	/* Accent text on an ember tint over the sunken background, the darkest place a tinted chip sits. The dark theme's accent text already reaches 6.2:1 there. */
-	--fp-accent-text-on-tint: var(--fp-accent-text);
-	/* Client text_on_primary is white (3.3:1 on ember-500); the site sets near-black on ember instead (5.9:1). */
-	--fp-on-accent: #1a0803;
-	--fp-ai: var(--fp-volt-400);
-	--fp-ai-text: var(--fp-volt-400);
-	--fp-on-ai: #1a2403;
-	--fp-danger-text: #ff6b85;
-	--fp-success-text: #2ee676;
-	--fp-border-subtle: rgb(242 237 236 / 0.08);
-	--fp-border: rgb(242 237 236 / 0.14);
-	--fp-border-strong: rgb(242 237 236 / 0.24);
-	--fp-focus: var(--fp-ember-400);
-	--fp-tint-ember: rgb(255 77 26 / 0.14);
-	--fp-tint-volt: rgb(200 255 61 / 0.12);
-	--fp-tint-danger: rgb(255 59 92 / 0.14);
-	--fp-glow: rgb(255 77 26 / 0.2);
-	--fp-grid-line: rgb(242 237 236 / 0.05);
-	--fp-header-bg: rgb(15 13 14 / 0.82);
+	--fp-bg: #05070d;
+	--fp-bg-sunken: #030408;
+	--fp-surface: #0a0c14;
+	--fp-surface-raised: #0c0e16;
+	--fp-surface-input: #0b0e16;
+	--fp-text: #f4f5f8;
+	--fp-text-secondary: rgb(244 245 248 / 0.75);
+	--fp-text-muted: rgb(244 245 248 / 0.6);
+	/* The launcher has no accent hue: focus and primary actions are the foreground colour itself. */
+	--fp-accent: #f4f5f8;
+	--fp-accent-hover: #ffffff;
+	--fp-on-accent: #05070d;
+	--fp-focus: #f4f5f8;
+	--fp-focus-fill: rgb(244 245 248 / 0.16);
+	/* PLAYER_ONE, the blue of the in-game score label. The site uses it for links in running text only. */
+	--fp-link: #5ab4ff;
+	/* FAVORITE / DANGER. */
+	--fp-danger-text: #ff6b7a;
+	--fp-border-subtle: rgb(244 245 248 / 0.12);
+	--fp-border: rgb(244 245 248 / 0.18);
+	--fp-border-strong: rgb(244 245 248 / 0.35);
+	--fp-header-bg: rgb(5 7 13 / 0.86);
 }
 
 :root[data-theme='light'] {
 	color-scheme: light;
-	--fp-bg: #fbf8f6;
-	--fp-bg-sunken: #f1ece9;
+	--fp-bg: #f4f5f8;
+	--fp-bg-sunken: #e9ebf0;
 	--fp-surface: #ffffff;
 	--fp-surface-raised: #ffffff;
-	--fp-surface-input: #f4f0ed;
-	--fp-text: #1c1819;
-	--fp-text-secondary: #574f50;
-	/* Client text_muted is #8e8384 (3.5:1 on bg_app); darkened to 5.3:1 for running text on the web. */
-	--fp-text-muted: #6f6566;
-	--fp-accent: var(--fp-ember-500);
-	--fp-accent-hover: var(--fp-ember-400);
-	--fp-accent-text: var(--fp-ember-700);
-	/* ember-700 is 4.4:1 on the ember tint over bg-sunken (composite #f0dad3), below AA for 13px text; darkened to 5.3:1. */
-	--fp-accent-text-on-tint: #a82705;
-	--fp-on-accent: #1a0803;
-	--fp-ai: var(--fp-volt-400);
-	--fp-ai-text: #3f5c00;
-	--fp-on-ai: #1a2403;
+	--fp-surface-input: #eceef2;
+	--fp-text: #05070d;
+	--fp-text-secondary: rgb(5 7 13 / 0.78);
+	/* 0.66 over the light background is 5.9:1, above AA for running text. */
+	--fp-text-muted: rgb(5 7 13 / 0.66);
+	--fp-accent: #05070d;
+	--fp-accent-hover: #1b1e27;
+	--fp-on-accent: #f4f5f8;
+	--fp-focus: #05070d;
+	--fp-focus-fill: rgb(5 7 13 / 0.08);
+	/* #5ab4ff is 2.1:1 on the light background; darkened to 6.1:1. */
+	--fp-link: #1d5fa6;
 	--fp-danger-text: #b3122f;
-	--fp-success-text: #0f6b32;
-	--fp-border-subtle: rgb(28 24 25 / 0.07);
-	--fp-border: rgb(28 24 25 / 0.12);
-	--fp-border-strong: rgb(28 24 25 / 0.22);
-	--fp-focus: var(--fp-ember-700);
-	--fp-tint-ember: rgb(232 58 11 / 0.1);
-	--fp-tint-volt: rgb(132 191 10 / 0.16);
-	--fp-tint-danger: rgb(209 26 60 / 0.1);
-	--fp-glow: rgb(255 77 26 / 0.13);
-	--fp-grid-line: rgb(28 24 25 / 0.05);
-	--fp-header-bg: rgb(251 248 246 / 0.86);
+	--fp-border-subtle: rgb(5 7 13 / 0.1);
+	--fp-border: rgb(5 7 13 / 0.16);
+	--fp-border-strong: rgb(5 7 13 / 0.32);
+	--fp-header-bg: rgb(244 245 248 / 0.88);
 }

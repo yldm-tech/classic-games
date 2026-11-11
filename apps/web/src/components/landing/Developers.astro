@@ -1,0 +1,271 @@
+---
+import Phrases from '../Phrases.astro';
+import { repoFile } from '../../config/site.ts';
+import { enemyTotals, patchLines } from '../../data/dsl-example.ts';
+import { games } from '../../data/games.ts';
+import { runtimes } from '../../data/runtimes.ts';
+import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].developers;
+const lang = locale === 'en' ? 'en' : 'zh';
+const gameName = (key: string) => games.find((game) => game.key === key)?.name[lang] ?? key;
+
+const services = [
+	{ ...t.server, href: localizePath(locale, '/docs/09-api-design/') },
+	{ ...t.cli, href: localizePath(locale, '/developers/cli/') },
+	{ ...t.mcp, href: localizePath(locale, '/developers/mcp/') },
+	{ ...t.sdk, href: localizePath(locale, '/developers/sdk/') },
+];
+---
+
+<section class="fp-section" id="developers" aria-labelledby="developers-title">
+	<div class="fp-container">
+		<div class="fp-section-head">
+			<p class="fp-eyebrow">{t.eyebrow}</p>
+			<h2 class="fp-h2" id="developers-title"><Phrases text={t.title} /></h2>
+			<p class="fp-lead">{t.lead}</p>
+		</div>
+
+		<div class="block">
+			<h3 class="fp-h3">{t.runtimesTitle}</h3>
+			<p class="block-lead">{t.runtimesLead}</p>
+			<ul class="runtimes">
+				{
+					runtimes.map((runtime) => (
+						<li class="runtime fp-card">
+							<p class="runtime-name">{gameName(runtime.key)}</p>
+							<p>
+								<code class="fp-chip">{runtime.id}</code>
+							</p>
+							<p class="label">{t.sectionsLabel}</p>
+							<ul class="sections">
+								{runtime.sections.map((section) => (
+									<li>
+										<code>{section}</code>
+									</li>
+								))}
+							</ul>
+							<p class="links">
+								<a class="fp-link" data-external href={repoFile(runtime.schemaPath)}>
+									{t.schemaLink}
+								</a>
+								<a class="fp-link" data-external href={repoFile(runtime.baselinePath)}>
+									{t.baselineLink}
+								</a>
+							</p>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+
+		<div class="block">
+			<h3 class="fp-h3">{t.patchTitle}</h3>
+			<p class="block-lead">{t.patchLead}</p>
+			<div class="table-wrap">
+				<table>
+					<caption class="fp-sr-only">{t.tableCaption}</caption>
+					<thead>
+						<tr>
+							<th scope="col">{t.columns.op}</th>
+							<th scope="col">{t.columns.path}</th>
+							<th scope="col">{t.columns.before}</th>
+							<th scope="col">{t.columns.after}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							patchLines.map((line) => (
+								<tr>
+									<td>
+										<code class="fp-chip">{line.op}</code>
+									</td>
+									<th scope="row">
+										<code>{line.path}</code>
+									</th>
+									<td>{line.before ? <code>{line.before}</code> : <span class="none">{t.absent}</span>}</td>
+									<td>{line.after ? <code>{line.after}</code> : <span class="none">{t.removed}</span>}</td>
+								</tr>
+							))
+						}
+					</tbody>
+				</table>
+			</div>
+			<p class="total">{t.total(enemyTotals.before, enemyTotals.after)}</p>
+		</div>
+
+		<div class="block">
+			<h3 class="fp-h3">{t.serviceTitle}</h3>
+			<p class="block-lead">{t.serviceLead}</p>
+			<ul class="services">
+				{
+					services.map((service) => (
+						<li class="service fp-card">
+							<p class="tag">{t.optionalTag}</p>
+							<h4>
+								<code>{service.title}</code>
+							</h4>
+							<p>{service.body}</p>
+							<a class="fp-link" href={service.href}>
+								{service.link}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+
+		<div class="fp-section-foot">
+			<a class="fp-link" href={localizePath(locale, '/docs/05-dsl-design/')}>{t.readMore}</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.block + .block {
+		margin-block-start: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	.block-lead {
+		max-width: 52rem;
+		margin-block: 0.5rem 1.5rem;
+		color: var(--fp-text-secondary);
+	}
+
+	.runtimes,
+	.services {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.runtime,
+	.service {
+		display: grid;
+		align-content: start;
+		gap: 0.75rem;
+		padding: 1.5rem;
+	}
+
+	.runtime-name {
+		font-size: 1.25rem;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+	}
+
+	.label,
+	.tag {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--fp-text-muted);
+	}
+
+	.sections {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1rem;
+		font-size: 0.875rem;
+		color: var(--fp-text-secondary);
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin-block-start: 0.25rem;
+		font-size: 0.9375rem;
+	}
+
+	.table-wrap {
+		overflow-x: auto;
+		border: 1px solid var(--fp-border-subtle);
+		border-radius: var(--fp-radius);
+		background: var(--fp-surface);
+	}
+
+	table {
+		width: 100%;
+		min-width: 44rem;
+		border-collapse: collapse;
+		font-size: 0.875rem;
+	}
+
+	th,
+	td {
+		padding: 0.8rem 1.25rem;
+		border-block-end: 1px solid var(--fp-border-subtle);
+		text-align: start;
+		vertical-align: top;
+		font-weight: 400;
+	}
+
+	tbody tr:last-child :is(th, td) {
+		border-block-end: 0;
+	}
+
+	thead th {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--fp-text-muted);
+	}
+
+	td code {
+		overflow-wrap: anywhere;
+		color: var(--fp-text-secondary);
+	}
+
+	tbody th code {
+		white-space: nowrap;
+		color: var(--fp-text);
+	}
+
+	.none {
+		color: var(--fp-text-muted);
+	}
+
+	.total {
+		margin-block-start: 0.9rem;
+		font-size: 0.9375rem;
+		color: var(--fp-text-muted);
+	}
+
+	.service h4 {
+		margin: 0;
+		font-size: 1.0625rem;
+		font-weight: 700;
+	}
+
+	.service > p:not(.tag) {
+		color: var(--fp-text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	.service .fp-link {
+		font-size: 0.9375rem;
+		justify-self: start;
+	}
+
+	@media (min-width: 48rem) {
+		.runtimes {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		.services {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 70rem) {
+		.services {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+</style>

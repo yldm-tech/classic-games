@@ -1,7 +1,9 @@
 ---
+import homeShot from '../../assets/launcher/home-played.png';
 import Phrases from '../Phrases.astro';
-import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
-import PatchConsole from './PatchConsole.astro';
+import { REPO_URL } from '../../config/site.ts';
+import { type Locale, landing } from '../../i18n/landing.ts';
+import Shot from './Shot.astro';
 
 interface Props {
 	locale: Locale;
@@ -12,87 +14,43 @@ const t = landing[locale].hero;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
-	<div class="backdrop" aria-hidden="true"></div>
-	<div class="fp-container layout">
+	<div class="fp-container">
 		<div class="copy">
-			<p class="status"><span class="status-dot" aria-hidden="true"></span>{t.status}</p>
+			<p class="fp-eyebrow">{t.status}</p>
 			<h1 id="hero-title"><Phrases text={t.title} /></h1>
 			<p class="lead">{t.lead}</p>
 			<div class="actions">
 				<a class="fp-button fp-button-primary" href="#get-started">{t.primaryCta}</a>
-				<a class="fp-button fp-button-secondary" href={localizePath(locale, '/docs/')}>{t.secondaryCta}</a>
+				<a class="fp-button fp-button-secondary" href={REPO_URL}>{t.secondaryCta}</a>
 			</div>
 			<p class="note">{t.note}</p>
 		</div>
-		<PatchConsole locale={locale} />
+		<Shot src={homeShot} alt={t.shotAlt} caption={t.shotCaption} sizes="(min-width: 76rem) 71rem, 92vw" eager />
 	</div>
 </section>
 
 <style>
 	.hero {
-		position: relative;
-		padding-block: clamp(3rem, 7vw, 6rem) clamp(3.5rem, 8vw, 6.5rem);
-		overflow: hidden;
-	}
-
-	/* Ember glow at the top of the page plus a faint isometric grid, echoing the "foundry" cover art in the client. */
-	.backdrop {
-		position: absolute;
-		inset: 0;
-		background-image:
-			radial-gradient(52rem 26rem at 78% -6rem, var(--fp-glow), transparent 70%),
-			repeating-linear-gradient(30deg, var(--fp-grid-line) 0 1px, transparent 1px 3rem),
-			repeating-linear-gradient(-30deg, var(--fp-grid-line) 0 1px, transparent 1px 3rem);
-		mask-image: linear-gradient(to bottom, #000 30%, transparent 96%);
-		-webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 96%);
-		pointer-events: none;
-	}
-
-	.layout {
-		position: relative;
-		display: grid;
-		gap: clamp(2.5rem, 5vw, 4rem);
-		align-items: center;
+		padding-block: clamp(3rem, 7vw, 5.5rem) clamp(3rem, 6vw, 5rem);
 	}
 
 	.copy {
-		min-width: 0;
-	}
-
-	.status {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.55rem;
-		margin-block-end: 1.5rem;
-		padding: 0.3rem 0.8rem;
-		border: 1px solid var(--fp-border);
-		border-radius: var(--fp-radius-pill);
-		background: var(--fp-surface);
-		font-family: var(--fp-font-mono);
-		font-size: 0.8125rem;
-		line-height: 1.5;
-		color: var(--fp-text-secondary);
-	}
-
-	.status-dot {
-		flex: none;
-		width: 0.5rem;
-		height: 0.5rem;
-		border-radius: 50%;
-		background: var(--fp-accent);
+		max-width: 62rem;
+		margin-block-end: clamp(2.5rem, 5vw, 4rem);
 	}
 
 	h1 {
-		font-size: clamp(2.125rem, 1.2rem + 3.6vw, 3.375rem);
-		font-weight: 800;
+		font-size: clamp(2.125rem, 1.2rem + 4vw, 4rem);
+		font-weight: 900;
 		line-height: 1.12;
-		letter-spacing: -0.02em;
+		letter-spacing: 0.01em;
+		text-wrap: balance;
 	}
 
 	.lead {
 		margin-block-start: 1.5rem;
-		max-width: 36rem;
-		font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
+		max-width: 44rem;
+		font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
 		color: var(--fp-text-secondary);
 		text-wrap: pretty;
 	}
@@ -105,14 +63,8 @@ const t = landing[locale].hero;
 	}
 
 	.note {
-		margin-block-start: 1.1rem;
-		color: var(--fp-text-muted);
+		margin-block-start: 1.25rem;
 		font-size: 0.875rem;
-	}
-
-	@media (min-width: 62rem) {
-		.layout {
-			grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
-		}
+		color: var(--fp-text-muted);
 	}
 </style>

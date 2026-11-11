@@ -48,8 +48,8 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 		z-index: 20;
 		border-block-end: 1px solid var(--fp-border-subtle);
 		background: var(--fp-header-bg);
-		backdrop-filter: blur(14px) saturate(1.4);
-		-webkit-backdrop-filter: blur(14px) saturate(1.4);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
 	}
 
 	.bar {
@@ -76,7 +76,7 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 		min-height: 2.75rem;
 		padding-inline: 0.7rem;
 		border: 0;
-		border-radius: var(--fp-radius-sm);
+		border-radius: var(--fp-radius);
 		background: transparent;
 		color: var(--fp-text-secondary);
 		font: inherit;
@@ -92,7 +92,7 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 	.text-link:hover,
 	.lang-link:hover,
 	.icon-link:hover {
-		background: var(--fp-surface);
+		background: var(--fp-focus-fill);
 		color: var(--fp-text);
 	}
 

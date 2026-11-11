@@ -1,0 +1,58 @@
+---
+import achievementsShot from '../../assets/launcher/achievements.png';
+import menuShot from '../../assets/launcher/game-menu.png';
+import libraryShot from '../../assets/launcher/library-played.png';
+import pauseShot from '../../assets/launcher/pause.png';
+import resultShot from '../../assets/launcher/result.png';
+import settingsShot from '../../assets/launcher/settings-general.png';
+import Phrases from '../Phrases.astro';
+import { type Locale, landing } from '../../i18n/landing.ts';
+import Shot from './Shot.astro';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].launcher;
+const shots = [
+	{ src: libraryShot, text: t.shots.library },
+	{ src: achievementsShot, text: t.shots.achievements },
+	{ src: settingsShot, text: t.shots.settings },
+	{ src: menuShot, text: t.shots.menu },
+	{ src: pauseShot, text: t.shots.pause },
+	{ src: resultShot, text: t.shots.result },
+];
+---
+
+<section class="fp-section" id="launcher" aria-labelledby="launcher-title">
+	<div class="fp-container">
+		<div class="fp-section-head">
+			<p class="fp-eyebrow">{t.eyebrow}</p>
+			<h2 class="fp-h2" id="launcher-title"><Phrases text={t.title} /></h2>
+			<p class="fp-lead">{t.lead}</p>
+		</div>
+		<ul class="grid">
+			{
+				shots.map((shot) => (
+					<li>
+						<Shot src={shot.src} alt={shot.text.alt} name={shot.text.name} caption={shot.text.caption} sizes="(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw" />
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.grid {
+		display: grid;
+		gap: 2.25rem 1.5rem;
+	}
+
+	@media (min-width: 48rem) {
+		.grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+</style>

@@ -1,61 +1,55 @@
-/* Maps the Classic Games tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. */
+/* Maps the Classic Games tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. The grey ramp is the launcher's foreground at its alpha steps, flattened onto the launcher's background, because Starlight needs opaque colours. */
 
 :root {
 	--sl-font: var(--fp-font-sans);
 	--sl-font-mono: var(--fp-font-mono);
 
-	--sl-color-white: #f2edec;
-	--sl-color-gray-1: #e4dcdb;
-	--sl-color-gray-2: #b3a9aa;
-	--sl-color-gray-3: #948a8b;
-	--sl-color-gray-4: #5c5354;
-	--sl-color-gray-5: #332c2d;
-	--sl-color-gray-6: #1c1819;
-	--sl-color-black: #0f0d0e;
+	--sl-color-white: #f4f5f8;
+	--sl-color-gray-1: #dcdde2;
+	--sl-color-gray-2: #b8b9be;
+	--sl-color-gray-3: #94969a;
+	--sl-color-gray-4: #595b63;
+	--sl-color-gray-5: #2a2d37;
+	--sl-color-gray-6: #0c0e16;
+	--sl-color-black: #05070d;
 
-	--sl-color-accent-low: #3a1508;
-	--sl-color-accent: #ff4d1a;
-	--sl-color-accent-high: #ff9670;
+	--sl-color-accent-low: #0e2238;
+	--sl-color-accent: #5ab4ff;
+	--sl-color-accent-high: #b9dcff;
 
-	--sl-color-bg-nav: #0f0d0e;
-	--sl-color-bg-sidebar: #0f0d0e;
-	--sl-color-bg-inline-code: #252021;
-	--sl-color-hairline-light: rgb(242 237 236 / 0.14);
-	--sl-color-hairline: rgb(242 237 236 / 0.08);
-	--sl-color-backdrop-overlay: rgb(10 8 9 / 0.72);
+	--sl-color-bg-nav: #05070d;
+	--sl-color-bg-sidebar: #05070d;
+	--sl-color-bg-inline-code: #0c0e16;
+	--sl-color-hairline-light: rgb(244 245 248 / 0.18);
+	--sl-color-hairline: rgb(244 245 248 / 0.12);
+	--sl-color-backdrop-overlay: rgb(3 4 8 / 0.72);
 
 	--sl-content-width: 46rem;
 	--sl-line-height: 1.8;
 }
 
 :root[data-theme='light'] {
-	--sl-color-white: #1c1819;
-	--sl-color-gray-1: #2b2526;
-	--sl-color-gray-2: #3d3536;
-	--sl-color-gray-3: #574f50;
-	--sl-color-gray-4: #6f6566;
-	--sl-color-gray-5: #cdc4c0;
-	--sl-color-gray-6: #f1ece9;
-	--sl-color-gray-7: #f6f2ef;
-	--sl-color-black: #fbf8f6;
+	--sl-color-white: #05070d;
+	--sl-color-gray-1: #14161d;
+	--sl-color-gray-2: #2b2e38;
+	--sl-color-gray-3: #4a4d58;
+	--sl-color-gray-4: #666974;
+	--sl-color-gray-5: #c4c7d0;
+	--sl-color-gray-6: #e9ebf0;
+	--sl-color-gray-7: #f0f1f5;
+	--sl-color-black: #f4f5f8;
 
-	--sl-color-accent-low: #ffe1d6;
-	--sl-color-accent: #bf2d06;
-	--sl-color-accent-high: #7a1c03;
+	--sl-color-accent-low: #d8e9fb;
+	--sl-color-accent: #1d5fa6;
+	--sl-color-accent-high: #0f3a6b;
 
-	--sl-color-bg-nav: #fbf8f6;
-	--sl-color-bg-sidebar: #fbf8f6;
-	--sl-color-bg-inline-code: #f1ece9;
-	--sl-color-hairline-light: rgb(28 24 25 / 0.12);
-	--sl-color-hairline: rgb(28 24 25 / 0.08);
-	--sl-color-hairline-shade: rgb(28 24 25 / 0.12);
-	--sl-color-backdrop-overlay: rgb(87 79 80 / 0.5);
-}
-
-/* The same faint forge glow the landing page uses, kept behind the content column. */
-body {
-	background-image: radial-gradient(60rem 22rem at 78% -8rem, var(--fp-glow), transparent 70%);
-	background-repeat: no-repeat;
+	--sl-color-bg-nav: #f4f5f8;
+	--sl-color-bg-sidebar: #f4f5f8;
+	--sl-color-bg-inline-code: #e9ebf0;
+	--sl-color-hairline-light: rgb(5 7 13 / 0.16);
+	--sl-color-hairline: rgb(5 7 13 / 0.1);
+	--sl-color-hairline-shade: rgb(5 7 13 / 0.16);
+	--sl-color-backdrop-overlay: rgb(74 77 88 / 0.5);
 }
 
 :focus-visible {
@@ -72,7 +66,7 @@ body {
 }
 
 .sl-markdown-content blockquote {
-	border-inline-start-color: var(--fp-accent);
+	border-inline-start-color: var(--fp-border-strong);
 }
 
 /* Long ASCII diagrams and wide tables scroll inside their own box instead of widening the page. */
@@ -80,15 +74,15 @@ body {
 	max-width: 100%;
 }
 
-/* Starlight colours "note" asides with its blue ramp. Remap that ramp to the warm neutrals and ember so notes belong to the same palette as everything else. */
+/* Starlight colours "note" asides with its blue ramp. Point that ramp at the same blue the links use, on the launcher's panel colour. */
 :root {
-	--sl-color-blue-low: #252021;
-	--sl-color-blue: #ff6b33;
-	--sl-color-blue-high: #f2edec;
+	--sl-color-blue-low: #0c0e16;
+	--sl-color-blue: #5ab4ff;
+	--sl-color-blue-high: #f4f5f8;
 }
 
 :root[data-theme='light'] {
-	--sl-color-blue-low: #f1ece9;
-	--sl-color-blue: #bf2d06;
-	--sl-color-blue-high: #1c1819;
+	--sl-color-blue-low: #e9ebf0;
+	--sl-color-blue: #1d5fa6;
+	--sl-color-blue-high: #05070d;
 }

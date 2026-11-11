@@ -1,0 +1,35 @@
+---
+import detailShot from '../../assets/launcher/pc-detail.png';
+import libraryShot from '../../assets/launcher/pc-library.png';
+import Phrases from '../Phrases.astro';
+import { type Locale, landing } from '../../i18n/landing.ts';
+import Shot from './Shot.astro';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].pc;
+---
+
+<section class="fp-section" id="pc-mode" aria-labelledby="pc-mode-title">
+	<div class="fp-container">
+		<div class="fp-section-head">
+			<p class="fp-eyebrow">{t.eyebrow}</p>
+			<h2 class="fp-h2" id="pc-mode-title"><Phrases text={t.title} /></h2>
+			<p class="fp-lead">{t.lead}</p>
+		</div>
+		<div class="stack">
+			<Shot src={detailShot} alt={t.shots.detail.alt} name={t.shots.detail.name} caption={t.shots.detail.caption} sizes="(min-width: 76rem) 71rem, 92vw" />
+			<Shot src={libraryShot} alt={t.shots.library.alt} name={t.shots.library.name} caption={t.shots.library.caption} sizes="(min-width: 76rem) 71rem, 92vw" />
+		</div>
+	</div>
+</section>
+
+<style>
+	.stack {
+		display: grid;
+		gap: 2.25rem;
+	}
+</style>

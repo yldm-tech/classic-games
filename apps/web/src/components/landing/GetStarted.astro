@@ -50,8 +50,8 @@ const lines = t.lines.map((line) => (line.text === CLONE_COMMAND_PLACEHOLDER ? {
 	}
 
 	.terminal {
-		border: 1px solid var(--fp-border);
-		border-radius: var(--fp-radius-lg);
+		border: 1px solid var(--fp-border-subtle);
+		border-radius: var(--fp-radius);
 		background: var(--fp-bg-sunken);
 		overflow: hidden;
 	}
@@ -59,23 +59,18 @@ const lines = t.lines.map((line) => (line.text === CLONE_COMMAND_PLACEHOLDER ? {
 	.terminal-label {
 		padding: 0.6rem 1.25rem;
 		border-block-end: 1px solid var(--fp-border-subtle);
-		font-family: var(--fp-font-mono);
 		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+		font-weight: 600;
+		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		color: var(--fp-text-muted);
 	}
 
 	pre {
-		padding: 1.1rem 1.25rem 1.2rem;
+		padding: 1.1rem 1.25rem 1.25rem;
 		overflow-x: auto;
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		line-height: 1.75;
-		tab-size: 2;
-	}
-
-	pre:focus-visible {
-		outline-offset: -2px;
 	}
 
 	.line.comment {
@@ -86,15 +81,9 @@ const lines = t.lines.map((line) => (line.text === CLONE_COMMAND_PLACEHOLDER ? {
 		color: var(--fp-text);
 	}
 
-	.line.command::before {
-		content: '$ ';
-		color: var(--fp-accent-text);
-		user-select: none;
-	}
-
 	@media (min-width: 62rem) {
 		.layout {
-			grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+			grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
 		}
 	}
 </style>

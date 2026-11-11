@@ -16,7 +16,7 @@ const columns = [
 		heading: t.footer.docsHeading,
 		links: [
 			{ label: t.footer.docsIndex, href: to('/docs/') },
-			{ label: t.footer.architecture, href: to('/docs/04-architecture/') },
+			{ label: t.footer.clientArchitecture, href: to('/docs/16-client-architecture/') },
 			{ label: t.footer.dsl, href: to('/docs/05-dsl-design/') },
 			{ label: t.footer.decisions, href: to('/docs/decisions/') },
 		],
@@ -66,6 +66,7 @@ const columns = [
 	<div class="fp-container">
 		<div class="legal">
 			<p><a href={repoFile('LICENSE')}>{t.footer.license}</a></p>
+			<p><a href={to('/legal/licenses/')}>{t.footer.artNote}</a></p>
 			<p>{t.footer.privacyNote}</p>
 		</div>
 	</div>
