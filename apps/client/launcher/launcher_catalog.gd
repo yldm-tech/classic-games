@@ -23,6 +23,8 @@ static var _root := GameSession.GAMES_ROOT
 static var _games: Array[Dictionary] = []
 static var _problems: Array[Dictionary] = []
 static var _loaded := false
+## Ids the catalog is limited to; empty means every game found.
+static var _only: Array[String] = []
 ## Counts reloads, so a cache built from the catalog (LauncherGameGuide) knows when it is stale.
 static var generation := 0
 
@@ -33,11 +35,17 @@ static func use_root(root: String = GameSession.GAMES_ROOT) -> void:
 	_loaded = false
 	_load()
 
+## Offer only the games with these ids, in catalog order; an empty list lifts the limit. This is for the launcher's own tests: they assert exact shelves, counts and orders, so they pin the games they were written against, and a game added under games/ changes nothing they see.
+static func limit_to(ids: Array[String] = []) -> void:
+	_only = ids.duplicate()
+	_loaded = false
+	_load()
+
 static func _load() -> void:
 	if _loaded:
 		return
 	var found := GameSession.catalog(_root)
-	_games.assign(found["games"])
+	_games.assign((found["games"] as Array).filter(func(game: Dictionary) -> bool: return _only.is_empty() or str(game["id"]) in _only))
 	_problems.assign(found["problems"])
 	_loaded = true
 	generation += 1

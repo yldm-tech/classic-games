@@ -51,16 +51,21 @@ func _test_catalog() -> void:
 	var ids: Array = []
 	for game: Dictionary in shipped["games"]:
 		ids.append(game["id"])
-	_check("the shipped catalog is the three migrated games and nothing else", ids == ["shooter", "survivor", "tower_defense"] and (shipped["problems"] as Array).is_empty())
+	# Only what must hold however many games are added: the three migrated ones are there and nothing found is broken.
+	_check("the shipped catalog holds the three migrated games and no broken one", ids.has("shooter") and ids.has("survivor") and ids.has("tower_defense") and (shipped["problems"] as Array).is_empty())
 	_check("the fixture is not in the shipped catalog", not ids.has("fixture_duo"))
 	var kinds := true
+	var migrated: Dictionary = {}
 	for game: Dictionary in shipped["games"]:
+		if not str(game["id"]) in ["shooter", "survivor", "tower_defense"]:
+			continue
+		migrated = game
 		kinds = kinds and game["kind"] == Session.KIND_DSL and not Session.baseline_payload(str(game["runtime"])).is_empty() and ResourceLoader.exists(str(game["art"]["image_path"]))
 	_check("each migrated game names a runtime that has a baseline, and its picture", kinds)
 	var fixture := _fixture()
 	_check("another games root is discovered the same way", fixture.get("kind") == Session.KIND_MODULE and fixture["entry_path"] == "res://testing/games/fixture_duo/main.gd" and fixture["players"] == {"min": 1, "max": 2, "join_in_progress": true})
 	_check("a module's stage comes from its manifest", Session.stage_for(fixture) == {"size": Vector2i(480, 270), "pixel_art": true, "scale": 4, "centered": false})
-	_check("a DSL game's stage is the runtimes' own", Session.stage_for(shipped["games"][0]) == {"size": Session.STAGE_SIZE, "pixel_art": false, "scale": 2, "centered": true})
+	_check("a DSL game's stage is the runtimes' own", Session.stage_for(migrated) == {"size": Session.STAGE_SIZE, "pixel_art": false, "scale": 2, "centered": true})
 	_check("the host is told the controls and the player limit", Session.CONTROLS.size() == 10 and Session.MAX_PLAYERS == 2)
 
 func _test_broken_manifests() -> void:
