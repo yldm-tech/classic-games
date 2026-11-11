@@ -9,10 +9,30 @@ const RuntimeLoaderScript := preload("res://runtime/runtime_loader.gd")
 ## Runtime 也绝不读 Shell 的全局状态/UI/用户数据。守住这条边界,架构逃生口才有效。
 
 ## Emitted when a game run finishes. result: { score, duration, cleared, ... }
+## After start_run the result is the final snapshot(): the runtime summary plus play_seconds (active seconds, pauses excluded), timed_out, aborted (the host ended it) and runtime_ref.
 signal game_ended(result: Dictionary)
 
 ## Emitted when the run cannot proceed. err: { code, msg } —— DSL 非法 / runtime 版本不匹配等
 signal game_error(err: Dictionary)
+
+## Live-run signals (start_run). A host that only uses start_game never sees these.
+## info: { runtime, stage_size }
+signal game_started(info: Dictionary)
+## Emitted whenever the running game's score changes.
+signal score_changed(score: int)
+## Emitted when set_paused actually changes the state.
+signal paused_changed(paused: bool)
+
+## Logical size of the stage every runtime draws into, centred on its own origin. A host puts this node inside a SubViewport of exactly this size and scales the viewport, never the runtime.
+const STAGE_SIZE := Vector2i(960, 540)
+const BASELINE_PATH := "res://runtime/%s/baseline.dsl.json"
+
+var _run: Node
+var _running := false
+var _paused := false
+var _play_seconds := 0.0
+var _last_score := 0
+var _runtime_ref := ""
 
 ## Start a game run.
 ## payload 两种形态:
@@ -41,6 +61,145 @@ func start_game(payload: Dictionary) -> void:
 	var summary: Dictionary = run.get_meta("summary", {})
 	summary["cleared"] = true
 	game_ended.emit(summary)
+
+## Payload that starts the built-in baseline of a runtime, e.g. baseline_payload("survivor@1.0.0"). Returns {} when the runtime ships no baseline, so hosts never read runtime files themselves.
+static func baseline_payload(runtime_ref: String) -> Dictionary:
+	var runtime_name := runtime_ref.split("@")[0]
+	var path := BASELINE_PATH % runtime_name
+	if not runtime_name.is_valid_identifier() or not FileAccess.file_exists(path):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not parsed is Dictionary:
+		return {}
+	return {"runtime": runtime_ref, "mod": parsed}
+
+## Start a live run: the runtime stays mounted under this node and keeps simulating until it clears, is defeated, runs out of time, or the host calls end_run. Same payload forms as start_game.
+## Returns false after emitting game_error when the run cannot start.
+func start_run(payload: Dictionary) -> bool:
+	_drop_run()
+	var runtime_ref: String = str(payload.get("runtime", ""))
+	var dsl: Dictionary = _resolve_dsl(payload)
+	if dsl.is_empty():
+		game_error.emit({"code": "DSL_INVALID", "msg": "payload 缺 mod / baseline"})
+		return false
+	var loader := RuntimeLoaderScript.new()
+	# Deep-copied so a runtime that mutates its configuration never changes the caller's DSL between runs.
+	var run := loader.load_from_dsl(runtime_ref, dsl.duplicate(true))
+	if run == null:
+		game_error.emit(loader.last_error)
+		return false
+	_run = run
+	_runtime_ref = runtime_ref
+	_running = true
+	_paused = false
+	_play_seconds = 0.0
+	_last_score = 0
+	if run is Node2D:
+		(run as Node2D).position = Vector2(STAGE_SIZE) / 2.0
+	add_child(run)
+	game_started.emit({"runtime": runtime_ref, "stage_size": STAGE_SIZE})
+	return true
+
+func is_running() -> bool:
+	return _running
+
+func is_paused() -> bool:
+	return _paused
+
+## Freeze or resume the simulation. Paused time does not count as play time.
+func set_paused(paused: bool) -> void:
+	if not _running or paused == _paused:
+		return
+	_paused = paused
+	_run.process_mode = Node.PROCESS_MODE_DISABLED if paused else Node.PROCESS_MODE_INHERIT
+	paused_changed.emit(paused)
+
+## Current state of the live run for a HUD: the runtime's own summary (score, cleared, defeated and runtime-specific fields such as kills, level, gold, base_hp, time_left) plus play_seconds and hp where the runtime has a player. Empty when nothing is mounted.
+func snapshot() -> Dictionary:
+	if not is_instance_valid(_run):
+		return {}
+	var summary: Dictionary = (_run.get_meta("summary", {}) as Dictionary).duplicate(true)
+	if _run.has_meta("score"):
+		summary["score"] = int(_run.get_meta("score"))
+	summary["score"] = int(summary.get("score", 0))
+	summary["play_seconds"] = _play_seconds
+	summary["timed_out"] = bool(_run.get_meta("time_up", false))
+	for actor_name in ["Player", "Hero"]:
+		var actor := _run.get_node_or_null(actor_name)
+		if actor != null and actor.has_meta("hp"):
+			summary["hp"] = int(actor.get_meta("hp"))
+			break
+	if _run.has_method("tower_ids"):
+		summary["tower_ids"] = Array(_run.call("tower_ids"))
+	return summary
+
+## Host-initiated end (the player quits). Emits game_ended with aborted = true; does nothing when no run is live.
+func end_run() -> void:
+	if _running:
+		_finish(true)
+
+## Commands a host may send to the live run. Returns false when the run is not live or the runtime does not support the action.
+##   "move"        { "axis": Vector2 }                      extra movement input (touch pad, on-screen stick)
+##   "boost"       { "on": bool }                            shooter: hold-to-boost
+##   "shield"      {}                                        shooter: grant one shield hit
+##   "place_tower" { "tower": id, "position": Vector2 }      tower_defense: stage coordinates inside STAGE_SIZE
+func perform(action: String, args: Dictionary = {}) -> bool:
+	if not _running or _paused:
+		return false
+	match action:
+		"move":
+			var axis: Variant = args.get("axis", Vector2.ZERO)
+			_run.set_meta("touch_move", (axis as Vector2).limit_length(1.0) if axis is Vector2 else Vector2.ZERO)
+			return true
+		"boost":
+			if _run.has_method("set_boost"):
+				_run.call("set_boost", bool(args.get("on", false)))
+				return true
+		"shield":
+			if _run.has_method("grant_shield"):
+				_run.call("grant_shield")
+				return true
+		"place_tower":
+			var at: Variant = args.get("position")
+			if _run.has_method("place_tower") and at is Vector2:
+				var local: Vector2 = (at as Vector2) - Vector2(STAGE_SIZE) / 2.0
+				return bool(_run.call("place_tower", "host_%d" % Time.get_ticks_usec(), {"tower": str(args.get("tower", "")), "position": [local.x, local.y]}))
+	return false
+
+func _process(delta: float) -> void:
+	if not _running or _paused or not is_instance_valid(_run):
+		return
+	_play_seconds += delta
+	var state := snapshot()
+	var score := int(state.get("score", 0))
+	if score != _last_score:
+		_last_score = score
+		score_changed.emit(score)
+	if bool(state.get("cleared", false)) or bool(state.get("defeated", false)) or bool(state.get("timed_out", false)):
+		_finish(false)
+
+## The finished run stays mounted and frozen so the host can keep showing its last frame; the next start_run or clear_run removes it.
+func _finish(aborted: bool) -> void:
+	var result := snapshot()
+	result["runtime_ref"] = _runtime_ref
+	result["aborted"] = aborted
+	_running = false
+	_paused = false
+	_run.process_mode = Node.PROCESS_MODE_DISABLED
+	game_ended.emit(result)
+
+## Remove the mounted run without emitting anything. Ends a live run silently, so call end_run first when the result matters.
+func clear_run() -> void:
+	_drop_run()
+
+func _drop_run() -> void:
+	_running = false
+	_paused = false
+	if is_instance_valid(_run):
+		if _run.get_parent() == self:
+			remove_child(_run)
+		_run.queue_free()
+	_run = null
 
 ## 把 payload 解析成生效 DSL(处理 Fork 补丁链)。失败返回空字典。
 func _resolve_dsl(payload: Dictionary) -> Dictionary:

@@ -8,8 +8,13 @@ extends RefCounted
 const LOCALES := ["zh", "en", "ja"]
 const DEFAULT_LOCALE := "zh"
 
+const LauncherTable := preload("res://i18n/launcher_strings.gd")
+
 ## 取文案。locale 没有该 key 时回落 zh;再没有则原样返回 key(开发期可见)。
 static func t(locale: String, key: String) -> Variant:
+	# The console launcher keeps its strings in its own table; its keys all start with "launcher.".
+	if key.begins_with(LauncherTable.PREFIX):
+		return LauncherTable.lookup(locale, key)
 	var table: Dictionary = TABLE.get(locale, TABLE[DEFAULT_LOCALE])
 	if table.has(key):
 		return table[key]

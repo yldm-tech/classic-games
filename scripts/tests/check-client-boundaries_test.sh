@@ -106,5 +106,73 @@ mkdir -p "$case_dir/apps/client/shell/net"
 : > "$case_dir/apps/client/shell/net/api_client.gd"
 expect_fail "empty legacy api file is absent" "$case_dir"
 
+# ---- console launcher ----
+
+launcher_fixture() {
+	local dir
+	dir="$(fixture)"
+	mkdir -p "$dir/apps/client/launcher" "$dir/apps/client/runtime/shooter"
+	printf '%s\n' "$dir"
+}
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'class_name LauncherHomeScreen' 'extends LauncherScreen' 'const Strings := preload("res://i18n/strings.gd")' > "$case_dir/apps/client/launcher/home_screen.gd"
+printf '%s\n' 'extends Control' 'const Session := preload("res://runtime/game_session.gd")' 'var _session: GameSession' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+printf '%s\n' '[ext_resource type="Script" path="res://launcher/launcher_root.gd" id="1"]' > "$case_dir/apps/client/launcher/launcher.tscn"
+printf '%s\n' 'class_name GameSession' 'extends Node' > "$case_dir/apps/client/runtime/game_session.gd"
+expect_pass "launcher screen, i18n and GameSession use" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const Catalog := preload("res://features/catalog/catalog_store.gd")' > "$case_dir/apps/client/launcher/home_screen.gd"
+expect_fail "launcher imports a feature" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const Tokens := preload("res://shell/design_system/theme/tokens.gd")' > "$case_dir/apps/client/launcher/launcher_tokens.gd"
+expect_fail "launcher imports the mobile design system" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'func locale() -> String:' '	return AppState.locale' > "$case_dir/apps/client/launcher/launcher_root.gd"
+expect_fail "launcher reads the mobile app state autoload" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const Loader := preload("res://runtime/runtime_loader.gd")' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher imports runtime internals by path" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const A := preload("res://runtime/game_session.gd"); const B := preload("res://runtime/shooter/shooter_play.gd")' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher hides a runtime import behind the session import" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'var loader := RuntimeLoader.new()' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher uses a runtime class by name" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' '[ext_resource type="Script" path="res://runtime/shooter/shooter_world.gd" id="1"]' > "$case_dir/apps/client/launcher/stage.tscn"
+expect_fail "launcher scene embeds a runtime script" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'var request := HTTPRequest.new()' > "$case_dir/apps/client/launcher/launcher_store.gd"
+expect_fail "launcher makes a network request" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const FEED := "https://example.test/games.json"' > "$case_dir/apps/client/launcher/launcher_catalog.gd"
+expect_fail "launcher owns a URL" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const Store := preload("res://launcher/launcher_store.gd")' > "$case_dir/apps/client/runtime/game_session.gd"
+expect_fail "runtime imports the launcher by path" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'func best() -> int:' '	return LauncherStore.new().stats("shooter")["best_score"]' > "$case_dir/apps/client/runtime/shooter/shooter_world.gd"
+expect_fail "runtime uses a launcher class by name" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'const Launcher := preload("res://launcher/launcher_root.gd")' > "$case_dir/apps/client/app/app_root.gd"
+expect_fail "mobile app shell imports the launcher" "$case_dir"
+
+case_dir="$(launcher_fixture)"
+printf '%s\n' 'var tokens := LauncherTokens.new()' > "$case_dir/apps/client/ui/patterns/paged_list.gd"
+expect_fail "shared mobile UI uses a launcher class" "$case_dir"
+
 echo "check-client-boundaries_test: $PASSED passed, $FAILED failed"
 test "$FAILED" -eq 0

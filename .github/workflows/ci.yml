@@ -122,5 +122,7 @@ jobs:
         run: make spike GODOT=godot
       - name: Run shell UI tests
         run: make ui-test GODOT=godot
+      - name: Run console launcher tests
+        run: make launcher-test GODOT=godot
       - name: Launch main scene
         run: make launch-test GODOT=godot

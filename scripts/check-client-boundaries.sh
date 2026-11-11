@@ -5,6 +5,8 @@ ROOT="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 CLIENT="$ROOT/apps/client"
 FEATURES="$ROOT/apps/client/features"
 UI="$ROOT/apps/client/ui"
+LAUNCHER="$ROOT/apps/client/launcher"
+RUNTIME="$ROOT/apps/client/runtime"
 FAILED=0
 
 # shellcheck source=lib/scan.sh
@@ -62,11 +64,56 @@ if [[ -d "$UI" ]]; then
 		"${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
 fi
 
+# ---- console launcher ----
+#
+# The launcher (apps/client/launcher) is a self-contained, local-only shell. It depends on nothing of the mobile app shell, reaches a game only through runtime/game_session.gd, and nothing below it depends back on it.
+if [[ -d "$LAUNCHER" ]]; then
+	report_matches \
+		"the launcher must not depend on the mobile app shell (app, features, shell, ui, core, platform):" \
+		scan_lines 'res://(app|features|shell|ui|core|platform)/|\bAppState\b|\bAppRoot\b|\bScreenBase\b' "$LAUNCHER" \
+		"${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+
+	report_matches \
+		"the launcher is local-only and must not make network calls:" \
+		scan_lines '\bHttpClient\b|\bHTTPRequest\b|\bHTTPClient\b|\bWebSocketPeer\b|/api/|https?://' "$LAUNCHER" \
+		"${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+
+	report_matches \
+		"the launcher may reach a runtime only through GameSession, never its classes:" \
+		scan_lines '\b(RuntimeLoader|DslMigrations|JsonPatch|NetworkMatch[A-Za-z]*|Shooter[A-Z][A-Za-z]*|Survivor[A-Z][A-Za-z]*|TowerDefense[A-Z][A-Za-z]*|WeaponController|BossSkillController|DropItem|ProceduralBGM)\b' "$LAUNCHER" \
+		"${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+
+	# Captured before the loop for the same fail-closed reason as the feature scan below.
+	runtime_paths="$(scan_lines 'res://runtime/' "$LAUNCHER" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}")"
+	while IFS= read -r hit; do
+		[[ -z "$hit" ]] && continue
+		# Every runtime path on the line has to be the session itself: removing those must leave no runtime path behind.
+		if [[ "${hit//res:\/\/runtime\/game_session.gd/}" == *"res://runtime/"* ]]; then
+			echo "the launcher may import only res://runtime/game_session.gd from the runtime: $hit" >&2
+			FAILED=1
+		fi
+	done <<< "$runtime_paths"
+fi
+
+if [[ -d "$RUNTIME" ]]; then
+	report_matches \
+		"the runtime must not depend on the launcher:" \
+		scan_lines 'res://launcher/|\bLauncher[A-Z][A-Za-z]*\b' "$RUNTIME" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+fi
+
+for lower in "$CLIENT/app" "$FEATURES" "$CLIENT/shell" "$UI" "$CLIENT/core" "$CLIENT/platform"; do
+	[[ -d "$lower" ]] || continue
+	report_matches \
+		"the mobile app shell must not depend on the launcher:" \
+		scan_lines 'res://launcher/|\bLauncher(Root|Screen|Store|Catalog|Tokens|Widgets|Controls|Input|Format|KeyArt|GameHost)\b' "$lower" \
+		"${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+done
+
 while IFS= read -r -d '' source; do
 	case "$source" in
-		"$CLIENT"/app/*|"$CLIENT"/features/*|"$CLIENT"/runtime/*) ;;
+		"$CLIENT"/app/*|"$CLIENT"/features/*|"$CLIENT"/runtime/*|"$CLIENT"/launcher/*) ;;
 		*)
-			echo "application screen lives outside apps/client/app or apps/client/features: $source" >&2
+			echo "application screen lives outside apps/client/app, apps/client/features or apps/client/launcher: $source" >&2
 			FAILED=1
 			;;
 	esac
