@@ -1,8 +1,10 @@
 extends RefCounted
 
-## Everything the game writes on the stage itself, in both languages. Scores, lives and the clock belong to the launcher's HUD. English is written in capitals: the lines are short signs on a workshop wall, and capitals keep them readable at a glance while the stage is moving.
+## Everything the game writes on the stage itself, in both languages: the names of the two squirrels (Fenn, russet with a teal scarf, and Tug, dark brown with an orange scarf), the hints, the banners. Scores, lives and the clock belong to the launcher's HUD. English is written in capitals: the lines are short signs on a workshop wall, and capitals keep them readable at a glance while the stage is moving.
 
 const TEXT := {
+	"hero_0": {"zh": "小枫", "en": "FENN"},
+	"hero_1": {"zh": "大栗", "en": "TUG"},
 	"hint_move": {"zh": "向右出发，跳过缺口", "en": "HEAD RIGHT AND JUMP THE GAPS"},
 	"hint_lift": {"zh": "走到箱子旁，按「举起」", "en": "STAND BY A CRATE, PRESS LIFT"},
 	"hint_throw": {"zh": "再按一次：扔出去", "en": "PRESS AGAIN TO THROW IT"},

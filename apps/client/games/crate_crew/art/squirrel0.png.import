@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwfjjq0kw7v0c"
-path="res://.godot/imported/hero1.png-85f02a7f77a20ff3264059bf771aed8d.ctex"
+uid="uid://0li4r6sys8ki"
+path="res://.godot/imported/squirrel0.png-11bb8b9e057907dc6dbd9f1fd3936f0a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/hero1.png"
-dest_files=["res://.godot/imported/hero1.png-85f02a7f77a20ff3264059bf771aed8d.ctex"]
+source_file="res://games/crate_crew/art/squirrel0.png"
+dest_files=["res://.godot/imported/squirrel0.png-11bb8b9e057907dc6dbd9f1fd3936f0a.ctex"]
 
 [params]
 

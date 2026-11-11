@@ -1,6 +1,6 @@
 extends GameModule
 
-## Crate Crew: two small repair robots cross a runaway workshop with nothing but what they can lift. This entry script joins the parts: world.gd simulates, render.gd draws, sounds.gd holds the effects and names the recorded themes and fanfares. All play happens in _game_step; _game_frame only animates.
+## Crate Crew: two small red squirrels cross a runaway workshop with nothing but what they can lift. This entry script joins the parts: world.gd simulates, render.gd draws, sounds.gd holds the effects and names the recorded themes and fanfares. All play happens in _game_step; _game_frame only animates.
 
 const World := preload("res://games/crate_crew/world.gd")
 const Levels := preload("res://games/crate_crew/levels.gd")

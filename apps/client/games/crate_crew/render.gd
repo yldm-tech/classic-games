@@ -1,6 +1,6 @@
 extends Node2D
 
-## Draws the world of Crate Crew and owns everything that is only for the eye: which painted frame a robot shows, squash and stretch, shadows, particles, screen shake, flashes, floating points and the banners. It reads the simulation and never changes it; its own randomness comes from a private generator so the game's seeded sequence is untouched. All art is loaded from art/ once; positions are stage pixels and every sprite is placed on the unchanged collision boxes of world.gd.
+## Draws the world of Crate Crew and owns everything that is only for the eye: which painted frame a squirrel shows, where the thing it carries rests on its paws, squash and stretch, shadows, particles, screen shake, flashes, floating points and the banners. It reads the simulation and never changes it; its own randomness comes from a private generator so the game's seeded sequence is untouched. All art is loaded from art/ once; positions are stage pixels and every sprite stands on the unchanged collision boxes of world.gd. The squirrels are painted larger than their 10 x 14 box: feet on its bottom edge, body on its middle, head, ears and tail above and behind it.
 
 const World := preload("res://games/crate_crew/world.gd")
 const Foes := preload("res://games/crate_crew/foes.gd")
@@ -15,8 +15,24 @@ const TILE := 16.0
 const MAX_PARTICLES := 220
 const MAX_PENDING := 96
 const HERO_COLORS := [Color("5fd4c4"), Color("f5a340")]
-## A sprite drawn this bright loses its colours: the hit flash.
-const WHITE_HOT := Color(4.0, 4.0, 4.0)
+## Every frame a squirrel atlas holds.
+const HERO_FRAMES := ["idle_0", "idle_1", "run_0", "run_1", "run_2", "run_3", "run_4", "run_5", "jump", "fall", "land", "lift", "carry", "carry_run_0", "carry_run_1", "carry_run_2", "carry_run_3", "throw_0", "throw_1", "throw_up", "duck", "hurt", "out", "cheer", "carried"]
+const RUN_FPS := 15.0
+const CARRY_RUN_FPS := 11.0
+## How long a crate takes from the floor to the paws, and how long something let go takes to settle from the paws onto the path the simulation gives it.
+const LIFT_SPAN := 0.2
+const DRIFT_SPAN := 0.12
+## How long the throwing pose is held, and how much of it is the wind-up.
+const THROW_SPAN := 0.24
+const WIND_UP := 0.05
+## A carried thing sinks this far into the paws, so the fingers lie over its bottom edge.
+const HOLD_SINK := 0.7
+## Where a carried thing rests when a frame names no spot of its own, from the feet.
+const HOLD_DEFAULT := Vector2(0.0, -22.0)
+## The pictures of the two pick-ups the simulation still calls by their old names.
+const PICKUP_FRAMES := {"battery": "acorn", "core": "golden_acorn"}
+## The white silhouette laid over a sprite that was just hit.
+const FLASH_SHADER := "shader_type canvas_item;\nvoid fragment() {\n\tCOLOR = vec4(1.0, 1.0, 1.0, texture(TEXTURE, UV).a * 0.85);\n}\n"
 ## The painted ground texture covers this many cells each way, so no single cell repeats beside itself.
 const FILL_CELLS := 4
 const BACK_SIZE := Vector2(480, 270)
@@ -47,6 +63,15 @@ var _pending: Array[Dictionary] = []
 var _particles: Array[Dictionary] = []
 var _popups: Array[Dictionary] = []
 var _looks: Array[Dictionary] = []
+## Per squirrel: frame name -> where the bottom middle of a carried thing rests, in stage pixels from the frame's pivot, for a squirrel facing right. Read from the "hold" entries of the frame tables.
+var _holds: Array[Dictionary] = []
+## Things just let go: [{ "thing", "offset", "life" }]. They are drawn `offset` away from where the simulation has them, shrinking to nothing, so a crate leaves from the paws.
+var _drifts: Array[Dictionary] = []
+## Where crates at rest and squirrels stood on the last frame: [[thing, position]], so a lift can start from where the thing was.
+var _seen: Array = []
+## Sprites to repeat as white silhouettes on the flash layer this frame: [[sheet, frame, position, flipped, scale, angle, pivot shift]].
+var _flashes: Array = []
+var _flash_layer: Node2D
 var _motes: Array[Dictionary] = []
 var _plate := StyleBoxFlat.new()
 var _shake := 0.0
@@ -67,7 +92,9 @@ func setup(simulation: World, language: String) -> void:
 	_popups.clear()
 	_looks.clear()
 	for slot in 2:
-		_looks.append({"squash": 0.0, "stretch": 0.0, "pose": "", "pose_time": 0.0, "step": 0})
+		_looks.append({"squash": 0.0, "stretch": 0.0, "pose": "", "pose_time": 0.0, "step": 0, "land_time": 0.0, "lift_time": 0.0, "lift_from": Vector2.ZERO, "held": null, "held_at": Vector2.ZERO})
+	_drifts.clear()
+	_seen.clear()
 	_shake = 0.0
 	_flash = 0.0
 	_band_key = ""
@@ -77,8 +104,11 @@ func art_ready() -> bool:
 	if heroes.size() != 2 or fills.size() != Levels.COUNT or backs.size() != Levels.COUNT:
 		return false
 	for slot in 2:
-		for frame: String in ["idle", "run_0", "run_3", "jump", "fall", "carry", "carry_run_1", "throw", "hurt", "cheer", "duck"]:
+		for frame: String in HERO_FRAMES:
 			if not heroes[slot].has_frame(frame):
+				return false
+		for frame: String in ["carry", "carry_run_0", "carry_run_1", "carry_run_2", "carry_run_3", "duck"]:
+			if not _holds[slot].has(frame):
 				return false
 	for stage in Levels.COUNT:
 		if not fills[stage].has_frame("main") or not backs[stage].has_frame("main"):
@@ -89,7 +119,7 @@ func art_ready() -> bool:
 	for frame: String in ["vac_closed", "vac_open", "vac_hurt", "crane_open", "crane_shut", "crane_hurt", "claw_open", "claw_shut"]:
 		if not bosses.has_frame(frame):
 			return false
-	for frame: String in ["wood", "steel", "scrap", "hexnut", "nut", "spark", "gear", "battery", "core", "cog", "door_closed", "door_open", "chute", "flag_off", "flag_on", "lift", "shelf_wood", "shelf_metal", "spikes", "fx_puff", "fx_star", "fx_splinter", "fx_bolt"]:
+	for frame: String in ["wood", "steel", "scrap", "hexnut", "nut", "spark", "gear", "acorn", "golden_acorn", "cog", "door_closed", "door_open", "chute", "flag_off", "flag_on", "lift", "shelf_wood", "shelf_metal", "spikes", "fx_puff", "fx_star", "fx_splinter", "fx_bolt"]:
 		if not props.has_frame(frame):
 			return false
 	return true
@@ -97,13 +127,23 @@ func art_ready() -> bool:
 func _load_art() -> void:
 	text = GameText.new()
 	for slot in 2:
-		heroes.append(GameSprites.load_atlas(ART + "hero%d.json" % slot))
+		heroes.append(GameSprites.load_atlas(ART + "squirrel%d.json" % slot))
+		_holds.append(_read_holds(ART + "squirrel%d.json" % slot))
 	foes = GameSprites.load_atlas(ART + "foes.json")
 	bosses = GameSprites.load_atlas(ART + "bosses.json")
 	props = GameSprites.load_atlas(ART + "props.json")
 	for stage in Levels.COUNT:
 		fills.append(GameSprites.load_image(ART + "ground%d.jpg" % stage, {"width": TILE * FILL_CELLS, "pivot": Vector2.ZERO}))
 		backs.append(GameSprites.load_image(ART + "back%d.jpg" % stage, {"width": BACK_SIZE.x, "pivot": Vector2.ZERO}))
+	_flash_layer = Node2D.new()
+	_flash_layer.name = "Flash"
+	var shader := Shader.new()
+	shader.code = FLASH_SHADER
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	_flash_layer.material = material
+	_flash_layer.draw.connect(_draw_flashes)
+	add_child(_flash_layer)
 	_plate.bg_color = Color(0.09, 0.07, 0.13, 0.86)
 	_plate.set_corner_radius_all(3)
 	_plate.corner_detail = 6
@@ -112,6 +152,20 @@ func _load_art() -> void:
 	_plate.border_width_bottom = 1
 	for index in MOTES:
 		_motes.append({"at": Vector2(_random.float_range(0.0, VIEW.x), _random.float_range(0.0, VIEW.y)), "drift": Vector2(_random.float_range(-4.0, 4.0), _random.float_range(0.4, 1.0)), "size": _random.float_range(0.35, 1.0), "depth": _random.float_range(0.35, 0.8), "phase": _random.float_range(0.0, TAU)})
+
+## The carry spots of one squirrel atlas: its frame table gives them as "hold", in source pixels like the pivot.
+func _read_holds(table_path: String) -> Dictionary:
+	var spots := {}
+	var table: Variant = JSON.parse_string(FileAccess.get_file_as_string(table_path))
+	if not table is Dictionary:
+		return spots
+	var size := float(table.get("scale", 1.0))
+	var frames: Dictionary = table.get("frames", {})
+	for frame: String in frames:
+		var entry: Dictionary = frames[frame]
+		if entry.get("hold") is Array and entry.get("pivot") is Array:
+			spots[frame] = Vector2(float(entry["hold"][0]) - float(entry["pivot"][0]), float(entry["hold"][1]) - float(entry["pivot"][1])) * size
+	return spots
 
 ## Called from the step with what the world reported; kept short so a run without frames (a test) cannot pile them up.
 func note(event: Dictionary) -> void:
@@ -131,7 +185,13 @@ func advance(delta: float) -> void:
 		look["squash"] = maxf(0.0, float(look["squash"]) - delta)
 		look["stretch"] = maxf(0.0, float(look["stretch"]) - delta)
 		look["pose_time"] = maxf(0.0, float(look["pose_time"]) - delta)
+		look["land_time"] = maxf(0.0, float(look["land_time"]) - delta)
+		look["lift_time"] = maxf(0.0, float(look["lift_time"]) - delta)
+	for drift in _drifts:
+		drift["life"] = float(drift["life"]) - delta
+	_drifts = _drifts.filter(func(drift: Dictionary) -> bool: return float(drift["life"]) > 0.0)
 	if world != null:
+		_track_holds()
 		_ambient()
 	for particle in _particles:
 		particle["life"] = float(particle["life"]) - delta
@@ -150,6 +210,46 @@ func advance(delta: float) -> void:
 		_band_age = 0.0
 	_band_age += delta
 	queue_redraw()
+	_flash_layer.queue_redraw()
+
+## Notice what each squirrel picked up or let go since the last frame. A new load starts its way up from where it stood; a load let go keeps, for a moment, the distance between the paws it left and the place the simulation gave it.
+func _track_holds() -> void:
+	for hero in world.heroes:
+		var look: Dictionary = _looks[int(hero["slot"])]
+		var held: Variant = null
+		if int(hero["state"]) == World.H_NORMAL:
+			if hero["carry"] is Dictionary:
+				held = hero["carry"]
+			elif int(hero["lifting"]) >= 0:
+				held = world.heroes[int(hero["lifting"])]
+		var before: Variant = look["held"]
+		var changed: bool = (before == null) != (held == null) or (held != null and not is_same(before, held))
+		if changed and before != null:
+			_drifts.append({"thing": before, "offset": (look["held_at"] as Vector2) - Vector2(float(before["x"]), float(before["y"])), "life": DRIFT_SPAN})
+		if changed and held != null:
+			look["lift_time"] = LIFT_SPAN
+			look["lift_from"] = Vector2(float(held["x"]), float(held["y"]))
+			for entry: Array in _seen:
+				if is_same(entry[0], held):
+					look["lift_from"] = entry[1]
+		look["held"] = held
+		if held != null:
+			look["held_at"] = _held_spot(hero, _pose(hero))
+	_seen.clear()
+	for object in world.objects:
+		if int(object["state"]) == World.O_REST and world.is_active_at(float(object["x"]), float(object["y"])):
+			_seen.append([object, Vector2(float(object["x"]), float(object["y"]))])
+	for hero in world.heroes:
+		if int(hero["state"]) == World.H_NORMAL:
+			_seen.append([hero, Vector2(float(hero["x"]), float(hero["y"]))])
+
+## How far from its simulated place a thing is drawn: nothing, except for the moment after it left a squirrel's paws.
+func _drift_of(thing: Dictionary) -> Vector2:
+	for drift in _drifts:
+		if is_same(drift["thing"], thing):
+			var left := clampf(float(drift["life"]) / DRIFT_SPAN, 0.0, 1.0)
+			return (drift["offset"] as Vector2) * left * left
+	return Vector2.ZERO
 
 ## Effects that come from what is going on rather than from one event: the Dustmaw's breath, exhaust, running dust, the trail behind anything thrown.
 func _ambient() -> void:
@@ -176,7 +276,7 @@ func _ambient() -> void:
 		if int(hero["state"]) != World.H_NORMAL or not bool(hero["ground"]) or absf(float(hero["vx"])) < 40.0:
 			continue
 		var look: Dictionary = _looks[int(hero["slot"])]
-		var step := int(float(hero["anim"]) * 5.5)
+		var step := int(float(hero["anim"]) * RUN_FPS / 3.0)
 		if step != int(look["step"]):
 			look["step"] = step
 			_spark(Vector2(float(hero["x"]) - signf(float(hero["vx"])) * 3.0, float(hero["y"]) - 1.0), Vector2(-signf(float(hero["vx"])) * 12.0, -8.0), -10.0, 0.3, Color(0.92, 0.88, 0.8, 0.6), 0.45, "puff")
@@ -203,7 +303,7 @@ func _dust(at: Vector2, count: int, speed: float, size: float, color: Color = Co
 		var side := -1.0 if index % 2 == 0 else 1.0
 		_spark(at + Vector2(side * 2.0, -1.0), Vector2(side * _random.float_range(speed * 0.4, speed), _random.float_range(-14.0, -2.0)), -12.0, _random.float_range(0.25, 0.42), color, size * _random.float_range(0.7, 1.1), "puff")
 
-## The look record of the robot an event at `at` belongs to, or null when none is near.
+## The look record of the squirrel an event at `at` belongs to, or null when none is near.
 func _look_near(at: Vector2) -> Variant:
 	for hero in world.heroes:
 		if int(hero["state"]) != World.H_OUT and absf(float(hero["x"]) - at.x) < 10.0 and absf(float(hero["y"]) - at.y) < 26.0:
@@ -222,6 +322,7 @@ func _react(event: Dictionary) -> void:
 			_dust(at, 4, 34.0, 0.55)
 			if look != null:
 				look["squash"] = 0.14
+				look["land_time"] = 0.13
 		"thud", "put_down":
 			_dust(at, 4, 34.0, 0.6)
 		"lift":
@@ -230,8 +331,8 @@ func _react(event: Dictionary) -> void:
 		"throw", "throw_up":
 			_burst(at, 3, 30.0, 0.0, 0.2, [Color("fff7e0")], 0.7)
 			if look != null:
-				look["pose"] = "throw"
-				look["pose_time"] = 0.2
+				look["pose"] = str(event["name"])
+				look["pose_time"] = THROW_SPAN
 		"break":
 			_burst(at, 9, 100.0, 420.0, 0.7, [Color.WHITE, Color(0.85, 0.8, 0.75)], 0.9, "splinter")
 			_dust(at, 4, 40.0, 0.9, Color(0.94, 0.86, 0.7, 0.8))
@@ -318,6 +419,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, VIEW), Color("1a1423"))
 		return
 	_camera = world.camera + _offset
+	_flashes.clear()
 	_draw_backdrop()
 	_home()
 	_draw_tiles()
@@ -335,8 +437,9 @@ func _draw() -> void:
 		_draw_boss(world.boss)
 	for hero in world.heroes:
 		_draw_hero(hero)
+	# A held crate is drawn with the squirrel that holds it.
 	for object in world.objects:
-		if int(object["state"]) != World.O_REST:
+		if int(object["state"]) == World.O_THROWN:
 			_draw_object(object)
 	for shot in world.shots:
 		_draw_shot(shot)
@@ -355,17 +458,29 @@ func _draw() -> void:
 func _home() -> void:
 	draw_set_transform(-_camera)
 
-## Draw a frame with its pivot (the bottom middle of the picture) at a world point, scaled, turned and tinted.
-func _put(sheet: GameSprites, frame: String, at: Vector2, flipped: bool = false, scale: Vector2 = Vector2.ONE, angle: float = 0.0, tint: Color = Color.WHITE) -> void:
+## Draw a frame with its pivot (the bottom middle of the picture) at a world point, scaled, turned and tinted. `hit` repeats it as a white silhouette on the flash layer.
+func _put(sheet: GameSprites, frame: String, at: Vector2, flipped: bool = false, scale: Vector2 = Vector2.ONE, angle: float = 0.0, tint: Color = Color.WHITE, hit: bool = false) -> void:
 	draw_set_transform(at - _camera, angle, scale)
 	sheet.draw(self, frame, Vector2.ZERO, flipped, 1.0, 0.0, tint)
 	_home()
+	if hit:
+		_flashes.append([sheet, frame, at - _camera, flipped, scale, angle, Vector2.ZERO])
 
 ## Draw a frame turned round its own middle, which is put at a world point.
-func _spin(sheet: GameSprites, frame: String, middle: Vector2, angle: float, zoom: float = 1.0, tint: Color = Color.WHITE, flipped: bool = false) -> void:
+func _spin(sheet: GameSprites, frame: String, middle: Vector2, angle: float, zoom: float = 1.0, tint: Color = Color.WHITE, flipped: bool = false, hit: bool = false) -> void:
+	var down := Vector2(0.0, sheet.size(frame).y * 0.5)
 	draw_set_transform(middle - _camera, angle, Vector2(zoom, zoom))
-	sheet.draw(self, frame, Vector2(0.0, sheet.size(frame).y * 0.5), flipped, 1.0, 0.0, tint)
+	sheet.draw(self, frame, down, flipped, 1.0, 0.0, tint)
 	_home()
+	if hit:
+		_flashes.append([sheet, frame, middle - _camera, flipped, Vector2(zoom, zoom), angle, down])
+
+## The hit flash: every sprite marked this frame once more, on the layer whose shader paints white where the sprite is.
+func _draw_flashes() -> void:
+	for flash: Array in _flashes:
+		_flash_layer.draw_set_transform(flash[2], flash[5], flash[4])
+		(flash[0] as GameSprites).draw(_flash_layer, flash[1], flash[6], flash[3])
+	_flash_layer.draw_set_transform(Vector2.ZERO)
 
 ## A soft contact shadow on the ground under something.
 func _shadow(x: float, y: float, half: float, strength: float = 0.3) -> void:
@@ -483,7 +598,8 @@ func _draw_fixtures() -> void:
 			draw_circle(at + Vector2(0.0, -12.0), 20.0 + sin(_clock * 3.0) * 1.5, Color(0.37, 0.83, 0.77, 0.12), true, -1.0, true)
 		_put(props, "door_open" if world.door_open else "door_closed", at)
 	for chute in world.chutes:
-		_put(props, "chute", Vector2(float(chute["x"]), float(chute["y"]) + 14.0))
+		# The hatch hangs from the ceiling at its own height.
+		_put(props, "chute", Vector2(float(chute["x"]), float(chute["y"]) + props.size("chute").y))
 	for index in world.flags.size():
 		var flag: Vector2 = world.flags[index]
 		var lit := index <= world.checkpoint
@@ -493,12 +609,14 @@ func _draw_lift(lift: Dictionary) -> void:
 	var x := float(lift["x"])
 	var y := float(lift["y"])
 	var wide := float(lift["w"])
+	var slab := props.size("lift")
+	var thick := wide * slab.y / maxf(1.0, slab.x)
 	# Two small jets hold it up.
 	for side: float in [0.22, 0.78]:
-		var jet := Vector2(x + wide * side, y + 7.5)
+		var jet := Vector2(x + wide * side, y + thick - 2.0)
 		var long := 3.0 + sin(_clock * 30.0 + side * 9.0) * 1.0
 		draw_polygon(PackedVector2Array([jet + Vector2(-1.6, 0.0), jet + Vector2(1.6, 0.0), jet + Vector2(0.0, long)]), PackedColorArray([Color(0.6, 1.0, 0.95, 0.9), Color(0.6, 1.0, 0.95, 0.9), Color(0.37, 0.83, 0.77, 0.0)]))
-	props.draw_fit(self, "lift", Rect2(x, y - 0.5, wide, 9.5))
+	props.draw_fit(self, "lift", Rect2(x, y - 0.5, wide, thick))
 
 func _draw_pickup(pickup: Dictionary) -> void:
 	var x := float(pickup["x"])
@@ -517,28 +635,34 @@ func _draw_pickup(pickup: Dictionary) -> void:
 			_spin(props, "fx_star", Vector2(x + 4.0, y - 10.0), _clock * 2.0, 0.25 + 0.2 * absf(sin(_clock * 5.0)))
 		_:
 			draw_circle(Vector2(x, y - 5.0), 6.5, Color(0.72, 1.0, 0.6, 0.12), true, -1.0, true)
-			_put(props, kind, Vector2(x, y), false, Vector2.ONE * (1.0 + sin(_clock * 6.0 + x) * 0.04))
+			_put(props, str(PICKUP_FRAMES.get(kind, kind)), Vector2(x, y), false, Vector2.ONE * (1.0 + sin(_clock * 6.0 + x) * 0.04))
 
+## A crate or a lump of scrap that nobody holds: at rest or in flight. One that just left a squirrel's paws is drawn on its way from them to where the simulation has it.
 func _draw_object(object: Dictionary) -> void:
-	var life := float(object["life"])
-	var tint := Color.WHITE
-	if life > 0.0 and life < 2.0:
-		tint.a = 0.35 + 0.5 * absf(sin(_clock * 18.0))
 	var kind := str(object["kind"])
-	var x := float(object["x"])
-	var y := float(object["y"])
+	var shift := _drift_of(object)
+	var x := float(object["x"]) + shift.x
+	var y := float(object["y"]) + shift.y
 	var tall := float(object["tall"])
-	var state := int(object["state"])
-	if state == World.O_THROWN:
-		var back := Vector2(float(object["vx"]), float(object["vy"])) * 0.022
+	var tint := _fading(object)
+	if int(object["state"]) == World.O_THROWN:
+		# No trail while it is still leaving the paws.
+		var back := Vector2(float(object["vx"]), float(object["vy"])) * (0.022 if shift == Vector2.ZERO else 0.0)
 		var angle := float(object["spin"]) * 14.0 if kind == "scrap" or kind == "hexnut" else sin(_clock * 22.0) * 0.07
 		for ghost in [2, 1]:
 			_spin(props, kind, Vector2(x, y - tall * 0.5) - back * float(ghost), angle, 1.0, Color(1.0, 1.0, 1.0, 0.22 / float(ghost)))
 		_spin(props, kind, Vector2(x, y - tall * 0.5), angle, 1.0, tint)
 		return
-	if state == World.O_REST:
+	if shift == Vector2.ZERO:
 		_shadow(x, y, float(object["half"]) + 1.0, 0.22)
 	_put(props, kind, Vector2(x, y), false, Vector2.ONE, 0.0, tint)
+
+## Scrap that is about to vanish blinks.
+func _fading(object: Dictionary) -> Color:
+	var life := float(object["life"])
+	if life > 0.0 and life < 2.0:
+		return Color(1.0, 1.0, 1.0, 0.35 + 0.5 * absf(sin(_clock * 18.0)))
+	return Color.WHITE
 
 func _draw_shot(shot: Dictionary) -> void:
 	var at := Vector2(float(shot["x"]), float(shot["y"]))
@@ -600,15 +724,15 @@ func _draw_foe(foe: Dictionary) -> void:
 			frame = "magnet_%d" % (int(time * 7.0) % 2)
 	var flipped := int(foe["face"]) < 0
 	if int(foe["state"]) == Foes.KNOCKED_OUT:
-		_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), 1.0, WHITE_HOT if time < 0.1 else Color.WHITE, flipped)
+		_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), 1.0, Color.WHITE, flipped, time < 0.1)
 		return
 	if grounded:
 		_shadow(float(foe["x"]), float(foe["y"]), float(foe["half"]) + 1.0)
-	var tint := WHITE_HOT if float(foe["flash"]) > 0.0 else Color.WHITE
+	var hit := float(foe["flash"]) > 0.0
 	if kind == "roller":
-		_spin(foes, frame, Vector2(x, y - foes.size(frame).y * 0.5), angle * (-1.0 if flipped else 1.0), 1.0, tint, flipped)
+		_spin(foes, frame, Vector2(x, y - foes.size(frame).y * 0.5), angle * (-1.0 if flipped else 1.0), 1.0, Color.WHITE, flipped, hit)
 	else:
-		_put(foes, frame, Vector2(x, y), flipped, scale, angle, tint)
+		_put(foes, frame, Vector2(x, y), flipped, scale, angle, Color.WHITE, hit)
 	if mode == "dizzy":
 		for star in 2:
 			var around := _clock * 7.0 + float(star) * PI
@@ -622,7 +746,6 @@ func _draw_boss(boss: Dictionary) -> void:
 	var y := float(boss["y"])
 	var hurt := float(boss["flash"]) > 0.0 or mode == "dying"
 	var white := float(boss["flash"]) > 0.2 or (mode == "dying" and int(_clock * 16.0) % 2 == 0)
-	var tint := WHITE_HOT if white else Color.WHITE
 	if float(boss.get("shake", 0.0)) > 0.0:
 		x += sin(_clock * 120.0) * 1.0
 	if str(boss["kind"]) == "vacuum":
@@ -645,7 +768,7 @@ func _draw_boss(boss: Dictionary) -> void:
 				scale = Vector2(0.97, 1.03)
 		_shadow(x, y + 1.0, 24.0, 0.36)
 		# The picture faces left; the wheels sit on the floor.
-		_put(bosses, frame, Vector2(x + (2.0 if facing < 0.0 else -2.0), y + 1.0), facing > 0.0, scale, angle, tint)
+		_put(bosses, frame, Vector2(x + (2.0 if facing < 0.0 else -2.0), y + 1.0), facing > 0.0, scale, angle, Color.WHITE, white)
 		return
 	# The rail across the room, the trolley, the chain and the claw.
 	var left := float(boss["left"])
@@ -676,33 +799,19 @@ func _draw_boss(boss: Dictionary) -> void:
 		draw_arc(Vector2.ZERO, 13.0, 0.0, TAU, 32, Color(1.0, 0.3, 0.3, pulse + 0.2), 1.6, true)
 		_home()
 	var body := "crane_hurt" if hurt else ("crane_open" if Bosses.is_open(boss) else "crane_shut")
-	_put(bosses, body, Vector2(x, y + 28.0), false, Vector2(1.0, 1.0 + sin(_clock * 30.0) * 0.006), 0.0, tint)
+	_put(bosses, body, Vector2(x, y + 28.0), false, Vector2(1.0, 1.0 + sin(_clock * 30.0) * 0.006), 0.0, Color.WHITE, white)
 	var shut := mode == "stuck" or mode == "retract"
-	_put(bosses, "claw_shut" if shut else "claw_open", Vector2(x, y + 28.0 + chain + 22.0), false, Vector2.ONE, sin(_clock * 3.0) * 0.03 if mode != "stuck" else 0.0, tint)
+	_put(bosses, "claw_shut" if shut else "claw_open", Vector2(x, y + 28.0 + chain + 22.0), false, Vector2.ONE, sin(_clock * 3.0) * 0.03 if mode != "stuck" else 0.0, Color.WHITE, white)
 
-func _draw_hero(hero: Dictionary) -> void:
-	var state := int(hero["state"])
-	if state == World.H_OUT:
-		return
+## Which frame a squirrel shows and how it is squashed, tilted and lifted off its feet. It reads the simulation and the renderer's own short timers and changes nothing, so the frame under a carried crate is known before anything is drawn. Returns { "frame", "at", "flip", "scale", "angle" }; "at" is where the frame's pivot (the feet) goes.
+func _pose(hero: Dictionary) -> Dictionary:
 	var slot := int(hero["slot"])
-	var sheet := heroes[slot]
 	var look: Dictionary = _looks[slot]
-	var x := float(hero["x"])
-	var y := float(hero["y"])
 	var anim := float(hero["anim"])
-	if state == World.H_DEAD:
-		_spin(sheet, "hurt", Vector2(x, y - 8.0), _clock * 14.0)
-		return
-	var tint := Color.WHITE
-	if float(hero["inv"]) > 0.0 and world.phase == World.P_PLAY:
-		tint.a = 0.4 + 0.45 * absf(sin(_clock * 24.0))
-	if state == World.H_THROWN:
-		_spin(sheet, "jump", Vector2(x, y - 8.0), float(hero["throw_time"]) * 18.0 * float(int(hero["face"])), 1.0, tint)
-		return
 	var carrying: bool = hero["carry"] != null or int(hero["lifting"]) >= 0
 	var grounded := bool(hero["ground"])
 	var running := grounded and absf(float(hero["vx"])) > 6.0
-	var frame := "carry" if carrying else "idle"
+	var frame := "carry" if carrying else "idle_0"
 	var scale := Vector2.ONE
 	var angle := 0.0
 	var lift := 0.0
@@ -710,42 +819,115 @@ func _draw_hero(hero: Dictionary) -> void:
 		frame = "hurt"
 	elif bool(hero["hide"]):
 		frame = "duck"
-	elif state == World.H_CARRIED:
-		frame = "jump"
+	elif carrying and float(look["lift_time"]) > LIFT_SPAN * 0.4:
+		frame = "lift"
 	elif float(look["pose_time"]) > 0.0 and not carrying:
-		frame = str(look["pose"])
+		if str(look["pose"]) == "throw_up":
+			frame = "throw_up"
+		else:
+			frame = "throw_0" if float(look["pose_time"]) > THROW_SPAN - WIND_UP else "throw_1"
 	elif not grounded:
-		frame = "carry_run_1" if carrying else ("jump" if float(hero["vy"]) < 0.0 else "fall")
+		frame = "carry_run_3" if carrying else ("jump" if float(hero["vy"]) < 0.0 else "fall")
 		# Long and thin on the way up, a little wide when falling fast.
-		var pull := clampf(absf(float(hero["vy"])) / 300.0, 0.0, 1.0) * 0.08
+		var pull := clampf(absf(float(hero["vy"])) / 300.0, 0.0, 1.0) * 0.06
 		scale = Vector2(1.0 - pull, 1.0 + pull)
 	elif running:
+		# The bob of the stride is painted into the frames.
 		if carrying:
-			frame = "carry_run_%d" % (int(anim * 7.0) % 2)
+			frame = "carry_run_%d" % (int(anim * CARRY_RUN_FPS) % 4)
 		else:
-			frame = "run_%d" % (int(anim * 11.0) % 4)
-		lift = absf(sin(anim * (7.0 if carrying else 11.0) * PI * 0.5)) * 0.8
-		angle = signf(float(hero["vx"])) * 0.05
+			frame = "run_%d" % (int(anim * RUN_FPS) % 6)
 	elif world.phase == World.P_CLEAR or world.phase == World.P_WON:
-		frame = "cheer"
+		if not carrying:
+			frame = "cheer"
 		lift = absf(sin(_clock * 7.0 + float(slot))) * 3.0
+	elif float(look["land_time"]) > 0.0 and not carrying:
+		frame = "land"
 	else:
-		# Standing still it breathes.
+		# Standing still it breathes, and blinks now and then.
 		var breath := sin(anim * 3.0 + float(slot)) * 0.018
 		scale = Vector2(1.0 - breath, 1.0 + breath)
+		if not carrying and fmod(anim + float(slot) * 1.3, 3.4) < 0.13:
+			frame = "idle_1"
 	var squash := float(look["squash"]) / 0.14
 	var stretch := float(look["stretch"]) / 0.16
 	if squash > 0.0:
-		scale *= Vector2(1.0 + 0.2 * squash, 1.0 - 0.2 * squash)
+		scale *= Vector2(1.0 + 0.16 * squash, 1.0 - 0.16 * squash)
 	elif stretch > 0.0:
-		scale *= Vector2(1.0 - 0.14 * stretch, 1.0 + 0.16 * stretch)
-	if grounded:
-		_shadow(x, y + 0.5, 6.0)
-	_put(sheet, frame, Vector2(x, y + 0.5 - lift), int(hero["face"]) < 0, scale, angle, tint)
-	if players > 1 and world.stage_time < 4.0:
-		var top := Vector2(x, y - 25.0 + sin(_clock * 8.0) * 1.0)
-		draw_colored_polygon(PackedVector2Array([top + Vector2(-3.4, -4.4), top + Vector2(3.4, -4.4), top + Vector2(0.0, 0.6)]), Color("1a1423"))
-		draw_colored_polygon(PackedVector2Array([top + Vector2(-2.2, -3.8), top + Vector2(2.2, -3.8), top + Vector2(0.0, -0.6)]), HERO_COLORS[slot])
+		scale *= Vector2(1.0 - 0.1 * stretch, 1.0 + 0.12 * stretch)
+	var shift := _drift_of(hero)
+	return {"frame": frame, "at": Vector2(float(hero["x"]) + shift.x, float(hero["y"]) + shift.y + 0.5 - lift), "flip": int(hero["face"]) < 0, "scale": scale, "angle": angle}
+
+## Where the bottom middle of what a squirrel carries is drawn: on the paws of the frame it shows, wherever the squash, the stride and the facing put them. While the load is on its way up from the floor it travels there from where it stood; hidden under a crate, the crate is lowered to the spot the crouching frame names.
+func _held_spot(hero: Dictionary, pose: Dictionary) -> Vector2:
+	var slot := int(hero["slot"])
+	var look: Dictionary = _looks[slot]
+	var frame := str(pose["frame"])
+	var hold: Vector2 = _holds[slot].get(frame if _holds[slot].has(frame) else "carry", HOLD_DEFAULT)
+	var spot: Vector2 = (pose["at"] as Vector2) + (Vector2(-hold.x if bool(pose["flip"]) else hold.x, hold.y) * (pose["scale"] as Vector2)).rotated(float(pose["angle"]))
+	var rising := float(look["lift_time"]) / LIFT_SPAN
+	if rising > 0.0:
+		var from: Vector2 = look["lift_from"]
+		var along := 1.0 - rising * rising
+		spot = from.lerp(spot, along) - Vector2(0.0, sin(along * PI) * 2.0)
+	return spot
+
+## What a squirrel holds, drawn on its paws: a crate, a lump of scrap or the partner.
+func _draw_held(hero: Dictionary, spot: Vector2) -> void:
+	var carried: Variant = hero["carry"]
+	if carried is Dictionary:
+		_put(props, str(carried["kind"]), spot + Vector2(0.0, HOLD_SINK), false, Vector2.ONE, 0.0, _fading(carried))
+	elif int(hero["lifting"]) >= 0:
+		var partner := world.heroes[int(hero["lifting"])]
+		_put(heroes[int(partner["slot"])], "carried", spot + Vector2(0.0, HOLD_SINK), int(hero["face"]) < 0, Vector2.ONE, 0.0, _blinking(partner))
+
+## A squirrel that cannot be hurt for a moment flickers.
+func _blinking(hero: Dictionary) -> Color:
+	if float(hero["inv"]) > 0.0 and world.phase == World.P_PLAY:
+		return Color(1.0, 1.0, 1.0, 0.4 + 0.45 * absf(sin(_clock * 24.0)))
+	return Color.WHITE
+
+func _draw_hero(hero: Dictionary) -> void:
+	var state := int(hero["state"])
+	# A carried squirrel is drawn by its carrier, on the paws.
+	if state == World.H_OUT or state == World.H_CARRIED:
+		return
+	var slot := int(hero["slot"])
+	var sheet := heroes[slot]
+	var shift := _drift_of(hero)
+	var x := float(hero["x"]) + shift.x
+	var y := float(hero["y"]) + shift.y
+	var facing := float(int(hero["face"]))
+	if state == World.H_DEAD:
+		_spin(sheet, "out", Vector2(x, y - 9.0), _clock * 9.0 * facing, 1.0, Color.WHITE, facing < 0.0)
+		return
+	var tint := _blinking(hero)
+	if state == World.H_THROWN:
+		# Curled up, it tumbles through the air.
+		_spin(sheet, "carried", Vector2(x, y - 8.0), float(hero["throw_time"]) * 16.0 * facing, 1.0, tint, facing < 0.0)
+		return
+	var pose := _pose(hero)
+	var at: Vector2 = pose["at"]
+	if bool(hero["ground"]):
+		_shadow(x, y + 0.5, 7.0)
+	var hiding := bool(hero["hide"])
+	var spot := _held_spot(hero, pose)
+	# The load goes behind the squirrel so that its paws lie over the bottom edge; a crate it hides under comes down in front of it and leaves the eyes peeking out.
+	if not hiding:
+		_draw_held(hero, spot)
+	_put(sheet, str(pose["frame"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), tint, float(hero["stun"]) > 0.2)
+	if hiding:
+		_draw_held(hero, spot)
+	if world.stage_time < 4.0 and world.phase == World.P_PLAY:
+		# Its name, and with two players a marker in its scarf colour, while the stage is new.
+		var top := Vector2(x, y - 30.0 + sin(_clock * 8.0) * 1.0)
+		var fade := clampf(4.0 - world.stage_time, 0.0, 1.0)
+		var ink := Color(0.1, 0.08, 0.14, fade)
+		var color: Color = HERO_COLORS[slot]
+		if players > 1:
+			draw_colored_polygon(PackedVector2Array([top + Vector2(-3.4, -4.4), top + Vector2(3.4, -4.4), top + Vector2(0.0, 0.6)]), ink)
+			draw_colored_polygon(PackedVector2Array([top + Vector2(-2.2, -3.8), top + Vector2(2.2, -3.8), top + Vector2(0.0, -0.6)]), Color(color.r, color.g, color.b, fade))
+		text.draw(self, top + Vector2(0.0, -7.0), Texts.of("hero_%d" % slot, locale), 6.5, Color(color.r, color.g, color.b, fade), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800, 0.8, ink)
 
 func _draw_particles() -> void:
 	for particle in _particles:
@@ -769,7 +951,7 @@ func _draw_particles() -> void:
 			_:
 				draw_circle(at, size * (0.4 + 0.6 * left), Color(color.r, color.g, color.b, color.a * minf(1.0, left * 2.5)), true, -1.0, true)
 
-## One hint at a time: the one nearest to a robot, and only while that robot stands by it.
+## One hint at a time: the one nearest to a squirrel, and only while that squirrel stands by it.
 func _draw_hint() -> void:
 	if world.phase != World.P_PLAY:
 		return
