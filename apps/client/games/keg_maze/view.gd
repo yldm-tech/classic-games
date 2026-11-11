@@ -419,6 +419,9 @@ func _draw_heroes() -> void:
 		var hop := Vector2.ZERO
 		if game.phase == Levels.Phase.CLEAR:
 			hop.y = -roundf(absf(sin(clock * 9.0 + float(slot))) * 4.0)
+		elif hero.dir == Vector2i.ZERO and hero.act <= 0.0 and int(clock * 2.5 + float(slot) * 0.5) % 2 == 0:
+			# Standing still, the digger breathes.
+			hop.y = 1.0
 		draw_texture(tex[_hero_key(slot, hero)], corner + hop)
 		if hero.shield:
 			var ring := 0.55 + 0.3 * sin(clock * 5.0)

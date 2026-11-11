@@ -45,5 +45,10 @@
 			"default": 1,
 			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "硬核", "en": "Hard"}]
 		}
-	]
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《火桶矿道》双人局内截图：像素风的俯视矿道里布满石柱和木箱，左上角戴黄头盔的鼹鼠和右下角戴青头盔的鼹鼠各自躲在拐角后，两只火药桶正炸出十字形的火焰并点燃木箱，三只绿色泥蛴在箱子之间游荡；两侧面板显示每位玩家的火药桶数、火焰长度和装备，以及九层矿井的进度。", "en": "Keg Burrow with two players: a top-down pixel-art mine full of stone pillars and wooden crates. The mole in the yellow helmet at the top left and the mole in the teal helmet at the bottom right each shelter round a corner while their two powder kegs go off in crosses of fire and set crates alight; three green mud grubs wander among the crates. Side panels show each player's kegs, blast reach and gear, and the progress down the nine levels."},
+		"art_alt": {"zh": "《火桶矿道》主视觉：两只戴矿工头盔、围着围巾的鼹鼠在木梁支撑的矿道里合力推着一只冒火星的火药桶，身后的深处有一只长着蓝色水晶巨螯的岩壳怪物。", "en": "Keg Burrow key art: two moles in miner's helmets and scarves roll a sparking powder keg through a timbered mine tunnel, while a rock-shelled creature with blue crystal claws looms in the depths behind them."}
+	}
 }

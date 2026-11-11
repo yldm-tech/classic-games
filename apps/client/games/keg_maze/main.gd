@@ -91,8 +91,7 @@ var crates_broken := 0
 var pickups := 0
 var bosses_beaten := 0
 var stages_cleared := 0
-## Slot of the digger who reached the lift and the time bonus that earned, for the banner.
-var clear_slot := -1
+## The time bonus paid for the level just cleared, for the banner.
 var clear_bonus := 0
 var _jingle: Array = []
 var _view: Node2D
@@ -163,7 +162,6 @@ func _load_stage(index: int) -> void:
 			hero.out = false
 			hero.lives = 1
 		_place(slot, START_INVULN)
-	clear_slot = -1
 	phase = Levels.Phase.INTRO
 	phase_time = INTRO_TIME
 	audio.play_music(Sounds.music(index))
@@ -606,7 +604,6 @@ func _check_exit() -> void:
 
 func _clear_stage(slot: int) -> void:
 	stages_cleared += 1
-	clear_slot = slot
 	var last := stage >= Levels.STAGE_COUNT - 1
 	phase = Levels.Phase.CLEAR
 	phase_time = FINAL_CLEAR_TIME if last else CLEAR_TIME
