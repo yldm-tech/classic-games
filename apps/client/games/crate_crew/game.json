@@ -55,7 +55,7 @@
 	],
 	"site": {
 		"screenshot": "site_screenshot.jpg",
-		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：灯光下的工具台上，围青色围巾的红松鼠小枫把木箱举过头顶，围橙色围巾的棕松鼠大栗跟在它身旁，前方一只紫色甲虫机器正爬过来。", "en": "Crate Crew with two players: on the lamp-lit workbench Fenn, the red squirrel with the teal scarf, holds a wooden crate over its head with Tug, the brown squirrel with the orange scarf, beside it, and a purple beetle machine crawls towards them."},
+		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：巨大的厨房台面上，红松鼠小枫把棕松鼠大栗举过头顶，身旁是一只木箱和一个苹果，一只红蚂蚁正从右边爬过来，背景是挂着铜锅的瓷砖墙和窗台上的香草。", "en": "Crate Crew with two players: on a giant kitchen counter Fenn, the red squirrel, lifts Tug, the brown one, over its head beside a wooden crate and an apple while a red ant walks in from the right, with copper pans and a tiled wall behind."},
 		"art_alt": {"zh": "《搬箱小队》主视觉：巨大的厨房台面上，一只红松鼠把木箱举过头顶，另一只跃起扔出苹果，窗外一只黑乌鸦叼着装满橡果的布袋飞走。", "en": "Crate Crew key art: on a giant kitchen counter one red squirrel heaves a wooden crate overhead while the other leaps to throw an apple, and outside the window a black crow flies off with a cloth sack of acorns."}
 	}
 }

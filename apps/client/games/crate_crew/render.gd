@@ -61,10 +61,10 @@ const PICKUP_FRAMES := {"acorn": "acorn", "bag": "acorn_bag", "heart": "heart", 
 
 ## Per place: the lit top of the ground, its highlight, the dark outline, the colour laid over the far wall so play stands out, the colour and drift of the specks in the air, and the colour of the map's nodes.
 const LOOKS := {
-	"kitchen": {"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.08, 0.05, 0.04, 0.14), "mote": Color("ffe2a8"), "rise": -3.0, "node": Color("f5a340")},
-	"toyshop": {"cap": Color("e8705a"), "lip": Color("ffd1a0"), "edge": Color("3a1a24"), "veil": Color(0.07, 0.04, 0.08, 0.14), "mote": Color("ffe9c0"), "rise": -2.0, "node": Color("e8705a")},
-	"sewer": {"cap": Color("6f9a6a"), "lip": Color("c3e0a8"), "edge": Color("12201b"), "veil": Color(0.02, 0.07, 0.06, 0.2), "mote": Color("c8f0d0"), "rise": 6.0, "node": Color("6fc8a0")},
-	"treehouse": {"cap": Color("b98a52"), "lip": Color("f4d39a"), "edge": Color("2e1c10"), "veil": Color(0.08, 0.04, 0.02, 0.12), "mote": Color("ffd27a"), "rise": -1.5, "node": Color("9bd06a")},
+	"kitchen": {"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.08, 0.05, 0.04, 0.14), "mote": Color("ffe2a8"), "rise": -3.0, "node": Color("f5a340"), "fill": Color(0.8, 0.74, 0.68)},
+	"toyshop": {"cap": Color("e8705a"), "lip": Color("ffd1a0"), "edge": Color("3a1a24"), "veil": Color(0.07, 0.04, 0.08, 0.14), "mote": Color("ffe9c0"), "rise": -2.0, "node": Color("e8705a"), "fill": Color(0.9, 0.88, 0.86)},
+	"sewer": {"cap": Color("6f9a6a"), "lip": Color("c3e0a8"), "edge": Color("12201b"), "veil": Color(0.02, 0.07, 0.06, 0.2), "mote": Color("c8f0d0"), "rise": 6.0, "node": Color("6fc8a0"), "fill": Color(1, 1, 1)},
+	"treehouse": {"cap": Color("b98a52"), "lip": Color("f4d39a"), "edge": Color("2e1c10"), "veil": Color(0.08, 0.04, 0.02, 0.12), "mote": Color("ffd27a"), "rise": -1.5, "node": Color("9bd06a"), "fill": Color(0.86, 0.8, 0.74)},
 }
 
 var world: World
@@ -714,7 +714,7 @@ func _draw_tiles() -> void:
 			if not open_above and row > 1 and World.is_solid(world.tile_at(column, row - 2)):
 				shade = Color(0.8, 0.8, 0.84) if row < 3 or not World.is_solid(world.tile_at(column, row - 3)) else Color(0.62, 0.62, 0.7)
 			if fill != null and fill.texture != null:
-				draw_texture_rect_region(fill.texture, Rect2(x, y, TILE, TILE), Rect2(Vector2(float(posmod(column, FILL_CELLS)), float(posmod(row, FILL_CELLS))) * cell, cell), shade)
+				draw_texture_rect_region(fill.texture, Rect2(x, y, TILE, TILE), Rect2(Vector2(float(posmod(column, FILL_CELLS)), float(posmod(row, FILL_CELLS))) * cell, cell), shade * (look["fill"] as Color))
 			else:
 				draw_rect(Rect2(x, y, TILE, TILE), (look["cap"] as Color).darkened(0.45) * shade)
 			var open_left := column > 0 and not World.is_solid(world.tile_at(column - 1, row))
@@ -1064,7 +1064,8 @@ func _draw_boss(boss: Dictionary) -> void:
 				"rise":
 					scale = Vector2(0.95, 1.08)
 		"crow":
-			frame = "crow_fly_%d" % (int(_clock * 9.0) % 2)
+			# The wingbeat cut from a clip of the crow flapping; the two painted wing poses when it is missing.
+			frame = "crow_flap_%d" % (int(_clock * 9.0) % 6) if _has(bosses, "crow_flap_0") else "crow_fly_%d" % (int(_clock * 9.0) % 2)
 			match mode:
 				"dive", "low":
 					frame = "crow_dive"
@@ -1472,7 +1473,7 @@ func _draw_map() -> void:
 	var line := (sub + "  ·  " if sub != "" else "") + Texts.of("map_pick" if open.size() > 1 else "map_go", locale)
 	var wide := maxf(text.measure(title, size, 800).x, text.measure(line, 7.0, 600).x) + 4.0
 	# A label beside the marker, above it in the lower half of the map and below it in the upper half, kept clear of the HUD.
-	var at := marker + Vector2(0.0, -40.0 if marker.y > 110.0 else 14.0)
+	var at := marker + Vector2(0.0, -58.0 if marker.y > 110.0 else 10.0)
 	var box := Rect2(clampf(at.x - wide * 0.5 - 10.0, 4.0, VIEW.x - wide - 24.0), clampf(at.y, 38.0, VIEW.y - 34.0), wide + 20.0, 30.0)
 	draw_style_box(_plate, box)
 	var middle := box.position.x + box.size.x * 0.5
