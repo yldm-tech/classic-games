@@ -13,7 +13,11 @@ extends SceneTree
 ##   LAUNCHER_SHOT_LIBRARY_EXTRA  number of synthetic entries to add to the library's grid, to look at it with more rows than the catalog fills (they have no art and exist only in this render)
 ##   LAUNCHER_SHOT_MODE     "pc" switches to PC mode before the actions are dispatched
 ##   LAUNCHER_SHOT_PC       semicolon-separated steps applied to PC mode after the actions: view=library, layout=list, sort=recent, category=favorites, genre=<English genre>, tab=1, locked, select=<game id>, query=<text>, search (focus the field), many=<n> (n synthetic games on top of the catalog), width=<canvas px> (narrower PC area, to check reflow), hover=<game id>, zone=<search|sidebar|main> (move keyboard focus there and show the ring), menu (the selected game's menu), sort_menu
-##   LAUNCHER_SHOT_GAME     catalog game id passed to the screen as { "game": id }, default "shooter"
+##   LAUNCHER_SHOT_GAME     catalog game id passed to the screen as { "game": id }, default "shooter" (the first game of the catalog when there is no such id)
+##   LAUNCHER_SHOT_GAMES_ROOT  games directory the catalog reads instead of the shipped one (the test fixture games live in the testing directory's games folder)
+##   LAUNCHER_SHOT_PLAYERS  player count the game starts with (1 or 2), for a game module that seats two
+##   LAUNCHER_SHOT_SEED     seed handed to a game module, default 1, so a capture can be repeated exactly
+##   LAUNCHER_SHOT_INPUT    scripted per-player input for a game module, run after the actions: semicolon-separated segments "SECONDS:P1 CONTROLS/P2 CONTROLS", controls joined by "+" (up down left right a b x y l r), e.g. "1.5:right+a/left;0.5:/a;1:" holds right and A for player one and left for player two for 1.5 game seconds, then only player two's A for 0.5, then nothing for 1. Seconds are game seconds, so "scale=N" in the actions shortens the wait
 ##
 ## Besides action names, LAUNCHER_SHOT_ACTIONS accepts steps that let a live game reach a state worth capturing: "wait=SECONDS" (real seconds), "scale=N" (Engine.time_scale), "press=ACTION" / "release=ACTION" (hold or let go of a launcher action, for what the game screen polls) and "cursor=X:Y" (put the game screen's tower cursor at a stage position).
 ##
@@ -49,6 +53,16 @@ func _initialize() -> void:
 		store.set_favorite("shooter", true)
 	store.set_setting("lang", locale)
 
+	var games_root := _env("LAUNCHER_SHOT_GAMES_ROOT", "")
+	if games_root != "":
+		LauncherCatalog.use_root(games_root)
+	var game_id := _env("LAUNCHER_SHOT_GAME", "shooter")
+	if not LauncherCatalog.has(game_id):
+		game_id = LauncherCatalog.first_id()
+	var player_count := int(_env("LAUNCHER_SHOT_PLAYERS", "0"))
+	if player_count > 0:
+		store.set_setting(LauncherGameGuide.players_key(game_id), player_count)
+
 	var viewport := SubViewport.new()
 	viewport.size = Vector2i(LauncherTokens.CANVAS)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -57,6 +71,7 @@ func _initialize() -> void:
 	shell.store = store
 	viewport.add_child(shell)
 	await process_frame
+	shell.game_host.run_seed = int(_env("LAUNCHER_SHOT_SEED", "1"))
 	var extra := int(_env("LAUNCHER_SHOT_LIBRARY_EXTRA", "0"))
 	if extra > 0:
 		var crowded: Array[Dictionary] = []
@@ -70,7 +85,7 @@ func _initialize() -> void:
 		(shell.screen(LauncherRoot.LIBRARY) as LauncherLibraryScreen).set_entries(crowded)
 	(shell.screen(LauncherRoot.GAME) as LauncherGameScreen).pause_on_focus_loss = false
 	if screen_id != "home":
-		shell.go(StringName(screen_id), {"game": _env("LAUNCHER_SHOT_GAME", "shooter")})
+		shell.go(StringName(screen_id), {"game": game_id})
 	if _env("LAUNCHER_SHOT_MODE", "console") == "pc":
 		shell.toggle_pc_mode()
 		await process_frame
@@ -81,6 +96,7 @@ func _initialize() -> void:
 			continue
 		shell.dispatch(StringName("launcher_" + step))
 		await process_frame
+	await _play_input(shell, _env("LAUNCHER_SHOT_INPUT", ""))
 	for key_name in _env("LAUNCHER_SHOT_KEYS", "").split(",", false):
 		var key := InputEventKey.new()
 		key.physical_keycode = OS.find_keycode_from_string(key_name.strip_edges())
@@ -114,6 +130,22 @@ func _initialize() -> void:
 		return
 	print("launcher_shot: wrote %s (%dx%d)" % [path, image.get_width(), image.get_height()])
 	quit(0)
+
+## Play a LAUNCHER_SHOT_INPUT script on the game module that is live: each segment sets which controls each player holds, then lets that many game seconds pass. Everything is let go at the end.
+func _play_input(shell: LauncherRoot, script_text: String) -> void:
+	var host := shell.game_host
+	for segment in script_text.split(";", false):
+		var seconds := segment.get_slice(":", 0).to_float()
+		var held := segment.get_slice(":", 1).split("/") if segment.contains(":") else PackedStringArray()
+		for slot in GameSession.MAX_PLAYERS:
+			var wanted := held[slot].split("+", false) if slot < held.size() else PackedStringArray()
+			for control in GameSession.CONTROLS:
+				host.set_control(slot, control, 1.0 if wanted.has(String(control)) else 0.0)
+		if seconds > 0.0:
+			await create_timer(seconds, true, false, false).timeout
+	if script_text != "":
+		host.release_controls()
+		await process_frame
 
 func _pc_step(pc: LauncherPcMode, step: String) -> void:
 	var value := step.get_slice("=", 1) if step.contains("=") else ""

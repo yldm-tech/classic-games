@@ -42,5 +42,10 @@
 			"default": 2
 		}
 	],
-	"tuning": {"shield_cooldown": 10}
+	"tuning": {"shield_cooldown": 10},
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《星环巡航》局内截图：蓝色三角形是玩家，向右发射一排黄色子弹；橙色方块是敌机，红色菱形和粉色箭头是敌方弹幕；上方有得分、生命条、倒计时和首领血条。", "en": "Orbit Patrol in game: the blue triangle is the player, firing a row of yellow bullets to the right; orange squares are enemies, red diamonds and pink arrows are enemy fire; the score, the HP bar, the countdown and the boss HP bar are along the top."},
+		"art_alt": {"zh": "《星环巡航》主视觉：一架战机拖着橙色尾焰飞向星云中的巨型机甲。", "en": "Orbit Patrol key art: a fighter with orange engine trails flies toward a giant mech in a nebula."}
+	}
 }

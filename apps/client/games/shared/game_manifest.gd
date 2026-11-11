@@ -19,7 +19,7 @@ extends RefCounted
 ##   controls      module: [{ id, name, inputs: ["move" | a GameInput control] }]; dsl: [{ id, name, actions, glyphs, pad?, mouse?, performs? }]
 ##   hud           { clock: { mode, field?, total? }, vital?: { field, max, label }, stats?: [{ label, fields }], player_stats?: [{ label, fields }], boss?: { field, max, label? } }
 ##   options       [{ id, name, note, values: [int], default, labels?: [{ zh, en }], path?: JSON pointer (dsl only, required there) }]
-##   site          optional { screenshot: a picture inside the directory, for the website }
+##   site          optional, for the website only: { screenshot: a picture inside the directory, screenshot_alt: { zh, en }, art_alt: { zh, en } }
 ##   towers, tuning   dsl only: display names of tower types, and numbers the host applies around the runtime
 
 const SCHEMA := 1
@@ -86,8 +86,17 @@ static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 		var site: Variant = manifest["site"]
 		if not site is Dictionary:
 			errors.append("site: must be an object")
-		elif (site as Dictionary).has("screenshot"):
-			_check_file(errors, "site.screenshot", site["screenshot"], dir, IMAGE_EXTENSIONS)
+		else:
+			if (site as Dictionary).has("screenshot"):
+				_check_file(errors, "site.screenshot", site["screenshot"], dir, IMAGE_EXTENSIONS)
+			for key: Variant in site:
+				match str(key):
+					"screenshot":
+						pass
+					"screenshot_alt", "art_alt":
+						_check_text(errors, "site.%s" % key, site[key])
+					_:
+						errors.append("site.%s: unknown field" % str(key))
 	if manifest.has("towers") and not manifest["towers"] is Dictionary:
 		errors.append("towers: must be an object")
 	if manifest.has("tuning"):

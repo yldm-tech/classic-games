@@ -26,9 +26,9 @@
 
 | 主视觉（插画） | 局内画面 |
 |---|---|
-| ![《星环巡航》主视觉：一架战机飞向星云中的巨型机甲](./apps/web/src/assets/key-art/shooter.jpg) | ![《星环巡航》局内：蓝色三角形向橙色方块发射黄色子弹](./apps/web/src/assets/launcher/game-shooter.png) |
-| ![《长夜草原》主视觉：月夜草原上举着发光法杖的披斗篷的人](./apps/web/src/assets/key-art/survivor.jpg) | ![《长夜草原》局内：绿色场地上的蓝色多边形和几个黄色圆点](./apps/web/src/assets/launcher/game-survivor.png) |
-| ![《隘口守卫》主视觉：黄昏时一座放电的塔守着道路](./apps/web/src/assets/key-art/tower-defense.jpg) | ![《隘口守卫》局内：灰色道路、粉色六边形敌人、蓝色的塔和射程圆圈](./apps/web/src/assets/launcher/game-tower-defense.png) |
+| ![《星环巡航》主视觉：一架战机飞向星云中的巨型机甲](./apps/client/games/shooter/key_art.jpg) | ![《星环巡航》局内：蓝色三角形向橙色方块发射黄色子弹](./apps/client/games/shooter/site_screenshot.png) |
+| ![《长夜草原》主视觉：月夜草原上举着发光法杖的披斗篷的人](./apps/client/games/survivor/key_art.jpg) | ![《长夜草原》局内：绿色场地上的蓝色多边形和几个黄色圆点](./apps/client/games/survivor/site_screenshot.png) |
+| ![《隘口守卫》主视觉：黄昏时一座放电的塔守着道路](./apps/client/games/tower_defense/key_art.jpg) | ![《隘口守卫》局内：灰色道路、粉色六边形敌人、蓝色的塔和射程圆圈](./apps/client/games/tower_defense/site_screenshot.png) |
 
 局内目前用的是纯几何图形，还没有贴图美术。主视觉是插画，不代表游戏的实际画面。三张主视觉由本项目用图像生成模型生成，是原创构图，来源记录在 [docs/legal/licenses.md](./docs/legal/licenses.md)。
 

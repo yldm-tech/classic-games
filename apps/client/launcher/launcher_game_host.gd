@@ -120,7 +120,7 @@ func quit() -> void:
 func restart() -> bool:
 	return _game_id != "" and launch(_game_id, _options, _player_count)
 
-## Size the stage viewport for a game. A pixel-art stage is rendered at its own logical resolution and enlarged by a whole factor with nearest filtering, so every stage pixel is one crisp block. Any other stage is rendered at the canvas's full resolution with its logical coordinates mapped onto it, so shapes stay sharp.
+## Size the stage viewport for a game. A pixel-art stage is rendered at its own logical resolution and enlarged by a whole factor with nearest filtering, so every stage pixel is one crisp block. Any other stage is rendered at the canvas's full resolution with its logical coordinates mapped onto it, so shapes stay sharp. The container owns the viewport's pixel size (the canvas divided by stretch_shrink); only the shrink factor and the 2D override are set here.
 func _shape_stage(stage: Dictionary) -> void:
 	_stage = stage
 	var pixel_art := bool(stage["pixel_art"])
@@ -130,10 +130,6 @@ func _shape_stage(stage: Dictionary) -> void:
 	_viewport.snap_2d_transforms_to_pixel = pixel_art
 	_viewport.size_2d_override = Vector2i.ZERO if pixel_art else (stage["size"] as Vector2i)
 	_viewport.size_2d_override_stretch = not pixel_art
-	if pixel_art:
-		_viewport.size = stage["size"]
-	else:
-		_viewport.size = Vector2i(LauncherTokens.CANVAS)
 
 ## The stage of the game on it: { size: Vector2i, pixel_art, scale, centered }.
 func stage() -> Dictionary:

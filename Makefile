@@ -182,7 +182,7 @@ export-test: ## 导出资源包并在包内运行游戏发现(验证导出版里
 	GODOT="$(GODOT)" scripts/check-export-discovery.sh
 
 .PHONY: launcher-shot
-launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played)
+launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played;局内截图用 SCREEN=game 加 LAUNCHER_SHOT_GAME / LAUNCHER_SHOT_PLAYERS / LAUNCHER_SHOT_INPUT)
 	GODOT="$(GODOT)" scripts/run-launcher-shot.sh $(SCREEN) $(STATE)
 
 .PHONY: script-test

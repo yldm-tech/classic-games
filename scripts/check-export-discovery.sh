@@ -20,7 +20,7 @@ fi
 
 # Every preset must carry the filters, or a build for that platform could ship the fixtures.
 PRESETS="$(grep -c '^\[preset\.[0-9]*\]$' "$CLIENT/export_presets.cfg")"
-for filter in 'include_filter="*.json"' 'exclude_filter="testing/*"'; do
+for filter in 'include_filter="*.json"' 'exclude_filter="testing/*,games/*/site_screenshot.*"'; do
 	if [[ "$(grep -cFx "$filter" "$CLIENT/export_presets.cfg")" -ne "$PRESETS" ]]; then
 		echo "export discovery: every preset in export_presets.cfg needs $filter" >&2
 		exit 1

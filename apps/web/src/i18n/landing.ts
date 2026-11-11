@@ -1,4 +1,4 @@
-// Copy for the landing page in both locales. Every claim here is backed by a file in the repository; when the repository changes, change the copy with it. The two objects share one interface so a string cannot exist in one language only. Game names, genres, taglines and guide texts are not here: they come from src/data/games.ts, which checks them against the launcher's own source.
+// Copy for the landing page in both locales. Every claim here is backed by a file in the repository; when the repository changes, change the copy with it. The two objects share one interface so a string cannot exist in one language only. Game names, genres, taglines, guide texts and the alt texts of each game's pictures are not here: they come from the game manifests through src/data/games.ts, and so does the number of games, which is why the lines that state it are functions of the count.
 
 export const LOCALES = ['zh-CN', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -61,19 +61,26 @@ export interface LandingStrings {
 		status: string;
 		/** Page heading, with "|" phrase boundaries like the section headings. */
 		title: string;
-		lead: string;
+		/** `count` is the number of games in the catalog. */
+		lead: (count: number) => string;
 		primaryCta: string;
 		secondaryCta: string;
 		note: string;
 		shotAlt: string;
 		shotCaption: string;
 	};
-	games: SectionHead & {
-		players: string;
+	games: Omit<SectionHead, 'title'> & {
+		/** Section heading for a catalog of `count` games, with "|" phrase boundaries. */
+		title: (count: number) => string;
+		players: (min: number, max: number) => string;
 		artLabel: string;
-		artAlt: { shooter: string; survivor: string; tower_defense: string };
+		/** Alt text of a game's key art when its manifest gives none. */
+		artAlt: (name: string) => string;
 		shotLabel: string;
-		shotAlt: { shooter: string; survivor: string; tower_defense: string };
+		/** Alt text of a game's capture when its manifest gives none. */
+		shotAlt: (name: string) => string;
+		/** Text of the panel shown for a game that ships no picture yet. */
+		noPicture: string;
 		achievements: (count: number) => string;
 		artCredit: string;
 		artCreditLink: string;
@@ -170,7 +177,7 @@ const zh: LandingStrings = {
 	hero: {
 		status: '开源 · 预发布 · 目前只能从源码运行',
 		title: '主机风格的启动器，|一组经典类型的|原创游戏',
-		lead: '经典厅（Classic Games）是一个开源的游戏启动器，自带三款原创游戏。用手柄或键盘就能完成全部操作，按 F11 切换到面向键盘鼠标的 PC 模式。进度只保存在本机，启动器不发任何网络请求。',
+		lead: (count) => `经典厅（Classic Games）是一个开源的游戏启动器，自带 ${count} 款原创游戏。用手柄或键盘就能完成全部操作，按 F11 切换到面向键盘鼠标的 PC 模式。进度只保存在本机，启动器不发任何网络请求。`,
 		primaryCta: '从源码运行',
 		secondaryCta: '在 GitHub 上查看源码',
 		note: '还没有公开的构建，也没有上架任何商店。运行需要 Godot 4.6.3。',
@@ -179,23 +186,16 @@ const zh: LandingStrings = {
 	},
 	games: {
 		eyebrow: '01 · 游戏',
-		title: '现在有三款游戏，|都是原创',
-		lead: '每款游戏放两张图：左边是启动器里用的主视觉，是一张插画；右边是真实的局内画面。局内目前用的是纯几何图形，还没有贴图美术，主视觉不代表实际画面。',
-		players: '1 人',
+		title: (count) => `现在有 ${count} 款游戏，|都是原创`,
+		lead: '每款游戏放两张图：左边是启动器里用的主视觉，是一张插画；右边是真实的局内画面。主视觉不代表实际画面。还没有图片的游戏先只列出文字。',
+		players: (min, max) => (max > min ? `${min}–${max} 人` : `${min} 人`),
 		artLabel: '主视觉（插画）',
-		artAlt: {
-			shooter: '《星环巡航》主视觉：一架战机拖着橙色尾焰飞向星云中的巨型机甲。',
-			survivor: '《长夜草原》主视觉：月夜的草原上，一个披斗篷的人举着发光的法杖，四周是发绿光的生物。',
-			tower_defense: '《隘口守卫》主视觉：黄昏的草坡上，一座放电的塔守着一条有队伍行进的道路。',
-		},
-		shotLabel: '局内画面（几何图形）',
-		shotAlt: {
-			shooter: '《星环巡航》局内截图：蓝色三角形是玩家，向右发射一排黄色子弹；橙色方块是敌机，红色菱形和粉色箭头是敌方弹幕；上方有得分、生命条、倒计时和首领血条。',
-			survivor: '《长夜草原》局内截图：绿色场地中央的蓝色多边形是玩家，旁边有几个黄色圆点；上方有得分、生命条、倒计时、等级和击倒数。',
-			tower_defense: '《隘口守卫》局内截图：一条灰色折线道路，路上有三个粉色六边形敌人，路边有一座蓝色六边形的塔；中间是准星和射程圆圈，左下角是五种塔的选择栏。',
-		},
+		artAlt: (name) => `《${name}》的主视觉插画。`,
+		shotLabel: '局内画面',
+		shotAlt: (name) => `《${name}》在启动器里运行时的局内截图。`,
+		noPicture: '这款游戏还没有主视觉和局内截图',
 		achievements: (count) => `${count} 个成就`,
-		artCredit: '三张主视觉由本项目用图像生成模型生成，是原创构图，不取材于任何现有游戏的角色或美术。来源记录在',
+		artCredit: '每款游戏的全部素材都是原创或有明确许可，不取材于任何现有游戏的角色或美术。各游戏目录里的 ASSETS.md 逐个文件记录来源与许可，总览见',
 		artCreditLink: '开源许可说明',
 	},
 	launcher: {
@@ -346,7 +346,7 @@ const en: LandingStrings = {
 	hero: {
 		status: 'Open source · pre-release · runs from source only',
 		title: 'A console-style launcher |with original games |in classic genres',
-		lead: 'Classic Games (经典厅) is an open-source game launcher that comes with three original games. Everything can be done with a gamepad or a keyboard, and F11 switches to a PC mode laid out for keyboard and mouse. Progress is stored on your machine only; the launcher makes no network requests.',
+		lead: (count) => `Classic Games (经典厅) is an open-source game launcher that comes with ${count} original ${count === 1 ? 'game' : 'games'}. Everything can be done with a gamepad or a keyboard, and F11 switches to a PC mode laid out for keyboard and mouse. Progress is stored on your machine only; the launcher makes no network requests.`,
 		primaryCta: 'Run from source',
 		secondaryCta: 'View the source on GitHub',
 		note: 'There are no public builds and no store releases yet. Running it needs Godot 4.6.3.',
@@ -355,23 +355,16 @@ const en: LandingStrings = {
 	},
 	games: {
 		eyebrow: '01 · Games',
-		title: 'Three games today, |all original',
-		lead: 'Each game is shown with two images: on the left the key art the launcher uses, which is an illustration, and on the right a capture of the game being played. In-game graphics are plain geometric shapes for now, with no sprite art yet; the key art does not represent how the game looks.',
-		players: '1 player',
+		title: (count) => `${count} ${count === 1 ? 'game' : 'games'} today, |all original`,
+		lead: 'Each game is shown with two images: on the left the key art the launcher uses, which is an illustration, and on the right a capture of the game being played. The key art does not represent how the game looks. A game that has no pictures yet is listed with its text only.',
+		players: (min, max) => (max > min ? `${min}–${max} players` : min === 1 ? '1 player' : `${min} players`),
 		artLabel: 'Key art (illustration)',
-		artAlt: {
-			shooter: 'Orbit Patrol key art: a fighter with orange engine trails flies toward a giant mech in a nebula.',
-			survivor: 'Meadow Vigil key art: a cloaked figure holding a glowing staff on a moonlit meadow, surrounded by creatures that glow green.',
-			tower_defense: 'Gatewatch key art: a tower crackling with electricity guards a road with a marching column, on a grassy slope at dusk.',
-		},
-		shotLabel: 'In game (geometric shapes)',
-		shotAlt: {
-			shooter: 'Orbit Patrol in game: the blue triangle is the player, firing a row of yellow bullets to the right; orange squares are enemies, red diamonds and pink arrows are enemy fire; the score, the HP bar, the countdown and the boss HP bar are along the top.',
-			survivor: 'Meadow Vigil in game: the blue polygon in the middle of a green field is the player, with a few yellow dots nearby; the score, the HP bar, the countdown, the level and the kill count are along the top.',
-			tower_defense: 'Gatewatch in game: a grey road with three pink hexagonal enemies on it and a blue hexagonal tower beside it; a cursor with a range circle in the middle, and a bar with the five tower types at the bottom left.',
-		},
+		artAlt: (name) => `Key art illustration of ${name}.`,
+		shotLabel: 'In game',
+		shotAlt: (name) => `A capture of ${name} being played in the launcher.`,
+		noPicture: 'This game has no key art or in-game capture yet',
 		achievements: (count) => `${count} achievements`,
-		artCredit: 'The three key art images were generated by this project with an image model. They are original compositions and are not based on the characters or art of any existing game. Their provenance is recorded in the',
+		artCredit: 'Every asset of every game is original or clearly licensed, and none is based on the characters or art of an existing game. The ASSETS.md in each game directory records the source and licence file by file; the overview is in the',
 		artCreditLink: 'third-party licence notes (Chinese)',
 	},
 	launcher: {

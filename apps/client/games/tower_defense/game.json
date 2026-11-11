@@ -43,5 +43,10 @@
 		"frost": {"name": {"zh": "冰霜塔", "en": "Frost"}, "note": {"zh": "命中后减速", "en": "Slows on hit"}},
 		"laser": {"name": {"zh": "激光塔", "en": "Laser"}, "note": {"zh": "射程远，出手快", "en": "Long range, fast"}},
 		"tesla": {"name": {"zh": "电塔", "en": "Tesla"}, "note": {"zh": "电弧连锁两个敌人", "en": "Chains to two more"}}
+	},
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《隘口守卫》局内截图：一条灰色折线道路，路上有三个粉色六边形敌人，路边有一座蓝色六边形的塔；中间是准星和射程圆圈，左下角是五种塔的选择栏。", "en": "Gatewatch in game: a grey road with three pink hexagonal enemies on it and a blue hexagonal tower beside it; a cursor with a range circle in the middle, and a bar with the five tower types at the bottom left."},
+		"art_alt": {"zh": "《隘口守卫》主视觉：黄昏的草坡上，一座放电的塔守着一条有队伍行进的道路。", "en": "Gatewatch key art: a tower crackling with electricity guards a road with a marching column, on a grassy slope at dusk."}
 	}
 }

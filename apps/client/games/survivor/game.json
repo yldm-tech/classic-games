@@ -33,5 +33,10 @@
 			{"label": {"zh": "击倒", "en": "Defeated"}, "fields": ["kills"]}
 		]
 	},
-	"options": []
+	"options": [],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《长夜草原》局内截图：绿色场地中央的蓝色多边形是玩家，旁边有几个黄色圆点；上方有得分、生命条、倒计时、等级和击倒数。", "en": "Meadow Vigil in game: the blue polygon in the middle of a green field is the player, with a few yellow dots nearby; the score, the HP bar, the countdown, the level and the kill count are along the top."},
+		"art_alt": {"zh": "《长夜草原》主视觉：月夜的草原上，一个披斗篷的人举着发光的法杖，四周是发绿光的生物。", "en": "Meadow Vigil key art: a cloaked figure holding a glowing staff on a moonlit meadow, surrounded by creatures that glow green."}
+	}
 }

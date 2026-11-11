@@ -18,7 +18,7 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 	<div class="cg-container">
 		<div class="cg-section-head">
 			<p class="cg-eyebrow">{t.eyebrow}</p>
-			<h2 class="cg-h2" id="games-title"><Phrases text={t.title} /></h2>
+			<h2 class="cg-h2" id="games-title"><Phrases text={t.title(games.length)} /></h2>
 			<p class="cg-lead">{t.lead}</p>
 		</div>
 
@@ -30,7 +30,7 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 							<p class="meta">
 								<span>{game.genre.en}</span>
 								<span aria-hidden="true">·</span>
-								<span>{t.players}</span>
+								<span>{t.players(game.players.min, game.players.max)}</span>
 								<span aria-hidden="true">·</span>
 								<span>{t.achievements(game.achievements)}</span>
 							</p>
@@ -42,10 +42,21 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 							</h3>
 							<p class="tagline">{game.tagline[lang]}</p>
 						</div>
-						<div class="pair">
-							<Shot src={game.art} alt={t.artAlt[game.key]} name={t.artLabel} sizes={pairSizes} />
-							<Shot src={game.shot} alt={t.shotAlt[game.key]} name={t.shotLabel} sizes={pairSizes} />
-						</div>
+						{
+							game.art || game.shot ? (
+								<div class:list={['pair', { single: !(game.art && game.shot) }]}>
+									{game.art && <Shot src={game.art} alt={game.artAlt?.[lang] ?? t.artAlt(game.name[lang])} name={t.artLabel} sizes={pairSizes} />}
+									{game.shot && <Shot src={game.shot} alt={game.shotAlt?.[lang] ?? t.shotAlt(game.name[lang])} name={t.shotLabel} sizes={pairSizes} />}
+								</div>
+							) : (
+								<div class="placeholder" style={`--from: ${game.colors.top}; --to: ${game.colors.bottom}; --ink: ${game.colors.title};`}>
+									<p class="placeholder-name" aria-hidden="true">
+										{game.name.en}
+									</p>
+									<p class="placeholder-note">{t.noPicture}</p>
+								</div>
+							)
+						}
 						<p class="how">{game.how[lang]}</p>
 					</li>
 				))
@@ -111,6 +122,32 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 		gap: 1.5rem;
 	}
 
+	/* A game that ships no picture yet: a panel in the colours of its own manifest, the same palette the launcher's placeholder art uses. */
+	.placeholder {
+		display: grid;
+		place-content: center;
+		gap: 0.75rem;
+		aspect-ratio: 16 / 5;
+		min-height: 11rem;
+		padding: 1.5rem;
+		border: 1px solid var(--cg-border-subtle);
+		background: linear-gradient(180deg, var(--from), var(--to));
+		text-align: center;
+	}
+
+	.placeholder-name {
+		font-size: clamp(1.25rem, 1rem + 1.6vw, 2rem);
+		font-weight: 900;
+		letter-spacing: 0.3em;
+		color: var(--ink);
+	}
+
+	.placeholder-note {
+		font-size: 0.875rem;
+		color: var(--ink);
+		opacity: 0.75;
+	}
+
 	.how {
 		max-width: 52rem;
 		color: var(--cg-text-secondary);
@@ -134,6 +171,12 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 	@media (min-width: 48rem) {
 		.pair {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		/* One picture alone keeps the width it would have next to a second one, instead of stretching across the page. */
+		.pair.single {
+			grid-template-columns: minmax(0, 1fr);
+			max-width: 36rem;
 		}
 	}
 </style>
