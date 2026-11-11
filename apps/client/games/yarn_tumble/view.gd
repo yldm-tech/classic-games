@@ -277,9 +277,9 @@ func _draw_ambience() -> void:
 				if fall < 150.0:
 					draw_rect(Rect2(44.0 + index * 52.0, 96.0 + fall, 1.0, 3.0), Color(accent.r, accent.g, accent.b, 0.7))
 			for vat: float in [70.0, 240.0, 410.0]:
-				for bubble in 3:
-					var rise := fposmod(_time * 14.0 + bubble * 9.0 + vat, 26.0)
-					draw_circle(Vector2(vat - 14.0 + bubble * 14.0 + sin(_time * 2.0 + bubble) * 2.0, 212.0 - rise), 2.0, Color(accent.r, accent.g, accent.b, 0.5 * (1.0 - rise / 26.0)))
+				for blob in 3:
+					var rise := fposmod(_time * 14.0 + blob * 9.0 + vat, 26.0)
+					draw_circle(Vector2(vat - 14.0 + blob * 14.0 + sin(_time * 2.0 + blob) * 2.0, 212.0 - rise), 2.0, Color(accent.r, accent.g, accent.b, 0.5 * (1.0 - rise / 26.0)))
 		Levels.THEME_CLOCK:
 			for cog: Vector3 in [Vector3(240.0, 120.0, 1.0), Vector3(40.0, 220.0, -1.4)]:
 				draw_set_transform(Vector2(cog.x, cog.y), _time * cog.z * 0.8)

@@ -14,7 +14,7 @@
 	"achievements": [
 		{"id": "first_ball", "icon": "bolt", "name": {"zh": "第一团毛线", "en": "First Ball"}, "desc": {"zh": "把一只捣蛋鬼缠成球并踢出去。", "en": "Wrap a pest into a ball and send it rolling."}, "when": {"min": {"kos": 1}}},
 		{"id": "triple_roll", "icon": "star", "name": {"zh": "一球三响", "en": "Three in One"}, "desc": {"zh": "一颗毛线球连同自己一共撞翻三只。", "en": "Knock out three pests with a single ball, the one inside included."}, "when": {"min": {"best_roll": 3}}},
-		{"id": "big_roll", "icon": "star", "name": {"zh": "滚雪崩", "en": "Landslide"}, "desc": {"zh": "一颗毛线球一共撞翻五只。", "en": "Knock out five pests with a single ball."}, "when": {"min": {"best_roll": 5}}},
+		{"id": "big_roll", "icon": "star", "name": {"zh": "连环撞", "en": "Bowled Over"}, "desc": {"zh": "一颗毛线球一共撞翻五只。", "en": "Knock out five pests with a single ball."}, "when": {"min": {"best_roll": 5}}},
 		{"id": "duchess_down", "icon": "shield", "name": {"zh": "女爵退场", "en": "Dusted"}, "desc": {"zh": "击败飞蛾阁楼的绒翼女爵。", "en": "Defeat Duchess Dustwing in the Moth Loft."}, "when": {"min": {"bosses_defeated": 1}}},
 		{"id": "tower_top", "icon": "cup", "name": {"zh": "登顶织塔", "en": "Top of the Tower"}, "desc": {"zh": "打通全部十四层。", "en": "Clear all fourteen floors."}, "when": {"cleared": true}},
 		{"id": "one_thread", "icon": "shield", "name": {"zh": "一线到底", "en": "One Thread"}, "desc": {"zh": "不使用续关打通织塔。", "en": "Clear the tower without using a continue."}, "when": {"cleared": true, "max": {"continues_used": 0}}},
