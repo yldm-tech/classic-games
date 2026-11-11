@@ -115,7 +115,7 @@ var cell := pad.move_sign()                 # Vector2i，各分量为 -1 / 0 / 1
 
 卷轴关卡：给模块加一个 `Camera2D` 子节点并移动它，舞台就是摄像机的视野，两种舞台模式下都一样（夹具 `fixture_duo` 用的是 `ANCHOR_MODE_FIXED_TOP_LEFT`，默认的居中锚点也可以，配合 `limit_left` / `limit_right`）。摄像机的位置如果影响玩法或进快照，就在 `_game_step` 里移动它。单屏游戏不需要摄像机。
 
-HUD 由启动器画在舞台之上，重要的东西别只放在它下面：上方约 16% 高度（左上、右上角是玩家信息，中间是时钟）；用了 `hud.player_stats` 或 `hud.stats` 时两个角会向下伸到约 24%；右下角是暂停按钮。HUD 不跟随摄像机。
+HUD 由启动器画在舞台之上，重要的东西别只放在它下面：上方约 16% 高度（左上、右上角是玩家信息，中间是时钟）；用了 `hud.player_stats` 或 `hud.stats` 时两个角会向下伸到约 24%，右上角再加首领血条时到约 29%；右下角是暂停按钮。HUD 不跟随摄像机。
 
 **玩法不要交给引擎的物理和计时节点。** `advance()`（测试）和固定步只推进 `_game_step`；`CharacterBody2D` / `Area2D` / `RigidBody2D` 的碰撞、`_physics_process`、`Timer`、`get_tree().create_timer()`、`Tween`、`AnimationPlayer`、粒子都按引擎自己的帧时间走，测试里根本不会前进，同一个种子也重放不出同一局。碰撞自己在 `_game_step` 里算（网格查表、矩形相交、圆距离，两个夹具都是这样），计时自己累加 `delta`。这些节点可以放心用在纯表现上。
 
