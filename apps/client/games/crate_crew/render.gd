@@ -24,10 +24,10 @@ const MOTES := 30
 
 ## Per stage: the lit top of the ground, its highlight, the dark outline, the colour laid over the far wall so play stands out, and the colour of the drifting specks.
 const LOOKS := [
-	{"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.07, 0.06, 0.12, 0.34), "mote": Color("ffe2a8"), "rise": -3.0},
-	{"cap": Color("7cc7bf"), "lip": Color("c9f0ea"), "edge": Color("10242c"), "veil": Color(0.03, 0.08, 0.1, 0.36), "mote": Color("d8f4f0"), "rise": -9.0},
-	{"cap": Color("d98250"), "lip": Color("ffc08a"), "edge": Color("2a1216"), "veil": Color(0.1, 0.03, 0.04, 0.36), "mote": Color("ffa24a"), "rise": -16.0},
-	{"cap": Color("9c98e0"), "lip": Color("d6d4ff"), "edge": Color("161432"), "veil": Color(0.05, 0.04, 0.13, 0.36), "mote": Color("9fe8dc"), "rise": -4.0},
+	{"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.07, 0.06, 0.12, 0.16), "mote": Color("ffe2a8"), "rise": -3.0},
+	{"cap": Color("7cc7bf"), "lip": Color("c9f0ea"), "edge": Color("10242c"), "veil": Color(0.03, 0.08, 0.1, 0.16), "mote": Color("d8f4f0"), "rise": -9.0},
+	{"cap": Color("d98250"), "lip": Color("ffc08a"), "edge": Color("2a1216"), "veil": Color(0.1, 0.03, 0.04, 0.16), "mote": Color("ffa24a"), "rise": -16.0},
+	{"cap": Color("9c98e0"), "lip": Color("d6d4ff"), "edge": Color("161432"), "veil": Color(0.05, 0.04, 0.13, 0.16), "mote": Color("9fe8dc"), "rise": -4.0},
 ]
 
 var world: World
