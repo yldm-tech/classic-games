@@ -2,9 +2,9 @@ class_name LauncherKeyArt
 extends Control
 
 ## Key art of one game, cover-fitted into this control. It is the only place that knows where a game's picture comes from.
-## Real art replaces the placeholder per game id by adding `res://launcher/art/<game id>.png` (16:9): texture_for() finds it and nothing else changes. Until then a procedural placeholder is drawn from the catalog entry's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
+## Real art replaces the placeholder per game id by adding `res://launcher/art/<game id>.jpg` (16:9): texture_for() finds it and nothing else changes. Until then a procedural placeholder is drawn from the catalog entry's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
 
-const ART_PATH := "res://launcher/art/%s.png"
+const ART_PATH := "res://launcher/art/%s.jpg"
 ## Reference frame the placeholders are authored in; it is scaled to cover the control like a background image.
 const FRAME := Vector2(1600, 900)
 
