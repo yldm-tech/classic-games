@@ -444,7 +444,8 @@ func dispatch(action: StringName) -> void:
 		if _pc_node != null and _pc_node.has_method("handle_action"):
 			_pc_node.call("handle_action", action)
 		return
-	if action == In.X and can_undo():
+	# Not while a game is being played: X is a game button there, and an undo offered just before the run started must not fire from it.
+	if action == In.X and can_undo() and current_id() != GAME:
 		undo()
 		return
 	if _current == null or _current.handle_action(action):

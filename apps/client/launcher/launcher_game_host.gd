@@ -18,7 +18,7 @@ signal score_changed(score: int)
 signal paused_changed(paused: bool)
 ## The set of playing slots of the live run changed (a player joined or left).
 signal players_changed
-## The gamepad of a playing slot was unplugged during a live two-player run.
+## The gamepad a player was playing on was unplugged during a live run of a game module.
 signal player_device_lost(slot: int)
 
 var store: LauncherStore
@@ -182,10 +182,16 @@ func remove_player() -> bool:
 	players_changed.emit()
 	return true
 
-## Called by the shell when a gamepad was plugged in or unplugged. A playing slot that lost its gamepad has its controls released and is announced, so the game screen can pause.
+## Called by the shell when a gamepad was plugged in or unplugged. Whatever an unplugged gamepad was holding is let go, with any number of players. A player who lost the gamepad they were playing on (the slot's own device with two players, the gamepad last used with one) also has all controls released and is announced, so the game screen can pause.
 func pads_changed() -> void:
 	if not _session.is_running() or not _session.is_module():
 		return
+	for change: Array in players.release_missing_pads():
+		_session.set_control(int(change[0]), change[1], float(change[2]))
+	# With one player every device plays, so no slot "has" a gamepad to lose; the one being played on going away is announced the same way.
+	if players.count <= 1 and players.take_lost_active_pad():
+		release_controls()
+		player_device_lost.emit(0)
 	for slot in players.disconnected_slots():
 		release_controls()
 		player_device_lost.emit(slot)

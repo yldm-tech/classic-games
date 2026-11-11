@@ -29,6 +29,8 @@ var count := 1
 var pads_provider := func() -> Array[int]: return Input.get_connected_joypads()
 
 var _devices: Array[String] = [KEYBOARD_1, KEYBOARD_2]
+## The gamepad that last moved a control of the game, -1 when the keyboard did or nothing has yet. In a one-player run every device plays, so this is the only way to tell that the gamepad just unplugged was the one in the player's hands.
+var _last_pad := -1
 ## "slot/control" -> { source: strength }: a control held from two places (stick and d-pad, or both keyboard schemes in a one-player run) stays held until both let go.
 var _held: Dictionary = {}
 
@@ -131,6 +133,12 @@ func source_controls(source: String, slot: int) -> bool:
 
 ## The control changes an event causes: [[slot, control, strength], ...]. Empty for an event that is not game input or belongs to no playing slot.
 func translate(event: InputEvent) -> Array:
+	var out := _translate(event)
+	if not out.is_empty():
+		_last_pad = event.device if (event is InputEventJoypadButton or event is InputEventJoypadMotion) else -1
+	return out
+
+func _translate(event: InputEvent) -> Array:
 	var out: Array = []
 	if event is InputEventKey:
 		if (event as InputEventKey).echo:
@@ -159,9 +167,36 @@ func translate(event: InputEvent) -> Array:
 			out.append(_hold(slot, high, source, maxf(0.0, value)))
 	return out
 
+## Let go of whatever the gamepads that are no longer connected were holding, and return the control changes that causes, like translate(). A gamepad that is unplugged with its stick pushed over or a button down never sends the event that would let go, in a one-player run as much as in a two-player one.
+func release_missing_pads() -> Array:
+	var connected := pads()
+	var out: Array = []
+	for key: String in _held.keys():
+		var sources: Dictionary = _held[key]
+		var dropped := false
+		for source: String in sources.keys():
+			# A gamepad's sources are "pad<device id>:button" and "pad<device id>:stick"; the keyboard's are "kb1" and "kb2".
+			if source.begins_with("pad") and not source.trim_prefix("pad").get_slice(":", 0).to_int() in connected:
+				sources.erase(source)
+				dropped = true
+		if not dropped:
+			continue
+		var strongest := 0.0
+		for held: float in sources.values():
+			strongest = maxf(strongest, held)
+		out.append([key.get_slice("/", 0).to_int(), StringName(key.get_slice("/", 1)), strongest])
+	return out
+
 ## Forget everything held. The caller releases the game's controls itself (GameSession.release_controls).
 func release_all() -> void:
 	_held.clear()
+
+## Whether the gamepad that was last played on is no longer connected. Asking forgets it, so one unplugging is reported once.
+func take_lost_active_pad() -> bool:
+	if _last_pad < 0 or _last_pad in pads():
+		return false
+	_last_pad = -1
+	return true
 
 func _slot_of_device(name: String) -> int:
 	if count <= 1:

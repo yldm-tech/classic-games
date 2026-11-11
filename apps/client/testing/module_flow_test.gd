@@ -13,6 +13,8 @@ const MIXED := "res://testing/mixed_games"
 const STORE_PATH := "user://module-flow-test.json"
 const NOW := 1794393000
 const GAME := "fixture_duo"
+## The second fixture: one seat, a smooth stage, achievements that read what finish() added to the result.
+const SOLO := "fixture_arena"
 
 var _passed := 0
 var _failed := 0
@@ -31,6 +33,7 @@ func _initialize() -> void:
 	await _test_join_leave_and_lost_device()
 	await _test_result_and_record()
 	await _test_single_player_devices()
+	await _test_single_seat_module()
 	await _test_invalid_manifest_reported()
 	Catalog.use_root()
 	_release_keys()
@@ -41,7 +44,7 @@ func _initialize() -> void:
 # ---- guide ----
 
 func _test_guide() -> void:
-	_check("the catalog reads the fixture root", Catalog.ids() == [GAME] and Catalog.problems().is_empty() and Guide.is_module(GAME))
+	_check("the catalog reads the fixture root", Catalog.ids() == [SOLO, GAME] and Catalog.problems().is_empty() and Guide.is_module(GAME))
 	_check("the player range and join rule come from the manifest", Guide.player_range(GAME) == Vector2i(1, 2) and Guide.joins_in_progress(GAME) and Catalog.players_label(Catalog.by_id(GAME)) == "1–2P" and Catalog.supports_two(Catalog.by_id(GAME)))
 	var controls := Guide.controls(GAME)
 	var ids: Array = []
@@ -60,7 +63,10 @@ func _test_guide() -> void:
 # ---- player counts ----
 
 func _test_player_counts_shown() -> void:
-	var shell := _boot(_fresh_store())
+	# The game last played is the one Home opens on.
+	var played := _fresh_store()
+	played.record_run(GAME, {"score": 1, "play_seconds": 1.0}, NOW - 60)
+	var shell := _boot(played)
 	await _frames(2)
 	_check("Home shows the game's real player count", str(shell.current_screen().find_child("Meta", true, false).text).ends_with("· 1–2P"))
 	shell.go(LauncherRoot.LIBRARY)
@@ -69,6 +75,9 @@ func _test_player_counts_shown() -> void:
 	shell.toggle_pc_mode()
 	await _frames(2)
 	var pc := shell.find_child("PcMode", false, false)
+	if pc != null:
+		pc.call("select", GAME)
+		await _frames(2)
 	_check("PC mode shows it", pc != null and str(pc.find_child("Eyebrow", true, false).text).ends_with("· 1–2P"))
 	shell.toggle_pc_mode()
 	shell.free()
@@ -183,6 +192,7 @@ func _test_two_player_run() -> void:
 	_check("and resumes", shell.current_id() == LauncherRoot.GAME and not host.is_paused() and host.pause_owner == -1)
 	shell.go(LauncherRoot.HOME)
 	_check("leaving the game screen ends and records the run once", not host.is_running() and int(store.stats(GAME)["runs"]) == 1 and int(store.stats(GAME)["best_score"]) == 100)
+	_check("a run the players walked out of unlocks nothing, not even the achievement for any finished run", store.achievements(GAME).is_empty() and int(store.stats(GAME)["clears"]) == 0)
 	shell.free()
 
 # ---- pause ownership ----
@@ -370,6 +380,62 @@ func _test_single_player_devices() -> void:
 	var parked := float(host.snapshot()["players"][0]["x"])
 	await _frames(6)
 	_check("losing the window's focus lets go of every held control", is_equal_approx(float(host.snapshot()["players"][0]["x"]), parked))
+	shell.free()
+	_pads = []
+
+# ---- a game with one seat ----
+
+func _test_single_seat_module() -> void:
+	_pads = [3]
+	var store := _fresh_store()
+	var shell := _boot(store)
+	await _frames(2)
+	shell.go(LauncherRoot.MENU, {"game": SOLO})
+	var menu := shell.current_screen() as LauncherMenuScreen
+	_check("a one-seat module has no players row, and an option without labels shows its number", menu.row_ids() == [&"start", &"how", &"records", &"achievements", &"option:sparks", &"favorite", &"back"] and _row(menu, "option_sparks").sub_text().begins_with("8"))
+	shell.go(LauncherRoot.GAME, {"game": SOLO})
+	await _frames(2)
+	var game := shell.current_screen() as LauncherGameScreen
+	var host := shell.game_host
+	var stage := host.find_child("Stage", true, false) as SubViewportContainer
+	var viewport := host.find_child("StageViewport", true, false) as SubViewport
+	_check("a smooth stage is rendered at the canvas's resolution with the module's coordinates mapped onto it", host.is_module() and host.stage_size() == Vector2i(640, 360) and stage.stretch_shrink == 1 and viewport.size_2d_override == Vector2i(640, 360) and viewport.size_2d_override_stretch and viewport.canvas_item_default_texture_filter == Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR and not viewport.snap_2d_transforms_to_pixel)
+	_check("its HUD has one corner, an elapsed clock and the manifest's counters", _text(game, "Tag") == "得分" and not game.find_child("Player2", true, false).is_visible_in_tree() and _text(game, "VitalLabel") == "护盾" and _text(game, "VitalValue") == "3 / 3" and _text(game.find_child("Stats", true, false), "Value") == "8 / 8" and _text(game, "Title") == "圆场清扫 · 时间")
+
+	var from: Vector2 = host.snapshot()["ship"]
+	shell._unhandled_input(_axis(3, JOY_AXIS_LEFT_X, 0.6))
+	var pushed := await _until(func() -> bool: return (host.snapshot()["ship"] as Vector2).x > from.x + 2.0, 5.0)
+	_check("the stick of any gamepad flies the one player", pushed)
+	_pads = []
+	shell._on_joy_connection_changed(3, false)
+	await _frames(3)
+	_check("unplugging the gamepad that was being played on pauses a one-player run too", shell.current_id() == LauncherRoot.PAUSE and host.is_paused() and host.pause_owner == -1 and shell.toast_text() == "P1 的手柄已断开，游戏已暂停。")
+	shell.dismiss_toast()
+	shell._unhandled_input(_key(KEY_ESCAPE, true))
+	await _frames(3)
+	var parked: Vector2 = host.snapshot()["ship"]
+	await _frames(8)
+	_check("and the stick it held over is let go: after resuming from the keyboard the ship stays put", shell.current_id() == LauncherRoot.GAME and not host.is_paused() and (host.snapshot()["ship"] as Vector2).is_equal_approx(parked))
+
+	_pads = [3, 5]
+	shell._on_joy_connection_changed(5, true)
+	shell._unhandled_input(_axis(5, JOY_AXIS_LEFT_Y, 0.9))
+	await _until(func() -> bool: return (host.snapshot()["ship"] as Vector2).y > parked.y + 2.0, 5.0)
+	_press(shell, KEY_D)
+	_pads = [3]
+	shell._on_joy_connection_changed(5, false)
+	await _frames(2)
+	_check("a gamepad unplugged while the keyboard is the one being played on does not pause", shell.current_id() == LauncherRoot.GAME and not host.is_paused())
+	var drifting: Vector2 = host.snapshot()["ship"]
+	var kept := await _until(func() -> bool: return (host.snapshot()["ship"] as Vector2).x > drifting.x + 2.0, 5.0)
+	await _frames(2)
+	_check("it only lets go of what that gamepad held: the key still moves the ship, the stick no longer does", kept and is_equal_approx((host.snapshot()["ship"] as Vector2).y, drifting.y))
+	_release(shell, KEY_D)
+
+	_check("achievement rules read the fields finish() added to the result", Catalog.earned(SOLO, {"cleared": true, "hits_taken": 0, "accuracy": 85}) == ["swept", "untouched", "marksman"] and Catalog.earned(SOLO, {"cleared": true, "hits_taken": 2, "accuracy": 40}) == ["swept"] and Catalog.earned(SOLO, {"cleared": false, "defeated": true, "hits_taken": 3, "accuracy": 100}).is_empty())
+	_check("a result field that is not a number satisfies no rule instead of raising an error", Catalog.earned(SOLO, {"cleared": true, "hits_taken": Vector2.ZERO, "accuracy": [90]}) == ["swept"])
+	shell.go(LauncherRoot.HOME)
+	_check("leaving records the one-seat run once and unlocks nothing", int(store.stats(SOLO)["runs"]) == 1 and store.achievements(SOLO).is_empty())
 	shell.free()
 	_pads = []
 

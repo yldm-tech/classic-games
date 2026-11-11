@@ -723,7 +723,7 @@ func _test_player_keys() -> void:
 
 	screen.begin_capture(p2_a)
 	screen.capture_key(KEY_M)
-	_check("a pause key is refused for a player control, and the capture goes on", screen.is_capturing() and shell.toast_text() == "M 已用于「选项（Menu）」，暂停键和玩家按键不能共用。" and store.bindings().is_empty())
+	_check("a pause key is refused for a player control, and the capture goes on", screen.is_capturing() and shell.toast_text() == "M 已用于「选项（Menu）」，暂停键、PC 模式键和玩家按键不能共用。" and store.bindings().is_empty())
 	screen.capture_key(KEY_ESCAPE)
 	_check("so is the other pause key", screen.is_capturing() and In.keycodes(p2_a) == [KEY_K])
 	screen.capture_key(KEY_ENTER)
@@ -744,7 +744,7 @@ func _test_player_keys() -> void:
 	screen = shell.current_screen() as LauncherSettingsScreen
 	screen.begin_capture(In.MENU)
 	screen.capture_key(KEY_F)
-	_check("a player key is refused for pause", screen.is_capturing() and In.keycodes(In.MENU) == [KEY_M] and shell.toast_text() == "F 已用于「玩家 2 · A 键」，暂停键和玩家按键不能共用。")
+	_check("a player key is refused for pause", screen.is_capturing() and In.keycodes(In.MENU) == [KEY_M] and shell.toast_text() == "F 已用于「玩家 2 · A 键」，暂停键、PC 模式键和玩家按键不能共用。")
 	screen.capture_key(KEY_N)
 	_check("a free key is accepted", In.keycodes(In.MENU) == [KEY_N])
 	screen.begin_capture(In.UP)
@@ -768,6 +768,50 @@ func _test_player_keys() -> void:
 	screen = shell.current_screen() as LauncherSettingsScreen
 	screen.reset_page()
 	_check("restoring the interface page leaves the player keys", In.keycodes(In.MENU) == [KEY_M] and In.keycodes(In.UP) == [KEY_UP] and In.keycodes(p2_a) == [KEY_F] and shell.store.bindings() == {"game_p1_a": [KEY_ENTER], "game_p2_a": [KEY_F]})
+
+	# A reset must not bring back a default that the other side of the pause boundary has taken in the meantime.
+	var p1_b := In.game_action(1, &"b")
+	screen.begin_capture(In.MENU)
+	screen.capture_key(KEY_N)
+	shell.go(&"settings", {"category": "players"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.begin_capture(p1_b)
+	screen.capture_key(KEY_M)
+	_check("a key the pause gave up can become a player's", In.keycodes(p1_b) == [KEY_M] and In.keycodes(In.MENU) == [KEY_N])
+	screen.begin_capture(p1_b)
+	screen.capture_key(KEY_F11)
+	_check("the PC mode key is refused for a player, like a pause key: it stays live during a game", screen.is_capturing() and In.keycodes(p1_b) == [KEY_M] and shell.toast_text().begins_with("F11 已用于"))
+	screen.cancel_capture()
+	shell.dismiss_toast()
+	shell.go(&"settings", {"category": "controls"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.begin_capture(In.PC_MODE)
+	screen.capture_key(KEY_M)
+	_check("and a player key is refused for PC mode", screen.is_capturing() and In.keycodes(In.PC_MODE) == [KEY_F11])
+	screen.cancel_capture()
+	shell.dismiss_toast()
+	screen.reset_page()
+	_check("restoring the interface keys when Menu's default now belongs to a player restores both pages, so no key both plays and pauses", In.keycodes(In.MENU) == [KEY_M] and In.keycodes(p1_b) == [KEY_G] and In.keycodes(p1_a) == [KEY_F] and shell.store.bindings().is_empty() and shell.toast_text() == "默认按键与另一页的自定义按键冲突，两页按键已一并恢复默认")
+	shell.undo()
+	_check("and one undo brings both pages back", In.keycodes(In.MENU) == [KEY_N] and In.keycodes(p1_b) == [KEY_M] and In.keycodes(p1_a) == [KEY_ENTER])
+	screen.reset_page()
+	shell.dismiss_toast()
+	screen.begin_capture(In.MENU)
+	screen.capture_key(KEY_N)
+	shell.go(&"settings", {"category": "players"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.begin_capture(p2_a)
+	screen.capture_key(KEY_J)
+	shell.go(&"settings", {"category": "controls"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.begin_capture(In.MENU)
+	screen.capture_key(KEY_K)
+	_check("the other way round: a key a player gave up can become the pause key", In.keycodes(In.MENU) == [KEY_K] and In.keycodes(p2_a) == [KEY_J])
+	shell.go(&"settings", {"category": "players"})
+	screen = shell.current_screen() as LauncherSettingsScreen
+	screen.reset_page()
+	_check("restoring the player keys when one of their defaults now pauses restores both pages too", In.keycodes(p2_a) == [KEY_K] and In.keycodes(In.MENU) == [KEY_M] and shell.store.bindings().is_empty())
+	shell.dismiss_toast()
 	shell.free()
 	_reset_engine()
 

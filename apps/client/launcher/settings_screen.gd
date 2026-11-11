@@ -20,6 +20,8 @@ const DISPLAY := &"display"
 const AUDIO := &"audio"
 const CONTROLS := &"controls"
 const PLAYERS := &"players"
+## The launcher actions that still act while a game module is being played: the two that pause and the PC mode switch. Their keys and the players' keys must never be the same key, or playing would pause or leave the game.
+const LIVE_IN_GAME: Array[StringName] = [In.MENU, In.BACK, In.PC_MODE]
 const SAVES := &"saves"
 const ABOUT := &"about"
 const CATEGORIES: Array[StringName] = [GENERAL, DISPLAY, AUDIO, CONTROLS, PLAYERS, SAVES, ABOUT]
@@ -528,9 +530,11 @@ func reset_page() -> void:
 		for action: String in previous:
 			if In.is_game_action(StringName(action)) != (category_id() == PLAYERS):
 				kept[action] = previous[action]
-		_replace_bindings(target, kept)
+		# A key this page gets back by default may since have been given to the other side of the pause boundary (Menu moved off M, then a player key put on M). Keeping that override would leave one key that both plays and pauses, so both pages go back to their defaults, which never clash.
+		var both := _clashes_across_pause(kept)
+		_replace_bindings(target, {} if both else kept)
 		_sync()
-		target.toast(t("launcher.settings.reset_controls_done"), Callable(get_script(), "_replace_bindings").bind(target, previous))
+		target.toast(t("launcher.settings.reset_controls_both" if both else "launcher.settings.reset_controls_done"), Callable(get_script(), "_replace_bindings").bind(target, previous))
 		return
 	var before := {}
 	var defaults := {}
@@ -683,9 +687,33 @@ func key_holder(code: int, for_action: StringName = &"") -> StringName:
 			return action
 	return &""
 
-## The action on the other side of the pause boundary that already uses `code`, or &"": a pause key (Menu, Back) for a game action, a game action for a pause key.
+## Whether, with these stored overrides and defaults for everything else, some key would belong both to a launcher action that is live during a game and to a player's control.
+static func _clashes_across_pause(bindings: Dictionary) -> bool:
+	var live := {}
+	for action in LIVE_IN_GAME:
+		for code: int in _codes_with(bindings, action):
+			live[code] = true
+	for action in In.all_game_actions():
+		for code: int in _codes_with(bindings, action):
+			if live.has(code):
+				return true
+	return false
+
+## The keys an action would have under these stored overrides: its override when that holds a usable key, its project default otherwise (what LauncherInput.apply_bindings does).
+static func _codes_with(bindings: Dictionary, action: StringName) -> Array:
+	var stored: Variant = bindings.get(String(action))
+	if stored is Array:
+		var codes: Array = []
+		for code: Variant in stored:
+			if (code is int or code is float) and int(code) > 0:
+				codes.append(int(code))
+		if not codes.is_empty():
+			return codes
+	return In.default_keycodes(action)
+
+## The action on the other side of the pause boundary that already uses `code`, or &"": a launcher action that stays live during a game (LIVE_IN_GAME) for a game action, a game action for one of those.
 func reserved_holder(for_action: StringName, code: int) -> StringName:
-	var others: Array[StringName] = [In.MENU, In.BACK]
+	var others: Array[StringName] = LIVE_IN_GAME.duplicate()
 	if for_action in others:
 		others = In.all_game_actions()
 	elif not In.is_game_action(for_action):

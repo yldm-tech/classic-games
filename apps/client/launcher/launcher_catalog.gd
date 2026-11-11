@@ -122,11 +122,15 @@ static func _satisfied(when: Dictionary, result: Dictionary) -> bool:
 		return false
 	var minimums: Dictionary = when.get("min", {})
 	for field in minimums:
-		if float(result.get(field, 0)) < float(minimums[field]):
+		if not _is_number(result.get(field, 0)) or float(result.get(field, 0)) < float(minimums[field]):
 			return false
 	var maximums: Dictionary = when.get("max", {})
 	for field in maximums:
 		# A field the result does not carry cannot satisfy an upper bound: "at most 0 deaths" must not be awarded by a game that never reported deaths.
-		if not result.has(field) or float(result[field]) > float(maximums[field]):
+		if not result.has(field) or not _is_number(result[field]) or float(result[field]) > float(maximums[field]):
 			return false
 	return true
+
+## A result field a condition can compare: a number, or a flag read as 0 or 1. A game may put anything in its result (a position, a list); such a field satisfies no condition instead of raising an error.
+static func _is_number(value: Variant) -> bool:
+	return value is int or value is float or value is bool
