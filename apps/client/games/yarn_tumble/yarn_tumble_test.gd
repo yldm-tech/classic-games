@@ -203,8 +203,10 @@ func _test_kick_chain_and_clear() -> void:
 	game.advance(0.05)
 	_check("yarn on a finished ball kicks it away", ball.state == Foe.ROLL and ball.dir == 1 and int(game.audio.played.get("kick", 0)) == 1)
 	game.advance(1.6)
+	_check("the rolling ball knocks out everything in its way and turns at the wall", _w(game).foes.size() == 1 and ball.state == Foe.ROLL and ball.dir == -1 and ball.chain == 2)
+	game.advance(2.6)
 	var state := game.snapshot()
-	_check("the rolling ball knocks out everything in its way and bursts on the far wall", _w(game).foes.is_empty() and state["kos"] == 3 and state["best_roll"] == 3)
+	_check("it bursts on the second wall of the floor", _w(game).foes.is_empty() and state["kos"] == 3 and state["best_roll"] == 3)
 	_check("each pest in the chain is worth more than the last", hero.score - before == 1000 + 2000 + 500 + _w(game).last_bonus and int(game.audio.played.get("ko", 0)) == 2 and int(game.audio.played.get("burst", 0)) == 1)
 	var kinds := {}
 	for item: Item in _w(game).pickups:
@@ -232,7 +234,7 @@ func _test_ball_drops_between_ledges() -> void:
 			fell = true
 			break
 	_check("a ball kicked off a ledge falls to the floor below and keeps rolling", fell and ball.dir == 1)
-	game.advance(1.5)
+	game.advance(5.0)
 	_check("and takes the pest down there with it", below.state == Foe.GONE and _w(game).best_roll == 2)
 	game.free()
 

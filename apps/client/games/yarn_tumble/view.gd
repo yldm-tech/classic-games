@@ -89,7 +89,7 @@ func _burst(x: float, y: float, count: int, color: Color, speed: float, life: fl
 		_particles.append({"x": x, "y": y, "vx": cos(angle) * pace, "vy": sin(angle) * pace - speed * 0.3, "gravity": gravity, "life": life * randf_range(0.6, 1.0), "span": life, "color": color, "size": size})
 
 func _popup(x: float, y: float, text: String, color: Color) -> void:
-	_popups.append({"x": x, "y": y, "text": text, "life": 0.9, "color": color})
+	_popups.append({"x": clampf(x, 30.0, 450.0), "y": maxf(y, 50.0), "text": text, "life": 0.9, "color": color})
 
 func _say(zh: String, en: String, seconds: float) -> void:
 	_notice = zh if locale == "zh" else en
@@ -182,8 +182,9 @@ func _sprite(key: String, x: float, y: float, flip: bool = false, tint: Color = 
 		return
 	var size := texture.get_size()
 	var rect := Rect2(roundf(x - size.x * 0.5), roundf(y - size.y), size.x, size.y)
+	# A negative width mirrors the texture in place.
 	if flip:
-		rect = Rect2(rect.position.x + size.x, rect.position.y, -size.x, size.y)
+		rect.size.x = -size.x
 	draw_texture_rect(texture, rect, false, tint)
 
 func _spun(key: String, x: float, y: float, angle: float, tint: Color = Color.WHITE, scale_by: Vector2 = Vector2.ONE) -> void:
@@ -419,7 +420,7 @@ func _draw_boss(boss: Boss) -> void:
 		if boss.state == "aim" and int(_time * 20.0) % 2 == 0:
 			tint = Color(2.0, 1.4, 1.4)
 		draw_texture_rect(wing, Rect2(roundf(x) - 7.0 - width, roundf(y) - 56.0, width, 50.0), false, tint)
-		draw_texture_rect(wing, Rect2(roundf(x) + 7.0 + width, roundf(y) - 56.0, -width, 50.0), false, tint)
+		draw_texture_rect(wing, Rect2(roundf(x) + 7.0, roundf(y) - 56.0, -width, 50.0), false, tint)
 		_sprite("duchess_body", x, y + 2.0, false, tint)
 		return
 	var squash := 0.86 if boss.state == "crouch" else 1.0

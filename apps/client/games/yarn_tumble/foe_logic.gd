@@ -194,7 +194,7 @@ static func _roam_ink(world: Variant, foe: Foe, dt: float, pace: float, target: 
 	if wall != 0:
 		foe.facing = -wall
 
-## A kicked ball: it rolls, drops from ledge to ledge, turns at walls and knocks out every creature in its way. It bursts against a wall of the bottom floor, on a guardian, or when it has rolled long enough.
+## A kicked ball: it rolls, drops from ledge to ledge, turns at walls and knocks out every creature in its way. It bursts against a wall of the bottom floor once it has already turned at a wall before (so a ball kicked along the floor sweeps it there and back), on a guardian, or when it has rolled long enough.
 static func _roll(world: Variant, ball: Foe, dt: float) -> void:
 	ball.roll_time += dt
 	ball.vx = ball.dir * world.ROLL_SPEED
@@ -233,7 +233,7 @@ static func _roll(world: Variant, ball: Foe, dt: float) -> void:
 		ball.dir = -wall
 		ball.bounces += 1
 		world.emit("bounce", ball.x, ball.y)
-		if (ball.on_ground and world.feet_row(ball) == Levels.FLOOR_ROW) or ball.bounces >= 6:
+		if (ball.on_ground and world.feet_row(ball) == Levels.FLOOR_ROW and ball.bounces >= 2) or ball.bounces >= 6:
 			burst(world, ball)
 			return
 	if ball.roll_time > 7.0:
