@@ -33,6 +33,9 @@ var _paused := false
 var _play_seconds := 0.0
 var _last_score := 0
 var _runtime_ref := ""
+## The effective DSL of the live run and the vitals it started with, kept for the HUD fields snapshot() derives from them.
+var _dsl: Dictionary = {}
+var _initial: Dictionary = {}
 
 ## Start a game run.
 ## payload 两种形态:
@@ -90,6 +93,8 @@ func start_run(payload: Dictionary) -> bool:
 		return false
 	_run = run
 	_runtime_ref = runtime_ref
+	_dsl = dsl
+	_initial = {}
 	_running = true
 	_paused = false
 	_play_seconds = 0.0
@@ -97,6 +102,8 @@ func start_run(payload: Dictionary) -> bool:
 	if run is Node2D:
 		(run as Node2D).position = Vector2(STAGE_SIZE) / 2.0
 	add_child(run)
+	var first := snapshot()
+	_initial = {"hp": int(first.get("hp", 0)), "base_hp": int(first.get("base_hp", 0))}
 	game_started.emit({"runtime": runtime_ref, "stage_size": STAGE_SIZE})
 	return true
 
@@ -115,6 +122,7 @@ func set_paused(paused: bool) -> void:
 	paused_changed.emit(paused)
 
 ## Current state of the live run for a HUD: the runtime's own summary (score, cleared, defeated and runtime-specific fields such as kills, level, gold, base_hp, time_left) plus play_seconds and hp where the runtime has a player. Empty when nothing is mounted.
+## Also carries what the runtime keeps on its nodes rather than in its summary: max_hp next to hp, base_hp_max next to base_hp, shield_hits and boost for a runtime with a shield, boss_hp / boss_max_hp while a boss is alive, and `towers` ([{ id, type, cost, damage, range, cooldown }], in tower_ids order) for a runtime that places towers.
 func snapshot() -> Dictionary:
 	if not is_instance_valid(_run):
 		return {}
@@ -131,7 +139,29 @@ func snapshot() -> Dictionary:
 			break
 	if _run.has_method("tower_ids"):
 		summary["tower_ids"] = Array(_run.call("tower_ids"))
+	_add_node_fields(summary)
 	return summary
+
+func _add_node_fields(summary: Dictionary) -> void:
+	if summary.has("hp"):
+		summary["max_hp"] = maxi(int(_initial.get("hp", 0)), int(summary["hp"]))
+	if summary.has("base_hp"):
+		summary["base_hp_max"] = maxi(int(_initial.get("base_hp", 0)), int(summary["base_hp"]))
+	var player := _run.get_node_or_null("Player")
+	if player != null and _run.has_method("grant_shield"):
+		summary["shield_hits"] = int(player.get_meta("shield_hits", 0))
+		summary["boost"] = bool(player.get_meta("boost", false))
+	var boss := _run.get_node_or_null("Boss")
+	if boss != null and not boss.is_queued_for_deletion() and boss.has_meta("hp"):
+		summary["boss_hp"] = int(boss.get_meta("hp"))
+		summary["boss_max_hp"] = int(boss.get_meta("max_hp", boss.get_meta("hp")))
+	if summary.has("tower_ids"):
+		var specs: Dictionary = _dsl.get("towers", {}) if _dsl.get("towers") is Dictionary else {}
+		var towers: Array = []
+		for id: String in summary["tower_ids"]:
+			var spec: Dictionary = specs.get(id, {}) if specs.get(id) is Dictionary else {}
+			towers.append({"id": id, "type": str(spec.get("type", id)), "cost": maxi(0, int(spec.get("cost", 0))), "damage": int(spec.get("damage", 0)), "range": float(spec.get("range", 0.0)), "cooldown": float(spec.get("cooldown", 0.0))})
+		summary["towers"] = towers
 
 ## Host-initiated end (the player quits). Emits game_ended with aborted = true; does nothing when no run is live.
 func end_run() -> void:
@@ -200,6 +230,8 @@ func _drop_run() -> void:
 			remove_child(_run)
 		_run.queue_free()
 	_run = null
+	_dsl = {}
+	_initial = {}
 
 ## 把 payload 解析成生效 DSL(处理 Fork 补丁链)。失败返回空字典。
 func _resolve_dsl(payload: Dictionary) -> Dictionary:
