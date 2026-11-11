@@ -1,0 +1,54 @@
+{
+	"schema": 1,
+	"id": "keg_maze",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "火桶矿道", "en": "KEG BURROW"},
+	"initials": "htkd",
+	"genre": {"zh": "迷宫爆破", "en": "MAZE BLASTER"},
+	"tagline": {"zh": "两只鼹鼠矿工，九层矿道，一路用火药桶炸到地心。", "en": "Two mole miners, nine levels of mine, and powder kegs all the way down."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "FFF3D6", "shadow": "8A3B12", "glow": "F2B233"},
+	"art": {"top": "17100E", "bottom": "4A2F25", "primary": "F2B233", "secondary": "58C7D9", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_descent", "icon": "bolt", "name": {"zh": "初次下井", "en": "First Descent"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "mine_cleared", "icon": "cup", "name": {"zh": "打通矿井", "en": "All the Way Down"}, "desc": {"zh": "打通全部九层，击败熔心巨螯。", "en": "Clear all nine levels and defeat the Molten Claw."}, "when": {"cleared": true}},
+		{"id": "geode_cracked", "icon": "star", "name": {"zh": "敲开晶螯", "en": "Geode Cracked"}, "desc": {"zh": "击败第六层的晶螯。", "en": "Defeat the Geode Claw on level 6."}, "when": {"min": {"bosses_beaten": 1}}},
+		{"id": "chain_gang", "icon": "bolt", "name": {"zh": "连环爆破", "en": "Chain Gang"}, "desc": {"zh": "让四个火药桶在一次连锁里接连爆炸。", "en": "Set off four kegs in a single chain reaction."}, "when": {"min": {"best_chain": 4}}},
+		{"id": "gem_hoard", "icon": "star", "name": {"zh": "满兜宝石", "en": "Pockets Full"}, "desc": {"zh": "一局里拾取 12 颗宝石。", "en": "Collect 12 gems in one run."}, "when": {"min": {"gems": 12}}},
+		{"id": "steady_hands", "icon": "shield", "name": {"zh": "稳手", "en": "Steady Hands"}, "desc": {"zh": "通关且没有人被爆炸炸到。", "en": "Clear the mine without anyone being caught in a blast."}, "when": {"cleared": true, "max": {"blast_deaths": 0}}},
+		{"id": "one_crew", "icon": "shield", "name": {"zh": "一班到底", "en": "One Crew"}, "desc": {"zh": "不使用续关通关。", "en": "Clear the mine without using a continue."}, "when": {"cleared": true, "max": {"continues_used": 0}}},
+		{"id": "double_shift", "icon": "cup", "name": {"zh": "双人班", "en": "Double Shift"}, "desc": {"zh": "两位玩家一起通关。", "en": "Clear the mine with two players."}, "when": {"cleared": true, "players": 2}}
+	],
+	"how": {
+		"zh": "放下火药桶，它会沿十字方向爆炸：岩石挡住火焰，方块会被炸开，露出装备、宝石和升降机舱门；火焰碰到别的火药桶会连锁引爆。消灭本层全部怪物后舱门打开，在空气耗尽前走进去就进入下一层，第六层和第九层各有一只首领。打通九层即通关。被怪物碰到、被落石砸中或被任何爆炸波及（包括自己和同伴的）会失去一条生命并掉落部分装备；空气耗尽时全员失去一条生命。所有人生命耗尽时消耗一次续关重打本层，续关用完则失败。",
+		"en": "Set a powder keg and it goes off in a cross: rock stops the fire, blocks are blown away to reveal gear, gems and the lift hatch, and fire that reaches another keg sets it off too. The hatch opens once every creature on the level is gone; step in before the air runs out to go one level down. Levels 6 and 9 hold a boss, and clearing all nine clears the run. Touching a creature, a falling rock or any blast (your own and your partner's included) costs a life and some gear, and running out of air costs everyone a life. When everybody is out of lives a continue restarts the level; with no continue left the run is lost."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动", "en": "Move"}, "inputs": ["move"]},
+		{"id": "keg", "name": {"zh": "放置火药桶", "en": "Set a keg"}, "inputs": ["a"]},
+		{"id": "detonate", "name": {"zh": "引爆（需要起爆器）", "en": "Detonate (needs the detonator)"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "countdown", "field": "time_left"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "生命", "en": "LIVES"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [{"label": {"zh": "矿层", "en": "Level"}, "fields": ["stage", "stages"]}]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "决定生命数、续关次数、怪物速度和每层的时间。", "en": "Sets lives, continues, creature speed and the time for each level."},
+			"values": [0, 1, 2],
+			"default": 1,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "硬核", "en": "Hard"}]
+		}
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《火桶矿道》双人局内截图：像素风的俯视矿道里布满石柱和木箱，左上角戴黄头盔的鼹鼠和右下角戴青头盔的鼹鼠各自躲在拐角后，两只火药桶正炸出十字形的火焰并点燃木箱，三只绿色泥蛴在箱子之间游荡；两侧面板显示每位玩家的火药桶数、火焰长度和装备，以及九层矿井的进度。", "en": "Keg Burrow with two players: a top-down pixel-art mine full of stone pillars and wooden crates. The mole in the yellow helmet at the top left and the mole in the teal helmet at the bottom right each shelter round a corner while their two powder kegs go off in crosses of fire and set crates alight; three green mud grubs wander among the crates. Side panels show each player's kegs, blast reach and gear, and the progress down the nine levels."},
+		"art_alt": {"zh": "《火桶矿道》主视觉：两只戴矿工头盔、围着围巾的鼹鼠在木梁支撑的矿道里合力推着一只冒火星的火药桶，身后的深处有一只长着蓝色水晶巨螯的岩壳怪物。", "en": "Keg Burrow key art: two moles in miner's helmets and scarves roll a sparking powder keg through a timbered mine tunnel, while a rock-shelled creature with blue crystal claws looms in the depths behind them."}
+	}
+}
