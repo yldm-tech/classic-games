@@ -106,6 +106,8 @@ func _initialize() -> void:
 	shell.free()
 	viewport.free()
 	DirAccess.remove_absolute(STORE_PATH)
+	# A runtime's music player was freed while playing; the audio thread lets go of its stream a moment later, and quitting before that is reported as leaked instances.
+	await create_timer(0.2).timeout
 	if saved != OK:
 		push_error("could not write %s" % path)
 		quit(1)

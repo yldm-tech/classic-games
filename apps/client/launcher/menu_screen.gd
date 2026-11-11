@@ -35,8 +35,8 @@ var _pane: VBoxContainer
 var _pane_for := &""
 
 func build() -> void:
-	# The key art shows through the middle; the right third is darkened earlier than on Home because the pane carries small text.
-	add_child(W.fill(C.GradientRect.new([[0.0, T.BG], [0.16, T.BG], [0.28, T.bg(0.82)], [0.42, T.bg(0.12)], [0.5, T.bg(0.16)], [0.62, T.bg(0.84)], [1.0, T.bg(0.94)]], true)))
+	# The key art shows through the middle; the right third is darkened earlier than on Home because the pane carries small text. The ramp into it eases out over several stops: a single straight ramp ends in a visible vertical edge on bright art.
+	add_child(W.fill(C.GradientRect.new([[0.0, T.BG], [0.16, T.BG], [0.28, T.bg(0.82)], [0.42, T.bg(0.12)], [0.5, T.bg(0.16)], [0.55, T.bg(0.44)], [0.6, T.bg(0.7)], [0.66, T.bg(0.86)], [1.0, T.bg(0.94)]], true)))
 	var bottom := C.GradientRect.new([[0.0, T.deep(0.0)], [1.0, T.deep(0.9)]])
 	bottom.position = Vector2(0, T.CANVAS.y - 260)
 	bottom.size = Vector2(T.CANVAS.x, 260)

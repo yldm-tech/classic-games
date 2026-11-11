@@ -150,7 +150,9 @@ func _build_hud() -> void:
 	var boss := W.hbox(12)
 	boss.name = "Boss"
 	boss.alignment = BoxContainer.ALIGNMENT_END
-	boss.add_child(W.text(t("launcher.game.boss"), T.SIZE_SUB, 700, T.FAVORITE, 2))
+	var boss_label := W.text(t("launcher.game.boss"), T.SIZE_SUB, 700, T.FAVORITE, 2)
+	_shadow(boss_label)
+	boss.add_child(boss_label)
 	_boss_meter = G.Meter.new(BOSS_WIDTH, T.FAVORITE)
 	_boss_meter.name = "BossMeter"
 	boss.add_child(_boss_meter)
