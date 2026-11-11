@@ -1,6 +1,6 @@
 ---
 title: 快速开始
-description: 从源码运行 Classic Games 的后端、Godot 客户端和本站，并在本地复现 CI 门禁。
+description: 从源码运行经典厅的启动器，按需启动可选的在线服务与工具，并在本地复现 CI 门禁。
 sidebar:
   order: 1
 ---
@@ -8,32 +8,54 @@ sidebar:
 import { Code } from '@astrojs/starlight/components';
 import { REPO_URL, repoFile } from '../../../config/site.ts';
 
-Classic Games 处于预发布阶段：没有公开构建，也没有应用商店版本。下面的步骤全部从源码开始，用到的 `make` 目标都定义在仓库根目录的 <a href={repoFile('Makefile')}>Makefile</a> 里。
+Classic Games（经典厅）是一个主机风格的游戏启动器，自带一组原创游戏。项目处于预发布阶段：没有公开构建，也没有商店版本。下面的步骤全部从源码开始，用到的 `make` 目标都定义在仓库根目录的 <a href={repoFile('Makefile')}>Makefile</a> 里。
 
-## 准备
+## 前置条件
 
 | 工具 | 版本 | 用途 |
 |---|---|---|
-| Go | 1.26 | 后端、CLI、MCP 服务和 SDK。各模块的 `go.mod` 声明 `go 1.26`，较新的 Go 工具链会按它自动下载对应版本 |
-| Godot | 4.6.3，必须精确 | 客户端。版本锁在 `apps/client/.godot-version`，测试脚本会检查 |
-| GNU Make | 任意近期版本 | 统一入口 |
-| Node.js 与 pnpm | Node 22.23.4 以上，pnpm 12 | 只在构建本站时需要 |
+| Godot | 精确的 4.6.3 | 启动器与游戏。用标准版，不要用 .NET 版。版本锁在 `apps/client/.godot-version`，测试脚本会检查 |
+| GNU Make | 任意较新版本 | 统一入口 |
+| Go | 1.26 | 只有可选的在线服务需要：后端、CLI、MCP 服务与 SDK。各模块的 `go.mod` 声明 `go 1.26`，较新的 Go 工具链会按需下载对应版本 |
+| Node.js 与 pnpm | Node 22.23.4 以上，pnpm 12 | 只有构建本站时需要 |
 
 ## 获取源码
 
 <Code code={`git clone ${REPO_URL}.git\ncd classic-games`} lang="bash" />
 
-## 启动后端
+## 运行启动器
+
+先让 Godot 导入工程资源，只需要做一次：
+
+```bash
+make import GODOT=/path/to/godot
+```
+
+再启动工程，它的主场景就是启动器：
+
+```bash
+/path/to/godot --path apps/client
+```
+
+也可以用 Godot 4.6.3 编辑器打开 `apps/client` 后运行。
+
+启动器用手柄或键盘操作：方向键或十字键移动焦点，Enter 或 A 确认，Esc 或 B 返回，F11 在主机模式和 PC 模式之间切换。全部进度保存在一个本地存档文件里。启动器不发网络请求，所以不需要先启动别的东西。
+
+## 可选的在线服务
+
+仓库里还有一个 Go 后端、一个命令行工具、一个 MCP 服务和一个 Go SDK。它们实现了 Mod DSL 的校验与补丁，以及一套在线服务的 API（账号、目录、Mod、社区、商业化）。它们可以运行、有测试，但启动器没有接入：如果只想玩游戏，或者只改启动器和游戏，可以跳过这一节。
+
+### 启动后端
 
 ```bash
 make dev
 ```
 
-后端默认监听 `:8080`，换端口用 `PORT=9090 make dev`。数据库默认是工作目录下的 SQLite 文件，不需要额外安装数据库。
+后端默认监听 `:8080`，改端口用 `PORT=9090 make dev`。默认数据库是工作目录下的一个 SQLite 文件，不需要另外安装数据库。
 
-没有设置 `ANTHROPIC_API_KEY` 时，后端使用确定性的本地 provider，所以不需要任何密钥就能走通「自然语言 → 补丁 → 校验」这条链路。设置后改用真实模型。全部环境变量见仓库根目录的 <a href={repoFile('.env.example')}>.env.example</a>。
+没有设置 `ANTHROPIC_API_KEY` 时，后端用确定性的本地 provider 代替模型，所以不需要任何密钥就能启动；设置后调用真实模型。全部环境变量见仓库根目录的 <a href={repoFile('.env.example')}>.env.example</a>。
 
-确认后端已经起来：
+确认后端已经启动：
 
 ```bash
 curl http://localhost:8080/healthz
@@ -41,62 +63,43 @@ curl http://localhost:8080/healthz
 
 接口文档在 `http://localhost:8080/swagger/index.html`。
 
-## 运行客户端
-
-先让 Godot 导入资源：
-
-```bash
-make import GODOT=/path/to/godot
-```
-
-再启动工程。客户端从环境变量 `CLASSIC_GAMES_API` 读取后端地址：
-
-```bash
-CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
-```
-
-也可以用 Godot 4.6.3 编辑器直接打开 `apps/client`。
-
-## 构建 CLI 与 MCP 服务
+### 构建 CLI 与 MCP 服务
 
 ```bash
 make cli-build    # apps/cli/bin/classic-games
 make mcp-build    # apps/mcp/bin/classic-games-mcp
 ```
 
-后端启动后，第一次使用大致是这样：
+CLI 的 DSL 命令可以离线使用，其余命令需要后端：
 
 ```bash
 export PATH="$PWD/apps/cli/bin:$PATH"
-classic-games server health
+classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json   # 离线
+classic-games server health                                                # 需要后端
 classic-games auth login
-classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
 classic-games mods list
 ```
 
-后续内容见 [CLI](/developers/cli/) 和 [MCP 服务](/developers/mcp/)。
+接下来见 [CLI](/developers/cli/) 和 [MCP 服务](/developers/mcp/)。
 
 ## 测试与门禁
 
 | 命令 | 作用 |
 |---|---|
+| `make launcher-test GODOT=/path/to/godot` | 启动器的无头测试：存档、目录、首页焦点、开局与结算 |
+| `make settings-test`、`make library-test`、`make pc-mode-test`、`make game-flow-test` | 设置屏、游戏库与成就、PC 模式，以及游戏菜单、HUD、暂停、结算流程的无头测试。都需要带 `GODOT=/path/to/godot` |
+| `make launch-test GODOT=/path/to/godot` | 启动主场景，检查启动器装配完成 |
+| `make boundary-test` | 客户端依赖方向检查，以及检查器自身的测试 |
+| `make architecture-test` | 仓库级架构边界检查 |
 | `make test` | 后端 `go test` |
 | `make vet` | 全部 Go 模块的 `go vet` |
 | `make dsl-test`、`make sdk-test` | 共享 Go 包的测试 |
 | `make cli-test`、`make mcp-test` | CLI 与 MCP 服务的测试 |
-| `make go-standalone` | 每个 Go 模块在 `GOWORK=off` 下的 `go vet` 与 `go test` |
-| `make boundary-test` | 客户端依赖方向检查，以及检查器自身的测试 |
-| `make architecture-test` | 仓库级架构边界检查 |
-| `make spike GODOT=/path/to/godot` | Godot headless 的 Runtime 与 DSL 测试 |
-| `make ui-test GODOT=/path/to/godot` | Shell UI 断言 |
+| `make go-standalone` | 每个 Go 模块在 `GOWORK=off` 下 `go vet` 与 `go test` |
 | `make ci GODOT=/path/to/godot` | 依次运行 Go 与 Godot 的全部门禁 |
 | `make ci-web` | 安装依赖、类型检查并构建本站 |
 
-`make help` 会列出所有目标。真实的双端集成测试是单独一个脚本，它会在 8099 端口启动后端，再让 Godot 客户端调用真实接口：
-
-```bash
-GODOT=/path/to/godot scripts/spike-integration.sh
-```
+`make help` 列出全部目标。
 
 ## 构建本站
 
@@ -111,7 +114,8 @@ pnpm web:build    # 输出静态文件到 apps/web/dist
 
 ## 下一步
 
-- 想在终端里操作：[CLI](/developers/cli/)
-- 想把 Classic Games 接到 AI 助手：[MCP 服务](/developers/mcp/)
+- 想了解启动器：[客户端架构](/docs/16-client-architecture/)
+- 想了解一款游戏如何用数据描述：[Mod DSL 设计](/docs/05-dsl-design/)
+- 想在终端里处理 DSL 文档：[CLI](/developers/cli/)
+- 想把 DSL 工具和在线服务接到 AI 助手：[MCP 服务](/developers/mcp/)
 - 想在 Go 程序里调用后端：[Go SDK](/developers/sdk/)
-- 想了解设计：[技术架构](/docs/04-architecture/) 和 [Mod DSL 设计](/docs/05-dsl-design/)

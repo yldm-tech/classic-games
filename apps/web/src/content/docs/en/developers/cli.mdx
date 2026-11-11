@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../../config/site.ts';
 
 `classic-games` is the Classic Games command-line tool. Its source is in <a href={repoDir('apps/cli')}>apps/cli</a> (Go module `github.com/yldm-tech/classic-games/apps/cli`). It talks to the backend through the [Go SDK](/en/developers/sdk/) and reuses the patch, migration and validation code in `packages/dsl`, so it reaches the same verdict on a DSL document as the backend does.
 
+:::note[Optional online service]
+The backend and the tools built on it are optional. The Classic Games launcher makes no network requests and does not use the backend, this CLI, the MCP server or the SDK; every game can be played without them.
+:::
+
 :::note
 This page lists the command structure. For every flag, the output formats and worked examples, see <a href={repoFile('apps/cli/README.md')}>apps/cli/README.md</a> and `classic-games <group> <command> --help`.
 :::
@@ -76,4 +80,4 @@ Errors go to standard error as `Error: <message>` with exit status 1; a backend 
 
 ## Where the AI runs
 
-`classic-games ai generate` does not call a model on your machine. It sends the request to the backend, which calls the model, applies the patch, validates the result against the schema, and returns the patch together with the new DSL. That is the same path the client uses; see [AI prompt engineering](/en/docs/12-ai-prompt/) (Chinese). Each call counts against a daily quota, shown by `classic-games ai quota`.
+`classic-games ai generate` does not call a model on your machine. It sends the request to the backend, which calls the model, applies the patch, validates the result against the schema, and returns the patch together with the new DSL. The pipeline is described in [AI prompt engineering](/en/docs/12-ai-prompt/) (Chinese). Each call counts against a daily quota, shown by `classic-games ai quota`.

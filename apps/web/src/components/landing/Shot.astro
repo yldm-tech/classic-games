@@ -1,0 +1,32 @@
+---
+// One capture of the launcher (or one key art image) in a hairline frame with a caption. Every image is a 16:9 picture of the launcher's fixed 1920x1080 canvas; Astro writes resized WebP variants and the browser picks one from `sizes`.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+	src: ImageMetadata;
+	alt: string;
+	/** Short label set in the foreground colour in front of the caption. */
+	name?: string;
+	caption?: string;
+	/** CSS `sizes` value describing how wide the image is laid out. */
+	sizes: string;
+	/** Set on the first image of the page so it is not lazy-loaded. */
+	eager?: boolean;
+}
+
+const { src, alt, name, caption, sizes, eager = false } = Astro.props;
+---
+
+<figure class="cg-shot">
+	<Image src={src} alt={alt} widths={[480, 800, 1200, 1920]} sizes={sizes} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} />
+	{
+		(name || caption) && (
+			<figcaption>
+				{name && <strong>{name}</strong>}
+				{name && caption && ' · '}
+				{caption}
+			</figcaption>
+		)
+	}
+</figure>

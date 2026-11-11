@@ -1,0 +1,139 @@
+---
+import Phrases from '../Phrases.astro';
+import { games } from '../../data/games.ts';
+import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
+import Shot from './Shot.astro';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].games;
+const lang = locale === 'en' ? 'en' : 'zh';
+const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
+---
+
+<section class="cg-section" id="games" aria-labelledby="games-title">
+	<div class="cg-container">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{t.eyebrow}</p>
+			<h2 class="cg-h2" id="games-title"><Phrases text={t.title} /></h2>
+			<p class="cg-lead">{t.lead}</p>
+		</div>
+
+		<ul class="games">
+			{
+				games.map((game) => (
+					<li class="game">
+						<div class="head">
+							<p class="meta">
+								<span>{game.genre.en}</span>
+								<span aria-hidden="true">·</span>
+								<span>{t.players}</span>
+								<span aria-hidden="true">·</span>
+								<span>{t.achievements(game.achievements)}</span>
+							</p>
+							<h3 class="name">
+								<span lang="zh-CN">{game.name.zh}</span>
+								<span class="latin" lang="en">
+									{game.name.en}
+								</span>
+							</h3>
+							<p class="tagline">{game.tagline[lang]}</p>
+						</div>
+						<div class="pair">
+							<Shot src={game.art} alt={t.artAlt[game.key]} name={t.artLabel} sizes={pairSizes} />
+							<Shot src={game.shot} alt={t.shotAlt[game.key]} name={t.shotLabel} sizes={pairSizes} />
+						</div>
+						<p class="how">{game.how[lang]}</p>
+					</li>
+				))
+			}
+		</ul>
+
+		<p class="credit">
+			{t.artCredit}
+			<a href={localizePath(locale, '/legal/licenses/')}>{t.artCreditLink}</a>{locale === 'en' ? '.' : '。'}
+		</p>
+	</div>
+</section>
+
+<style>
+	.games {
+		display: grid;
+		gap: clamp(3rem, 6vw, 4.5rem);
+	}
+
+	.game {
+		display: grid;
+		gap: 1.5rem;
+	}
+
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		color: var(--cg-text-muted);
+	}
+
+	.name {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.25rem 1.25rem;
+		margin-block-start: 0.6rem;
+		font-size: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
+		font-weight: 900;
+		line-height: 1.15;
+		letter-spacing: 0.04em;
+	}
+
+	.latin {
+		font-size: 0.8125rem;
+		font-weight: 700;
+		letter-spacing: 0.5em;
+		color: var(--cg-text-secondary);
+	}
+
+	.tagline {
+		margin-block-start: 0.6rem;
+		font-size: 1.125rem;
+		color: var(--cg-text-secondary);
+	}
+
+	.pair {
+		display: grid;
+		gap: 1.5rem;
+	}
+
+	.how {
+		max-width: 52rem;
+		color: var(--cg-text-secondary);
+		text-wrap: pretty;
+	}
+
+	.credit {
+		margin-block-start: clamp(2.5rem, 5vw, 3.5rem);
+		padding-block-start: 1.25rem;
+		border-block-start: 1px solid var(--cg-border-subtle);
+		max-width: 56rem;
+		font-size: 0.875rem;
+		color: var(--cg-text-muted);
+	}
+
+	.credit a {
+		color: var(--cg-text);
+		text-underline-offset: 0.25em;
+	}
+
+	@media (min-width: 48rem) {
+		.pair {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+</style>

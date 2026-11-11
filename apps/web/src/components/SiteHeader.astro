@@ -14,7 +14,7 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 ---
 
 <header class="site-header">
-	<div class="fp-container bar">
+	<div class="cg-container bar">
 		<Wordmark href={localizePath(locale, '/')} label={t.home} />
 		<nav class="links" aria-label={t.primaryLabel}>
 			<a class="text-link" href={localizePath(locale, '/docs/')}>{t.docs}</a>
@@ -46,10 +46,10 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 		position: sticky;
 		inset-block-start: 0;
 		z-index: 20;
-		border-block-end: 1px solid var(--fp-border-subtle);
-		background: var(--fp-header-bg);
-		backdrop-filter: blur(14px) saturate(1.4);
-		-webkit-backdrop-filter: blur(14px) saturate(1.4);
+		border-block-end: 1px solid var(--cg-border-subtle);
+		background: var(--cg-header-bg);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
 	}
 
 	.bar {
@@ -76,24 +76,24 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 		min-height: 2.75rem;
 		padding-inline: 0.7rem;
 		border: 0;
-		border-radius: var(--fp-radius-sm);
+		border-radius: var(--cg-radius);
 		background: transparent;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 		font: inherit;
 		font-size: 0.9375rem;
 		font-weight: 550;
 		text-decoration: none;
 		cursor: pointer;
 		transition:
-			color var(--fp-dur-fast) ease,
-			background-color var(--fp-dur-fast) ease;
+			color var(--cg-dur-fast) ease,
+			background-color var(--cg-dur-fast) ease;
 	}
 
 	.text-link:hover,
 	.lang-link:hover,
 	.icon-link:hover {
-		background: var(--fp-surface);
-		color: var(--fp-text);
+		background: var(--cg-focus-fill);
+		color: var(--cg-text);
 	}
 
 	.icon-link {
@@ -101,7 +101,7 @@ const otherLocale: Locale = locale === 'en' ? 'zh-CN' : 'en';
 	}
 
 	.lang-link {
-		font-family: var(--fp-font-mono);
+		font-family: var(--cg-font-mono);
 		font-size: 0.8125rem;
 		letter-spacing: 0.04em;
 	}

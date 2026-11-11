@@ -12,15 +12,15 @@ const t = landing[locale].start;
 const lines = t.lines.map((line) => (line.text === CLONE_COMMAND_PLACEHOLDER ? { ...line, text: `git clone ${REPO_URL}.git` } : line));
 ---
 
-<section class="fp-section" id="get-started" aria-labelledby="get-started-title">
-	<div class="fp-container layout">
+<section class="cg-section" id="get-started" aria-labelledby="get-started-title">
+	<div class="cg-container layout">
 		<div class="copy">
-			<p class="fp-eyebrow">{t.eyebrow}</p>
-			<h2 class="fp-h2" id="get-started-title"><Phrases text={t.title} /></h2>
-			<p class="fp-lead">{t.lead}</p>
+			<p class="cg-eyebrow">{t.eyebrow}</p>
+			<h2 class="cg-h2" id="get-started-title"><Phrases text={t.title} /></h2>
+			<p class="cg-lead">{t.lead}</p>
 			<div class="links">
-				<a class="fp-link" href={localizePath(locale, '/developers/getting-started/')}>{t.guideLink}</a>
-				<a class="fp-link" data-external href={REPO_URL}>{t.repoLink}</a>
+				<a class="cg-link" href={localizePath(locale, '/developers/getting-started/')}>{t.guideLink}</a>
+				<a class="cg-link" data-external href={REPO_URL}>{t.repoLink}</a>
 			</div>
 		</div>
 		<div class="terminal" role="group" aria-label={t.codeLabel}>
@@ -50,51 +50,40 @@ const lines = t.lines.map((line) => (line.text === CLONE_COMMAND_PLACEHOLDER ? {
 	}
 
 	.terminal {
-		border: 1px solid var(--fp-border);
-		border-radius: var(--fp-radius-lg);
-		background: var(--fp-bg-sunken);
+		border: 1px solid var(--cg-border-subtle);
+		border-radius: var(--cg-radius);
+		background: var(--cg-bg-sunken);
 		overflow: hidden;
 	}
 
 	.terminal-label {
 		padding: 0.6rem 1.25rem;
-		border-block-end: 1px solid var(--fp-border-subtle);
-		font-family: var(--fp-font-mono);
+		border-block-end: 1px solid var(--cg-border-subtle);
 		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+		font-weight: 600;
+		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	pre {
-		padding: 1.1rem 1.25rem 1.2rem;
+		padding: 1.1rem 1.25rem 1.25rem;
 		overflow-x: auto;
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		line-height: 1.75;
-		tab-size: 2;
-	}
-
-	pre:focus-visible {
-		outline-offset: -2px;
 	}
 
 	.line.comment {
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.line.command {
-		color: var(--fp-text);
-	}
-
-	.line.command::before {
-		content: '$ ';
-		color: var(--fp-accent-text);
-		user-select: none;
+		color: var(--cg-text);
 	}
 
 	@media (min-width: 62rem) {
 		.layout {
-			grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+			grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
 		}
 	}
 </style>

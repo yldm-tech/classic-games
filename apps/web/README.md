@@ -1,6 +1,6 @@
 # Classic Games website
 
-The official Classic Games site: a bilingual landing page and the documentation site. It is a static site built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build), with no UI framework, no analytics and no third-party fonts or CDNs.
+The official Classic Games site: a bilingual landing page for the console-style launcher and its games, and the documentation site. It is a static site built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build), with no UI framework, no analytics and no third-party fonts or CDNs.
 
 - Default locale: Simplified Chinese (`zh-CN`), served from `/`.
 - Second locale: English (`en`), served from `/en/`.
@@ -53,18 +53,20 @@ apps/web/
     │   ├── check-built-links.ts  Fails the build on broken internal links in the built HTML
     │   └── check-built-pages.ts  Fails the build on UI strings in the wrong language and on a 404 page that poses as the landing page
     ├── content/
-    │   ├── docs/developers/   Developer pages, Chinese (getting started, CLI, MCP, Go SDK)
+    │   ├── docs/developers/   Developer pages, Chinese (getting started, CLI, MCP, Go SDK); the last three document the optional online service
     │   ├── docs/en/developers/  The same pages in English
     │   ├── docs/docs/         Generated from <repo>/docs, git-ignored
     │   ├── docs/legal/        Generated from <repo>/docs/legal, git-ignored
     │   └── i18n/              Overrides for Starlight's UI strings
     ├── i18n/landing.ts        All landing page copy, both locales, one typed interface
-    ├── data/                  Build-time data read from repository fixtures
+    ├── data/                  Build-time data read from repository fixtures and from the launcher's catalog
     ├── components/            Landing page sections, header, footer, wordmark
     ├── layouts/               HTML shell of the landing pages
     ├── pages/                 `/`, `/en/` and the 404 page
     ├── styles/                Design tokens, landing styles, Starlight theme mapping
-    └── assets/covers/         Cover art copied from apps/client/assets/covers
+    └── assets/
+        ├── launcher/          1920x1080 captures of the launcher and of the three games
+        └── key-art/           The three key art images, copied from apps/client/launcher/art
 ```
 
 ## How the docs are sourced
@@ -100,18 +102,33 @@ Links to GitHub are external and are not checked. The developer pages link to `a
 
 ## Landing page content
 
+The landing page presents the launcher: a hero with the home screen, the three games (key art next to an in-game capture), the other launcher screens, PC mode, the default controls, local storage, the planned genres, the Mod DSL with the optional online service, and how to run from source.
+
 All landing page copy is in `src/i18n/landing.ts`, as two objects that implement one interface, so a string cannot exist in one language only. A `|` in a heading marks a phrase boundary where the line may wrap.
 
 Facts that can be read from the repository are read at build time instead of being typed in:
 
-- `src/data/dsl-example.ts` imports the Shooter baseline and the golden file from `apps/client/runtime/shooter/` and applies the fork patch in `src/data/fork-patch.json`. If the result no longer equals the golden file, the build fails. The patch itself is a copy of the one used in `packages/dsl/patch_test.go`, `apps/server/internal/ai/service_test.go` and `apps/client/spike_test.gd`.
-- `src/data/runtimes.ts` imports the three runtime schemas and baselines and derives each runtime's id and top-level DSL sections from them. It also lists the schema fields that are not an enum, a ranged number or a boolean, and fails the build when a schema gains or loses one, because the landing copy names those exceptions.
+- `src/data/games.ts` holds the names, genres, taglines and guide texts of the games. They are the launcher's own strings from `apps/client/launcher/launcher_catalog.gd` and `launcher_game_guide.gd`; GDScript cannot be imported as data, so the copy is checked against both files, which are imported as raw text. If the launcher gains or loses a game, or changes one of these strings or the number of achievements, the build fails until the copy is updated.
+- `src/data/runtimes.ts` imports the three runtime schemas and baselines and derives each runtime's id and top-level DSL sections from them. It also lists the schema fields that are not an enum, a ranged number or a boolean, and fails the build when a schema gains or loses one.
+- `src/data/dsl-example.ts` imports the Orbit Patrol (`shooter`) baseline and the golden file from `apps/client/runtime/shooter/` and applies the patch in `src/data/fork-patch.json`. If the result no longer equals the golden file, the build fails. The patch is a copy of the one used in `packages/dsl/patch_test.go`.
 
-The site should not claim anything the repository cannot back up: no download links, store badges, usage numbers or screenshots of features that do not exist.
+The default controls in `src/i18n/landing.ts` are typed in from the `[input]` section of `apps/client/project.godot`; update them when the bindings change.
+
+### Images
+
+The screenshots in `src/assets/launcher/` are unedited 1920x1080 captures of the launcher with the interface set to Chinese (`make launcher-shot` in the root `Makefile` renders one screen at that size). Replace them with new captures when a screen changes; do not retouch them. In-game graphics are plain geometric shapes today, and the page says so next to the captures: the key art must never be presented as gameplay.
+
+The key art in `src/assets/key-art/` is copied from `apps/client/launcher/art/`. It was generated by the project with an image model, as original compositions; the record is in `docs/legal/licenses.md`, and the landing page and the footer repeat that note. Any new image needs the same record before it is added here.
+
+Images go through Astro's asset pipeline (`astro:assets`), which writes resized WebP variants; everything below the first screen is lazy-loaded.
+
+The site should not claim anything the repository cannot back up: no download links, store badges, usage numbers, dates for planned games or screenshots of features that do not exist. The backend, the CLI, the MCP server and the SDK are described as an optional online service that the launcher does not use.
 
 ## Design
 
-`src/styles/tokens.css` mirrors the client's design tokens in `apps/client/shell/design_system/theme/tokens.gd` (ember and volt ramps, warm neutrals, radii, motion durations), for a dark and a light theme. Where a client token does not reach WCAG AA contrast for running text on the web, the site uses the nearest value that does, and the token file says so next to the value. `src/styles/starlight.css` maps the same tokens onto Starlight's custom properties, so docs and landing share one palette.
+`src/styles/tokens.css` follows the launcher's design tokens in `apps/client/launcher/launcher_tokens.gd`: the `#05070D` background, the `#F4F5F8` foreground and its alpha steps for secondary text, rules and hairlines, the panel colours, the single 4px radius and the motion durations. The launcher has no accent hue, so focus and primary actions use the foreground colour; links in running text use the blue of the launcher's in-game score label. The launcher has no light theme; the light theme here is the same scale inverted. `src/styles/starlight.css` maps the same tokens onto Starlight's custom properties, so docs and landing share one palette.
+
+The wordmark is the launcher's own brand line, the Chinese name followed by the Latin name in small letter-spaced capitals. The landing page uses no decorative gradients.
 
 The landing header's theme toggle uses the same `localStorage` key as Starlight's theme picker, so a choice made on either side applies to both.
 

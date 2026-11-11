@@ -14,7 +14,7 @@ export default defineConfig({
 		docsSync(),
 		starlight({
 			title: SITE_NAME,
-			description: 'AI 驱动的小游戏创作与社区平台：Fork 一个游戏，用自然语言描述修改，AI 只改 Mod DSL。',
+			description: '经典厅（Classic Games）：开源的主机风格游戏启动器，自带一组经典类型的原创游戏，用手柄或键盘游玩。',
 			defaultLocale: 'root',
 			locales: {
 				root: { label: '简体中文', lang: 'zh-CN' },

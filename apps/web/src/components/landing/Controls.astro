@@ -1,0 +1,146 @@
+---
+import Phrases from '../Phrases.astro';
+import { type Locale, landing } from '../../i18n/landing.ts';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = landing[locale].controls;
+---
+
+<section class="cg-section" id="controls" aria-labelledby="controls-title">
+	<div class="cg-container layout">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{t.eyebrow}</p>
+			<h2 class="cg-h2" id="controls-title"><Phrases text={t.title} /></h2>
+			<p class="cg-lead">{t.lead}</p>
+			<ul class="notes">
+				{t.notes.map((note) => <li>{note}</li>)}
+			</ul>
+		</div>
+		<div class="table-wrap">
+			<table>
+				<caption class="cg-sr-only">{t.tableCaption}</caption>
+				<thead>
+					<tr>
+						<th scope="col">{t.columns.action}</th>
+						<th scope="col">{t.columns.keyboard}</th>
+						<th scope="col">{t.columns.gamepad}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						t.rows.map((row) => (
+							<tr>
+								<th scope="row">{row.action}</th>
+								<td>
+									<span class="caps">
+										{row.keys.map((key) => (
+											<kbd class="cg-key">{key}</kbd>
+										))}
+									</span>
+								</td>
+								<td>
+									<span class="caps">
+										{row.pad.map((button) => (
+											<kbd class="cg-key pad">{button}</kbd>
+										))}
+										{row.padNote && <span class="pad-note">{row.padNote}</span>}
+									</span>
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
+
+<style>
+	.layout {
+		display: grid;
+		gap: clamp(1.5rem, 4vw, 3rem);
+		align-items: start;
+	}
+
+	.cg-section-head {
+		margin-block-end: 0;
+	}
+
+	.notes {
+		display: grid;
+		gap: 0.6rem;
+		margin-block-start: 1.5rem;
+		font-size: 0.9375rem;
+		color: var(--cg-text-muted);
+	}
+
+	.notes li {
+		padding-inline-start: 1rem;
+		border-inline-start: 1px solid var(--cg-border-strong);
+	}
+
+	.table-wrap {
+		min-width: 0;
+		overflow-x: auto;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9375rem;
+	}
+
+	th,
+	td {
+		padding: 0.8rem 1rem 0.8rem 0;
+		border-block-end: 1px solid var(--cg-border-subtle);
+		text-align: start;
+		vertical-align: middle;
+	}
+
+	thead th {
+		padding-block: 0 0.6rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--cg-text-muted);
+		border-block-end-color: var(--cg-border);
+	}
+
+	tbody th {
+		font-weight: 400;
+		color: var(--cg-text-secondary);
+	}
+
+	.caps {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.pad {
+		border-radius: 999px;
+		min-width: 1.625rem;
+	}
+
+	.pad-note {
+		font-size: 0.875rem;
+		color: var(--cg-text-muted);
+	}
+
+	@media (min-width: 62rem) {
+		.caps {
+			flex-wrap: nowrap;
+		}
+
+		.layout {
+			grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+		}
+	}
+</style>

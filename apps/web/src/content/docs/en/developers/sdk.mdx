@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../../config/site.ts';
 
 `github.com/yldm-tech/classic-games/packages/sdk` is a typed Go client for the Classic Games backend HTTP API. Its source is in <a href={repoDir('packages/sdk')}>packages/sdk</a>. It depends on the standard library only, and both the `classic-games` CLI and the `classic-games-mcp` server use it to reach the backend.
 
+:::note[Optional online service]
+The backend and the tools built on it are optional. The Classic Games launcher makes no network requests and does not use the backend, the CLI, the MCP server or the SDK; every game can be played without them.
+:::
+
 :::note
 For the full method list and type reference, see <a href={repoFile('packages/sdk/README.md')}>packages/sdk/README.md</a> and the doc comments in the source.
 :::

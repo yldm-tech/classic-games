@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Run the Classic Games backend, the Godot client and this site from source, and reproduce the CI gates locally.
+description: Run the Classic Games launcher from source, optionally start the online service and its tools, and reproduce the CI gates locally.
 sidebar:
   order: 1
 ---
@@ -8,22 +8,44 @@ sidebar:
 import { Code } from '@astrojs/starlight/components';
 import { REPO_URL, repoFile } from '../../../../config/site.ts';
 
-Classic Games is pre-release: there are no public builds and no app store releases. Everything below starts from source, and every `make` target used here is defined in the <a href={repoFile('Makefile')}>Makefile</a> at the repository root.
+Classic Games is a console-style launcher with a collection of original games. It is pre-release: there are no public builds and no store releases. Everything below starts from source, and every `make` target used here is defined in the <a href={repoFile('Makefile')}>Makefile</a> at the repository root.
 
 ## Prerequisites
 
 | Tool | Version | Used for |
 |---|---|---|
-| Go | 1.26 | Backend, CLI, MCP server and SDK. Each module's `go.mod` declares `go 1.26`, and a recent Go toolchain downloads the matching version on demand |
-| Godot | 4.6.3, exactly | Client. The version is pinned in `apps/client/.godot-version` and the test scripts check it |
+| Godot | 4.6.3, exactly | The launcher and the games. Use the standard build, not the .NET build. The version is pinned in `apps/client/.godot-version` and the test scripts check it |
 | GNU Make | Any recent version | Single entry point |
+| Go | 1.26 | Only for the optional online service: backend, CLI, MCP server and SDK. Each module's `go.mod` declares `go 1.26`, and a recent Go toolchain downloads the matching version on demand |
 | Node.js and pnpm | Node 22.23.4 or newer, pnpm 12 | Only needed to build this site |
 
 ## Get the source
 
 <Code code={`git clone ${REPO_URL}.git\ncd classic-games`} lang="bash" />
 
-## Start the backend
+## Run the launcher
+
+Let Godot import the project's resources first. This is needed once:
+
+```bash
+make import GODOT=/path/to/godot
+```
+
+Then start the project. Its main scene is the launcher:
+
+```bash
+/path/to/godot --path apps/client
+```
+
+You can also open `apps/client` in the Godot 4.6.3 editor and run it from there.
+
+The launcher is operated with a gamepad or a keyboard: arrow keys or the D-pad move the focus, Enter or A confirms, Esc or B goes back, and F11 switches between console mode and PC mode. All progress is kept in one local save file. The launcher makes no network requests, so nothing else has to be running.
+
+## The optional online service
+
+The repository also contains a Go backend, a command-line tool, an MCP server and a Go SDK. They implement Mod DSL validation and patching and the API of an online service (accounts, catalog, mods, community, commerce). They work and are tested, but the launcher is not wired to them: skip this section if you only want to play or to work on the launcher and the games.
+
+### Start the backend
 
 ```bash
 make dev
@@ -31,7 +53,7 @@ make dev
 
 The backend listens on `:8080` by default; use `PORT=9090 make dev` to change the port. The default database is a SQLite file in the working directory, so there is no database to install.
 
-Without `ANTHROPIC_API_KEY` the backend uses a deterministic local provider, so the whole "plain language → patch → validation" path works with no keys at all. With the key set it calls the real model. Every environment variable is listed in <a href={repoFile('.env.example')}>.env.example</a> at the repository root.
+Without `ANTHROPIC_API_KEY` the backend uses a deterministic local provider in place of a model, so it starts with no keys at all. With the key set it calls the real model. Every environment variable is listed in <a href={repoFile('.env.example')}>.env.example</a> at the repository root.
 
 Check that the backend is up:
 
@@ -41,36 +63,20 @@ curl http://localhost:8080/healthz
 
 The API reference is served at `http://localhost:8080/swagger/index.html`.
 
-## Run the client
-
-Let Godot import the project's resources first:
-
-```bash
-make import GODOT=/path/to/godot
-```
-
-Then start the project. The client reads the backend address from the `CLASSIC_GAMES_API` environment variable:
-
-```bash
-CLASSIC_GAMES_API=http://127.0.0.1:8080 /path/to/godot --path apps/client
-```
-
-You can also open `apps/client` in the Godot 4.6.3 editor.
-
-## Build the CLI and the MCP server
+### Build the CLI and the MCP server
 
 ```bash
 make cli-build    # apps/cli/bin/classic-games
 make mcp-build    # apps/mcp/bin/classic-games-mcp
 ```
 
-With the backend running, a first session looks like this:
+The DSL commands of the CLI work offline. The others need the backend:
 
 ```bash
 export PATH="$PWD/apps/cli/bin:$PATH"
-classic-games server health
+classic-games dsl validate apps/client/runtime/shooter/baseline.dsl.json   # offline
+classic-games server health                                                # needs the backend
 classic-games auth login
-classic-games ai generate "turn the player into a cat" --runtime shooter@1.0.0 --save
 classic-games mods list
 ```
 
@@ -80,23 +86,20 @@ The [CLI](/en/developers/cli/) and [MCP server](/en/developers/mcp/) pages go on
 
 | Command | What it does |
 |---|---|
+| `make launcher-test GODOT=/path/to/godot` | Headless launcher tests: save file, catalog, home screen focus, starting and finishing a run |
+| `make settings-test`, `make library-test`, `make pc-mode-test`, `make game-flow-test` | Headless tests of the settings screen, the library and achievements, PC mode, and the game menu, HUD, pause and result flow. Each takes `GODOT=/path/to/godot` |
+| `make launch-test GODOT=/path/to/godot` | Starts the main scene and checks that the launcher is assembled |
+| `make boundary-test` | Client dependency-direction check, plus the checker's own tests |
+| `make architecture-test` | Repository-level architecture boundary check |
 | `make test` | Backend `go test` |
 | `make vet` | `go vet` for every Go module |
 | `make dsl-test`, `make sdk-test` | Tests of the shared Go packages |
 | `make cli-test`, `make mcp-test` | Tests of the CLI and the MCP server |
 | `make go-standalone` | `go vet` and `go test` for every Go module with `GOWORK=off` |
-| `make boundary-test` | Client dependency-direction check, plus the checker's own tests |
-| `make architecture-test` | Repository-level architecture boundary check |
-| `make spike GODOT=/path/to/godot` | Headless Godot tests for the runtimes and the DSL |
-| `make ui-test GODOT=/path/to/godot` | Shell UI assertions |
 | `make ci GODOT=/path/to/godot` | Runs every Go and Godot gate in order |
 | `make ci-web` | Installs, type checks and builds this site |
 
-`make help` lists all targets. The real client-server integration test is a separate script. It starts the backend on port 8099 and has the Godot client call the real endpoints:
-
-```bash
-GODOT=/path/to/godot scripts/spike-integration.sh
-```
+`make help` lists all targets.
 
 ## Build this site
 
@@ -111,7 +114,8 @@ pnpm web:build    # static output in apps/web/dist
 
 ## Next steps
 
-- Work from a terminal: [CLI](/en/developers/cli/)
-- Connect Classic Games to an AI assistant: [MCP server](/en/developers/mcp/)
+- Understand the launcher: [Client architecture](/en/docs/16-client-architecture/), in Chinese
+- Understand how a game is described: [Mod DSL design](/en/docs/05-dsl-design/), in Chinese
+- Work with DSL documents from a terminal: [CLI](/en/developers/cli/)
+- Connect the DSL tools and the online service to an AI assistant: [MCP server](/en/developers/mcp/)
 - Call the backend from Go: [Go SDK](/en/developers/sdk/)
-- Understand the design: [Architecture](/en/docs/04-architecture/) and [Mod DSL design](/en/docs/05-dsl-design/), both in Chinese

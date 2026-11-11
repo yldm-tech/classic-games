@@ -9,6 +9,10 @@ import { repoDir, repoFile } from '../../../config/site.ts';
 
 `classic-games-mcp` 是一个 [Model Context Protocol](https://modelcontextprotocol.io) 服务，源码在 <a href={repoDir('apps/mcp')}>apps/mcp</a>（Go 模块 `github.com/yldm-tech/classic-games/apps/mcp`），基于官方的 MCP Go SDK 构建。它让支持 MCP 的 AI 助手可以读取 Schema、校验和修改 DSL，并经后端 Fork、修改和发布 Mod。
 
+:::note[可选的在线服务]
+后端以及构建在它之上的工具都是可选组件。经典厅的启动器不发网络请求，也不使用后端、CLI、MCP 服务或 SDK；不运行它们也能玩全部游戏。
+:::
+
 :::note
 各客户端的配置文件写法、每个工具的行为细节和安全说明，以 <a href={repoFile('apps/mcp/README.md')}>apps/mcp/README.md</a> 为准。
 :::
