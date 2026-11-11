@@ -55,8 +55,8 @@ func advance(delta: float) -> void:
 		_font = SystemFont.new()
 		_font.font_names = PackedStringArray(["Noto Sans SC", "PingFang SC", "Microsoft YaHei", "sans-serif"])
 		_font.allow_system_fallback = true
-		# At this size Chinese reads best as hard pixels and Latin letters need their grey edges.
-		_font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY if locale == "en" else TextServer.FONT_ANTIALIASING_NONE
+		# The stage is scaled up by whole pixels, so text is drawn as hard pixels too: grey edges would turn into a blur.
+		_font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 		_font.hinting = TextServer.HINTING_NORMAL
 		_font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 		_font_locale = locale
@@ -218,7 +218,7 @@ func _draw() -> void:
 				hint_key = str(hint["key"])
 				hint_x = at.x
 	if hint_key != "" and world.phase == World.P_PLAY:
-		_plate(Texts.of(hint_key, locale), Vector2(clampf(hint_x, camera.x + 100.0, camera.x + VIEW.x - 100.0), camera.y + 80.0), 10, Color("f4f1e8"))
+		_plate(Texts.of(hint_key, locale), Vector2(clampf(hint_x, camera.x + 100.0, camera.x + VIEW.x - 100.0), camera.y + 80.0), 10 if locale == "en" else 12, Color("f4f1e8"))
 	draw_set_transform(Vector2.ZERO)
 	_draw_banners()
 	if _flash > 0.0:
@@ -482,12 +482,12 @@ func _band(title: String, subtitle: String, accent: Color) -> void:
 	draw_rect(Rect2(0, 132, VIEW.x, 2), accent)
 	_text(title, Vector2(VIEW.x * 0.5, 108 if subtitle != "" else 115), 16, Color("f4f1e8"))
 	if subtitle != "":
-		_text(subtitle, Vector2(VIEW.x * 0.5, 125), 11, accent)
+		_text(subtitle, Vector2(VIEW.x * 0.5, 125), 11 if locale == "en" else 12, accent)
 
 func _draw_banners() -> void:
 	match world.phase:
 		World.P_INTRO:
-			_band(Texts.of("stage", locale) % (world.stage + 1), str(Levels.NAMES[world.stage]["en" if locale == "en" else "zh"]), Color("5fd4c4"))
+			_band(Texts.of("stage", locale) % (world.stage + 1), str(Levels.NAMES[world.stage]["en" if locale == "en" else "zh"]).to_upper(), Color("5fd4c4"))
 		World.P_CLEAR, World.P_WON:
 			var last := world.stage + 1 >= Levels.COUNT
 			_band(Texts.of("won" if last else "clear", locale), "", Color("ffd75e"))

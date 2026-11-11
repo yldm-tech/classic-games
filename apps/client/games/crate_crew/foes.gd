@@ -1,6 +1,6 @@
 extends RefCounted
 
-## The workshop's runaway gadgets and what they shoot. Every function is static and works on the world it is handed (world.gd), so the two scripts do not hold each other.
+## The workshop's runaway machines and what they shoot. Every function is static and works on the world it is handed (world.gd), so the two scripts do not hold each other.
 ##
 ##   bug     a wind-up beetle that walks its ledge back and forth
 ##   hopper  a spring that jumps at the nearest robot
