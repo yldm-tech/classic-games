@@ -135,7 +135,10 @@ static func _regent(world: Variant, boss: Boss, dt: float) -> void:
 			boss.vx = 0.0
 			world.move_body(boss, dt, true)
 			if boss.on_ground:
-				_slam(world, boss, 1.1)
+				# The entrance only shakes the floor: nobody should lose a life before the fight has begun.
+				boss.state = "recover"
+				boss.timer = 1.4
+				world.emit("slam", boss.x, boss.y)
 		"walk":
 			if target != null and absf(target.x - boss.x) > 6.0:
 				boss.facing = 1 if target.x > boss.x else -1

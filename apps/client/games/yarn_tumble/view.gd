@@ -296,14 +296,14 @@ func _draw_ambience() -> void:
 		var drift_y := fposmod(mote * 37.7 - _time * (3.0 + mote % 5), 250.0)
 		draw_rect(Rect2(roundf(drift_x), roundf(drift_y), 1.0, 1.0), Color(1.0, 0.95, 0.85, 0.16 + 0.1 * sin(_time * 2.0 + mote)))
 
-## The floor plaque at the top centre: "F 07/14".
+## The floor plaque under the game's title at the top centre: "F 07/14".
 func _draw_sign() -> void:
 	var knit: Array = Backdrop.THEMES[world.theme]["knit"]
-	draw_rect(Rect2(214.0, 4.0, 52.0, 13.0), INK)
-	draw_rect(Rect2(215.0, 5.0, 50.0, 11.0), Color(str(knit[2])))
-	draw_rect(Rect2(216.0, 6.0, 48.0, 9.0), Color("2a1c2c"))
-	_number("F", 222.0, 8.0, Color(str(knit[1])), false)
-	_number("%02d/%02d" % [world.stage, Levels.count()], 246.0, 8.0, CREAM)
+	draw_rect(Rect2(214.0, 19.0, 52.0, 13.0), INK)
+	draw_rect(Rect2(215.0, 20.0, 50.0, 11.0), Color(str(knit[2])))
+	draw_rect(Rect2(216.0, 21.0, 48.0, 9.0), Color("2a1c2c"))
+	_number("F", 222.0, 23.0, Color(str(knit[1])), false)
+	_number("%02d/%02d" % [world.stage, Levels.count()], 246.0, 23.0, CREAM)
 
 func _draw_foe(foe: Foe) -> void:
 	var drop := float(FOE_DROP[foe.kind])
