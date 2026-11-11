@@ -17,7 +17,7 @@ static func paint(game: Node2D) -> void:
 	var world: RefCounted = game.world
 
 	game.draw_texture(art["sky%d" % area][0], origin)
-	_layer(game, art["far%d" % area][0], view_x, 0.1, 67.0 if area == 1 else 52.0)
+	_layer(game, art["far%d" % area][0], view_x, 0.1, 67.0 if area == 1 else 2.0)
 	_layer(game, art["near%d" % area][0], view_x, 0.32, 2.0)
 
 	var first := int(floor(view_x / World.TILE)) - 2
@@ -30,12 +30,12 @@ static func paint(game: Node2D) -> void:
 	for lamp: Dictionary in game.lamps:
 		var at: Vector2 = lamp["pos"]
 		if lamp["lit"]:
-			_glow(game, art, at + Vector2(0.0, -30.0), 0, 2.2 + 0.2 * sin(time * 6.0))
+			_glow(game, art, at + Vector2(0.0, -30.0), 1)
 		game.draw_texture(art["lamp"][1 if lamp["lit"] else 0], at + Vector2(-7.0, -36.0))
 	if game.has_goal:
 		var lit: bool = game.phase == "clear"
 		if lit:
-			_glow(game, art, game.goal + Vector2(0.0, -44.0), 0, 4.0 + 0.4 * sin(time * 9.0))
+			_glow(game, art, game.goal + Vector2(0.0, -44.0), 2)
 		game.draw_texture(art["beacon"][(1 + int(time * 8.0) % 2) if lit else 0], game.goal + Vector2(-18.0, -56.0))
 	for geyser: Dictionary in game.geysers:
 		var at: Vector2 = geyser["pos"]
@@ -63,10 +63,10 @@ static func paint(game: Node2D) -> void:
 			"f":
 				_centred(game, art["flask"][0], at + Vector2(0.0, bob), false)
 			"r":
-				_glow(game, art, at, 0, 1.0)
+				_glow(game, art, at, 0)
 				_centred(game, art["resin"][0], at + Vector2(0.0, bob), false)
 			"w":
-				_glow(game, art, at, 0, 1.0)
+				_glow(game, art, at, 0)
 				_centred(game, art["wick"][0], at + Vector2(0.0, bob), false)
 			"b":
 				_centred(game, art["bell"][0], at + Vector2(roundf(sin(time * 9.0)), bob), false)
@@ -107,8 +107,9 @@ static func paint(game: Node2D) -> void:
 	for note: Dictionary in game.fx.popups:
 		var at: Vector2 = (note["pos"] as Vector2).round()
 		var text := str(note["text"])
-		game.draw_string_outline(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 10, 3, Pal.of("0"))
-		game.draw_string(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 10, Pal.of(str(note["key"])))
+		var size := 10 if text.is_valid_int() else 12
+		game.draw_string_outline(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, size, 3, Pal.of("0"))
+		game.draw_string(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, size, Pal.of(str(note["key"])))
 
 	_overlays(game, origin, font)
 
@@ -201,7 +202,7 @@ static func _hero(game: Node2D, art: Dictionary, time: float) -> void:
 		var gallop := int(hero.anim * 12.0) % 4 if absf(hero.vel.x) > 10.0 and hero.on_ground else (1 if not hero.on_ground else 0)
 		_standing(game, art["ram"][gallop], at, flip)
 		var seat := at + Vector2(float(hero.facing) * -2.0, -11.0 + (1.0 if gallop % 2 == 1 else 0.0))
-		_glow(game, art, seat + Vector2(float(hero.facing) * 6.0, -9.0), 0, 1.6 + float(game.flame) / 100.0)
+		_glow(game, art, seat + Vector2(float(hero.facing) * 6.0, -9.0), 1 if game.flame > 35.0 else 0)
 		_standing(game, art["hero_ride"][1 if hero.throw_pose > 0.0 else 0], seat, flip)
 		return
 	var key := "hero_idle"
@@ -219,7 +220,7 @@ static func _hero(game: Node2D, art: Dictionary, time: float) -> void:
 		key = "hero_run"
 		frame = int(hero.anim * 12.0) % 4
 	if not hero.dead:
-		_glow(game, art, lantern, 0, 1.2 + float(game.flame) / 100.0 + 0.08 * sin(time * 11.0))
+		_glow(game, art, lantern, 1 if game.flame > 35.0 else 0)
 	if white:
 		key += "_w"
 	_standing(game, art[key][frame], at + Vector2(float(hero.facing), 0.0), flip)
@@ -239,9 +240,12 @@ static func _overlays(game: Node2D, origin: Vector2, font: SystemFont) -> void:
 		game.draw_rect(Rect2(band.position + Vector2(0.0, band.size.y - 1.0), Vector2(VIEW.x, 1.0)), Pal.of("6"))
 		if open >= 1.0:
 			var has_sub := str(banner["sub"]) != ""
-			game.draw_string(font, origin + Vector2(0.0, 118.0 if has_sub else 124.0), str(banner["title"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 16, Pal.of("7"))
+			game.draw_string(font, origin + Vector2(0.0, 117.0 if has_sub else 124.0), str(banner["title"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 16, Pal.of("7"))
 			if has_sub:
-				game.draw_string(font, origin + Vector2(0.0, 133.0), str(banner["sub"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 10, Pal.of("8"))
+				game.draw_string(font, origin + Vector2(0.0, 134.0), str(banner["sub"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, Pal.of("8"))
+			if banner.has("hint"):
+				game.draw_string_outline(font, origin + Vector2(0.0, 162.0), str(banner["hint"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, 2, Pal.of("0"))
+				game.draw_string(font, origin + Vector2(0.0, 162.0), str(banner["hint"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, Pal.of("8"))
 	var dark := 0.0
 	match str(game.phase):
 		"intro":
@@ -273,7 +277,7 @@ static func _centred(game: Node2D, texture: Texture2D, middle: Vector2, flip: bo
 	var size := Vector2(texture.get_size())
 	_standing(game, texture, middle + Vector2(0.0, size.y * 0.5), flip)
 
-static func _glow(game: Node2D, art: Dictionary, middle: Vector2, tint: int, scale: float) -> void:
-	var texture: Texture2D = art["glow"][tint]
-	var size := Vector2(texture.get_size()) * scale
-	game.draw_texture_rect(texture, Rect2((middle - size * 0.5).round(), size.round()), false)
+## A disc of light: size 0 for the lantern and small things, 1 for a lamp post, 2 for a beacon.
+static func _glow(game: Node2D, art: Dictionary, middle: Vector2, size: int) -> void:
+	var texture: Texture2D = art["glow"][size]
+	game.draw_texture(texture, (middle - Vector2(texture.get_size()) * 0.5).round())

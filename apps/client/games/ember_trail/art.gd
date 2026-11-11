@@ -58,7 +58,7 @@ static func build_images() -> Dictionary:
 	out["tuft"] = [_tuft(1), _tuft(2)]
 	out["crystal"] = [_crystal(0), _crystal(1)]
 	out["shroom"] = [_shroom()]
-	out["glow"] = [_glow(24, "6"), _glow(24, "r")]
+	out["glow"] = [_glow(44, "7"), _glow(72, "7"), _glow(110, "7")]
 	for key: String in FLASHED:
 		var white: Array = []
 		for image: Image in out[key]:
@@ -426,7 +426,10 @@ static func _tree(variant: int) -> Image:
 	_line(image, 21, 9, 24, 3, "1")
 	_line(image, 21, 9, 17, 3, "1")
 	_line(image, 12 + lean, 14, 11 + lean * 2, 4, "1")
-	_line(image, 12, 39, 12 + lean, 20, "2")
+	_line(image, 12, 39, 12 + lean, 20, "3")
+	_line(image, 4, 12, 2, 5, "3")
+	_line(image, 21, 9, 24, 3, "3")
+	_outline(image, "0")
 	return image
 
 static func _spire(area: int) -> Image:
@@ -485,7 +488,7 @@ static func _glow(size: int, key: String) -> Image:
 	for y in size:
 		for x in size:
 			var distance := Vector2(float(x) - centre, float(y) - centre).length() / centre
-			if distance < 0.45 or (distance < 0.75 and (x + y) % 2 == 0) or (distance < 1.0 and x % 2 == 0 and y % 2 == 0 and (x + y) % 4 == 0):
+			if distance < 0.4 or (distance < 0.72 and (x + y) % 2 == 0) or (distance < 1.0 and x % 2 == 0 and y % 2 == 0):
 				var colour := Pal.of(key)
 				colour.a = 0.14
 				image.set_pixel(x, y, colour)
@@ -580,6 +583,8 @@ static func _owl(pose: int) -> Image:
 		_ell(image, 36.0 + float(side) * 5.0, 12.0, 4.5, 4.5, "h")
 		_ell(image, 36.0 + float(side) * 5.0, 12.0, 2.6, 2.6, "6")
 		_box(image, 36 + side * 5 - (1 if side < 0 else 0), 11, 2, 3, "0")
+		_line(image, 36 + side * 2, 9, 36 + side * 8, 6, "d")
+		_line(image, 36 + side * 2, 10, 36 + side * 8, 7, "0")
 		_box(image, 36 + side * 4 - 1, 38, 3, 4, "6")
 		_px(image, 36 + side * 4 - 1, 42, "5")
 		_px(image, 36 + side * 4 + 1, 42, "5")
@@ -620,12 +625,12 @@ static func _sky(area: int) -> Image:
 	return image
 
 static func _far(area: int) -> Image:
-	var image := _new(320, 150)
+	var image := _new(640, 150) if area == 1 else _new(320, 270)
 	var rng := Rng.new(700 + area)
 	if area == 1:
-		for column in 320:
-			var phase := float(column) * TAU / 320.0
-			var height := 46.0 + 20.0 * sin(phase * 2.0 + 0.6) + 12.0 * sin(phase * 5.0 + 2.0) + 5.0 * sin(phase * 13.0)
+		for column in 640:
+			var phase := float(column) * TAU / 640.0
+			var height := 46.0 + 20.0 * sin(phase * 3.0 + 0.6) + 12.0 * sin(phase * 7.0 + 2.0) + 5.0 * sin(phase * 17.0) + 4.0 * sin(phase * 31.0)
 			# One volcano stands above the range.
 			var cone := 104.0 - absf(float(column) - 210.0) * 1.25
 			if cone > height:
@@ -648,9 +653,9 @@ static func _far(area: int) -> Image:
 			var x := pillar * 36 + rng.int_range(0, 12)
 			var width := rng.int_range(10, 22)
 			var lean := rng.int_range(-10, 10)
-			for row in 150:
-				var offset := int(float(lean) * float(row) / 150.0)
-				var pinch := int(4.0 * sin(float(row) / 150.0 * PI))
+			for row in 270:
+				var offset := int(float(lean) * float(row) / 270.0)
+				var pinch := int(4.0 * sin(float(row) / 270.0 * PI))
 				for column in range(x + offset + pinch, x + offset + width - pinch):
 					_px(image, posmod(column, 320), row, "d")
 				_px(image, posmod(x + offset + pinch, 320), row, "e")

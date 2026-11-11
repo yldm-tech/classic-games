@@ -8,10 +8,10 @@ const Levels := preload("res://games/ember_trail/levels.gd")
 const World := preload("res://games/ember_trail/world.gd")
 const Art := preload("res://games/ember_trail/art.gd")
 const Texts := preload("res://games/ember_trail/texts.gd")
+const Body := preload("res://games/ember_trail/body.gd")
 
 const STAGE := Vector2i(480, 270)
 const STEP := GameModule.STEP
-const TRACE := true
 
 var _passed := 0
 var _failed := 0
@@ -23,6 +23,7 @@ var _bot_from := 0.0
 func _initialize() -> void:
 	_test_levels()
 	_test_art()
+	_test_world()
 	_test_start()
 	_test_movement()
 	_test_sparks()
@@ -75,7 +76,6 @@ func _test_levels() -> void:
 		counts.append([lamps, goals, flasks, built["world"].width])
 		for problem: String in built["problems"]:
 			push_error("stage %d: %s" % [index, problem])
-	print("  stage counts [lamps, beacons, flasks, width]: ", counts)
 	_check("every stage is drawn without a ragged row", sound)
 	var shaped := true
 	for index in Levels.STAGES.size():
@@ -100,6 +100,57 @@ func _test_art() -> void:
 	for key: String in Texts.TEXT:
 		both = both and str(Texts.TEXT[key].get("zh", "")) != "" and str(Texts.TEXT[key].get("en", "")) != ""
 	_check("every line the game writes exists in Chinese and English", both)
+
+## The collision rules on a hand-made patch of tiles: a floor along row 6, a one-way ledge and a crumbling slab on row 3, a wall at column 9.
+func _test_world() -> void:
+	var world := World.new()
+	world.width = 12
+	world.tiles.resize(12 * World.ROWS)
+	world.tiles.fill(World.EMPTY)
+	for tx in 12:
+		world.tiles[6 * 12 + tx] = World.SOLID
+	world.tiles[3 * 12 + 2] = World.ONEWAY
+	world.tiles[3 * 12 + 5] = World.CRUMBLE
+	for ty in range(0, 6):
+		world.tiles[ty * 12 + 9] = World.SOLID
+	var body := Body.new()
+	body.pos = Vector2(40.0, 20.0)
+	for step in 120:
+		body.vel.y = minf(body.vel.y + 880.0 * STEP, 420.0)
+		world.move_body(body, STEP)
+	_check("a falling body comes to rest on a one-way ledge", body.on_ground and is_equal_approx(body.pos.y, 48.0) and body.ground_tile == World.ONEWAY)
+	body.pos = Vector2(40.0, 94.0)
+	body.vel = Vector2(0.0, -330.0)
+	var rose := 94.0
+	for step in 120:
+		body.vel.y = minf(body.vel.y + 880.0 * STEP, 420.0)
+		world.move_body(body, STEP)
+		rose = minf(rose, body.pos.y)
+	_check("the same ledge lets a body through from below and catches it on the way down", rose < 44.0 and body.on_ground and is_equal_approx(body.pos.y, 48.0))
+	body.pos = Vector2(120.0, 96.0)
+	body.vel = Vector2(100.0, 0.0)
+	for step in 60:
+		body.vel.x = 100.0
+		world.move_body(body, STEP)
+	_check("a wall stops a body and reports it", body.pos.x < 144.0 - body.hw + 0.5 and body.pos.x > 136.0 and is_equal_approx(body.pos.y, 96.0))
+	body.pos = Vector2(120.0, 90.0)
+	body.vel = Vector2(0.0, -200.0)
+	world.tiles[2 * 12 + 7] = World.SOLID
+	for step in 30:
+		world.move_body(body, STEP)
+	_check("solid rock overhead stops a jump", is_equal_approx(body.pos.y, 48.0 + body.h) and body.vel.y == 0.0)
+	_check("a crumbling slab holds until it is stepped on", world.standable(5, 3) and world.touch_crumble(5, 3) and not world.touch_crumble(5, 3))
+	var fell: Array = world.step_crumbles(World.CRUMBLE_HOLD + 0.01, Rect2())
+	_check("then it falls", fell == [3 * 12 + 5] and world.tile(5, 3) == World.EMPTY)
+	world.step_crumbles(World.CRUMBLE_BACK, Rect2(80.0, 40.0, 10.0, 10.0))
+	var blocked: bool = world.tile(5, 3) == World.EMPTY
+	world.step_crumbles(0.1, Rect2())
+	_check("and grows back once nothing stands in its place", blocked and world.tile(5, 3) == World.CRUMBLE)
+	world.plats.append({"x": 0.0, "y": 0.0, "w": 40.0, "x0": 16.0, "y0": 80.0, "range": 80.0, "period": 4.0, "phase": 0.0, "axis": "x", "dx": 0.0, "dy": 0.0})
+	world.step_plats(0.0)
+	var left_end := float(world.plats[0]["x"])
+	world.step_plats(2.0)
+	_check("a moving platform swings between its two ends and says how far it moved", is_equal_approx(left_end, 16.0) and is_equal_approx(float(world.plats[0]["x"]), 96.0) and is_equal_approx(float(world.plats[0]["dx"]), 80.0))
 
 # ---- rules ----
 
@@ -222,6 +273,7 @@ func _test_guardians() -> void:
 	_hold(game, [], 2.0)
 	var fight := game.snapshot()
 	_check("the guardian's health is reported while it stands", fight.has("boss_hp") and fight["boss_hp"] == fight["boss_max_hp"] and int(fight["boss_max_hp"]) == 36)
+	_check("the guardian has its own tune", game.track == "boss" and game.audio.music_playing)
 	var seconds := _play(game, 240.0, func() -> bool: return int(game.stage_i) == 3)
 	var after := game.snapshot()
 	print("  Magmaw took the scripted player %.0f s, %d deaths" % [seconds, after["deaths"]])
@@ -248,7 +300,7 @@ func _test_full_run() -> void:
 	if not results.is_empty():
 		print("  result: cleared=%s deaths=%d continues_used=%d moths=%d kills=%d stomps=%d score=%d" % [results[0]["cleared"], results[0]["deaths"], results[0]["continues_used"], results[0]["moths"], results[0]["kills"], results[0]["mount_stomps"], results[0]["score"]])
 	_check("one player can finish the whole trail from the first stage", results.size() == 1 and results[0]["cleared"] == true and results[0]["full_run"] == 1 and results[0]["areas_cleared"] == 2 and results[0]["stages_cleared"] == 6)
-	_check("the result carries what the achievements read", results.size() == 1 and results[0].has("continues_used") and results[0].has("moths") and results[0].has("mount_stomps") and results[0].has("difficulty") and int(results[0]["moths"]) >= 40)
+	_check("the result carries what the achievements read", results.size() == 1 and results[0].has("continues_used") and results[0].has("difficulty") and int(results[0]["moths"]) >= 40 and int(results[0]["kills"]) >= 20 and int(results[0]["mount_stomps"]) >= 1 and int(results[0]["score"]) > 10000)
 	game.free()
 
 func _test_determinism() -> void:
@@ -269,19 +321,11 @@ func _test_determinism() -> void:
 func _play(game: GameModule, limit: float, done: Callable) -> float:
 	var began: float = game.elapsed
 	_bot_jump = false
-	var died: int = game.deaths
 	while game.is_running() and game.elapsed - began < limit:
 		if done.call():
 			break
 		_drive(game)
 		game.advance(STEP)
-		if TRACE and game.stage_i == 4 and game.hero.pos.x > 7000.0 and game.hero.pos.x < 7200.0 and game.elapsed < 395.0:
-			print("    FINE x=%.1f y=%.1f vx=%.0f vy=%.0f ground=%s a=%s hurt=%.2f fl=%.0f" % [game.hero.pos.x, game.hero.pos.y, game.hero.vel.x, game.hero.vel.y, game.hero.on_ground, _bot_jump, game.hero.hurt_time, game.flame])
-		if TRACE and game.deaths != died:
-			died = game.deaths
-			print("    DIED t=%.0f stage=%d tile=%d y=%.0f flame=%.0f mounted=%s" % [game.elapsed, game.stage_i, int(game.hero.pos.x / 16.0), game.hero.pos.y, game.flame, game.hero.mounted])
-		if TRACE and int(game.elapsed * 60.0) % 300 == 0:
-			print("    t=%.0f stage=%d x=%.0f tile=%d y=%.0f flame=%.0f lives=%d phase=%s" % [game.elapsed, game.stage_i, game.hero.pos.x, int(game.hero.pos.x / 16.0), game.hero.pos.y, game.flame, game.lives, game.phase])
 	for control: StringName in GameInput.CONTROLS:
 		game.feed(0, control, 0.0)
 	return game.elapsed - began

@@ -10,7 +10,7 @@
 	"tagline": {"zh": "提着一盏不断变暗的灯穿过烬原与霜洞，把沿途的烽火重新点亮。", "en": "Carry a lantern that never stops burning down across the cinder highlands and the rime hollow, and relight the beacons on the way."},
 	"players": {"min": 1, "max": 1},
 	"colors": {"title": "FFE9B0", "shadow": "7A2D1E", "glow": "F6B24A"},
-	"art": {"motif": "road", "top": "1A1424", "bottom": "7A3B45", "primary": "F6B24A", "secondary": "6FE0C0"},
+	"art": {"motif": "road", "top": "1A1424", "bottom": "7A3B45", "primary": "F6B24A", "secondary": "6FE0C0", "image": "key_art.jpg"},
 	"achievements": [
 		{"id": "first_flame", "icon": "bolt", "name": {"zh": "提灯上路", "en": "Lantern in Hand"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
 		{"id": "slag_toad", "icon": "shield", "name": {"zh": "熔蟾退场", "en": "Toad Dethroned"}, "desc": {"zh": "击败烬原的守护者熔蟾。", "en": "Defeat Magmaw, the guardian of the highlands."}, "when": {"min": {"areas_cleared": 1}}},

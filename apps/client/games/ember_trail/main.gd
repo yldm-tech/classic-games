@@ -171,9 +171,11 @@ func _load_stage(index: int, fresh: bool) -> void:
 		audio.play_music(Sounds.tune(track))
 	_set_phase("intro")
 	var title := Texts.of("stage", locale) % str(stage["key"])
-	banner = {"title": title, "sub": str(stage[locale] if stage.has(locale) else stage["en"]), "t": 0.0, "life": 2.4}
+	banner = {"title": title, "sub": str(stage[locale] if stage.has(locale) else stage["en"]), "t": 0.0, "life": 3.0}
 	if boss != null:
 		banner["sub"] = Texts.of("boss_" + str(stage["boss"]), locale)
+	elif index == 0 and deaths == 0:
+		banner["hint"] = Texts.of("hint_throw", locale)
 
 func _cam_limit() -> float:
 	return maxf(0.0, float(world.width * World.TILE - stage_size.x))
@@ -269,8 +271,19 @@ func _simulate(delta: float, control: bool, burning: bool) -> void:
 		if flame <= 0.0:
 			flame = 0.0
 			_kill_hero()
+	_ambience()
 	fx.step(delta)
 	_step_camera(delta)
+
+## Embers rising over the highlands, frost drifting down in the hollow. Looks only: it draws on the effects' own generator.
+func _ambience() -> void:
+	if int(stage_time * 60.0) % 6 != 0:
+		return
+	var x: float = cam_x + fx.rng.float_range(-20.0, float(stage_size.x) + 20.0)
+	if int(stage["area"]) == 1:
+		fx.puff(Vector2(x, fx.rng.float_range(200.0, 268.0)), Vector2(fx.rng.float_range(-8.0, 8.0), -fx.rng.float_range(14.0, 34.0)), "5" if fx.rng.chance(0.6) else "6", fx.rng.float_range(2.0, 4.0))
+	else:
+		fx.puff(Vector2(x, fx.rng.float_range(10.0, 120.0)), Vector2(-fx.rng.float_range(4.0, 12.0), fx.rng.float_range(10.0, 22.0)), "g" if fx.rng.chance(0.7) else "r", fx.rng.float_range(3.0, 6.0))
 
 func _step_camera(delta: float) -> void:
 	if not hero.dead:
@@ -381,7 +394,7 @@ func _step_shots(delta: float) -> void:
 				_hit_creature(creature)
 				spent = true
 				break
-		if not spent and boss != null and boss.state != "dying" and boss.state != "enter" and box.intersects(boss.rect()):
+		if not spent and boss != null and not hero.dead and boss.state != "dying" and boss.state != "enter" and box.intersects(boss.rect()):
 			_hit_boss()
 			spent = true
 		if spent:

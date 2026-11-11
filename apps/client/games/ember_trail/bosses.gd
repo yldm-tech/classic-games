@@ -9,7 +9,7 @@ const ARENA_LEFT := 28.0
 const ARENA_RIGHT := 516.0
 const FLOOR := 224.0
 const TOAD_HP := 36
-const OWL_HP := 30
+const OWL_HP := 24
 
 static func make(kind: String, hp_scale: float) -> RefCounted:
 	var boss := Creature.new()
