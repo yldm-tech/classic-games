@@ -1,0 +1,58 @@
+{
+	"schema": 1,
+	"id": "crate_crew",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [384, 216], "pixel_art": true},
+	"name": {"zh": "搬箱小队", "en": "CRATE CREW"},
+	"initials": "bxxd",
+	"genre": {"zh": "平台跳跃", "en": "PLATFORMER"},
+	"tagline": {"zh": "两个小维修机器人，一座失控的大工坊：举起箱子，砸回去。", "en": "Two small repair bots, one runaway workshop: lift a crate and throw it back."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "FFE9B8", "shadow": "5F3B28", "glow": "5FD4C4"},
+	"art": {"top": "1B2433", "bottom": "5F3B28", "primary": "5FD4C4", "secondary": "F5A340", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_shift", "icon": "bolt", "name": {"zh": "第一班", "en": "First Shift"}, "desc": {"zh": "完成一局，无论结果。", "en": "Finish a run, however it ends."}, "when": {}},
+		{"id": "dust_settled", "icon": "star", "name": {"zh": "尘埃落定", "en": "Dust Settled"}, "desc": {"zh": "击败管道井顶端的吸尘巨兽。", "en": "Beat the vacuum beast at the top of the pipe shaft."}, "when": {"min": {"bosses_beaten": 1}}},
+		{"id": "workshop_saved", "icon": "cup", "name": {"zh": "工坊复工", "en": "Back in Order"}, "desc": {"zh": "通关全部四个关卡。", "en": "Clear all four stages."}, "when": {"cleared": true}},
+		{"id": "no_overtime", "icon": "shield", "name": {"zh": "不用加班", "en": "No Overtime"}, "desc": {"zh": "不使用续关通关。", "en": "Clear the game without using a continue."}, "when": {"cleared": true, "max": {"continues_used": 0}}},
+		{"id": "golden_set", "icon": "star", "name": {"zh": "金齿轮全套", "en": "Golden Set"}, "desc": {"zh": "在一局里找到四枚藏在箱子里的金齿轮。", "en": "Find all four golden cogs hidden in crates in one run."}, "when": {"min": {"golden_cogs": 4}}},
+		{"id": "double_shift", "icon": "cup", "name": {"zh": "双人搭班", "en": "Double Shift"}, "desc": {"zh": "两位玩家一起通关。", "en": "Clear the game with two players."}, "when": {"cleared": true, "players": 2}},
+		{"id": "buddy_toss", "icon": "bolt", "name": {"zh": "队友也能扔", "en": "Buddy Toss"}, "desc": {"zh": "在一局里把队友扔出去砸中 3 个敌人。", "en": "Knock out 3 enemies in one run by throwing your partner at them."}, "when": {"min": {"buddy_hits": 3}}},
+		{"id": "night_shift", "icon": "shield", "name": {"zh": "夜班高手", "en": "Night Shift Pro"}, "desc": {"zh": "在困难难度下通关。", "en": "Clear the game on hard."}, "when": {"cleared": true, "min": {"difficulty": 3}}}
+	],
+	"how": {
+		"zh": "小机器人没有武器：按「举起 / 投掷」搬起面前的箱子，再按一次水平扔出，按住上再按则向上扔。举着箱子时按住下可以躲在箱子下面，敌人碰不到你；躲着时再按一次把箱子轻轻放下。木箱砸碎后会掉出齿轮、电池或备用核心，铁箱可以反复使用。双人时也可以举起队友扔向敌人。首领吐出或丢下的东西要捡起来，趁它张嘴或睁眼出爪时扔回去。四个关卡全部通过即通关；所有玩家用完生命且没有续关次数则失败。",
+		"en": "The bots carry no weapon. Press Lift / Throw to pick up the crate in front of you and again to throw it sideways; hold Up while pressing to throw it upwards. While carrying, hold Down to hide under the crate so enemies cannot touch you, and press the button again while hiding to set the crate down. Wooden crates break and drop gears, batteries or spare cores; steel crates can be used again and again. With two players you can lift your partner and throw them at enemies too. Whatever a boss spits or drops, pick it up and throw it back while its mouth or its eye is open. Clear all four stages to win; the run is lost when every player is out of lives and no continue is left."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动 / 上扔 / 躲藏", "en": "Move / aim up / hide"}, "inputs": ["move"]},
+		{"id": "jump", "name": {"zh": "跳跃", "en": "Jump"}, "inputs": ["a"]},
+		{"id": "grab", "name": {"zh": "举起 / 投掷", "en": "Lift / Throw"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "elapsed"},
+		"vital": {"field": "energy", "max": "max_energy", "label": {"zh": "电量", "en": "ENERGY"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [
+			{"label": {"zh": "关卡", "en": "Stage"}, "fields": ["stage", "stages"]},
+			{"label": {"zh": "齿轮", "en": "Gears"}, "fields": ["gears"]}
+		],
+		"player_stats": [{"label": {"zh": "生命", "en": "Lives"}, "fields": ["lives"]}]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "影响电量、生命、续关次数和敌人的速度。", "en": "Changes energy, lives, continues and how fast enemies are."},
+			"values": [1, 2, 3],
+			"default": 2,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "困难", "en": "Hard"}]
+		}
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《搬箱小队》双人局内画面：两个小机器人刚跳过工具台上的缺口，其中一个举着木箱，面前是一只弹簧跳虫。", "en": "Crate Crew with two players: two small robots just past a gap in the workbench, one holding a wooden crate, a spring hopper ahead of them."},
+		"art_alt": {"zh": "《搬箱小队》主视觉：两个小维修机器人在巨大的工坊里合力举起一只木箱。", "en": "Crate Crew key art: two small repair robots lifting a wooden crate together in an enormous workshop."}
+	}
+}
