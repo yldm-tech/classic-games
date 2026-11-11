@@ -3,10 +3,10 @@ extends RefCounted
 ## The workshop's runaway machines and what they shoot. Every function is static and works on the world it is handed (world.gd), so the two scripts do not hold each other.
 ##
 ##   bug     a wind-up beetle that walks its ledge back and forth
-##   hopper  a spring that jumps at the nearest robot
+##   hopper  a spring that jumps at the nearest squirrel
 ##   drone   a little saw that flies a wavy line and is best hit from below
 ##   turret  a weld gun that fires sparks along the floor
-##   roller  an armoured drum that charges when it sees a robot; two hits, or one with a steel crate
+##   roller  an armoured drum that charges when it sees a squirrel; two hits, or one with a steel crate
 ##   magnet  a flying magnet that drops nuts on whoever walks under it
 
 const ALIVE := 0
@@ -177,7 +177,7 @@ static func _step_magnet(world: Variant, foe: Dictionary, delta: float, speed: f
 	foe["x"] = x
 	foe["y"] = home.y + sin(float(foe["time"]) * 2.0) * 4.0
 
-## What happens when an enemy and a robot overlap: a thrown robot knocks it out, a hidden robot turns it away, anyone else is hurt.
+## What happens when an enemy and a squirrel overlap: a thrown squirrel knocks it out, a hidden squirrel turns it away, anyone else is hurt.
 static func _touch_heroes(world: Variant, foe: Dictionary) -> void:
 	if int(foe["state"]) != ALIVE:
 		return
@@ -226,7 +226,7 @@ static func hit(world: Variant, foe: Dictionary, slot: int, power: int, directio
 	world.foe_beaten(foe, slot, chain, by_buddy)
 	return true
 
-## Sparks, nuts and whatever a boss throws: fly, hit robots, stop at walls. A lump that lands may turn into something a robot can pick up.
+## Sparks, nuts and whatever a boss throws: fly, hit squirrels, stop at walls. A lump that lands may turn into something a squirrel can pick up.
 static func step_shots(world: Variant, delta: float) -> void:
 	for shot: Dictionary in world.shots:
 		if bool(shot["gone"]):

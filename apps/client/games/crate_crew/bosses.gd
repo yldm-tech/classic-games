@@ -1,8 +1,8 @@
 extends RefCounted
 
-## The two bosses. Neither can be hurt by anything the robots own: each one throws things into its room that turn into something to pick up, and those are what gets thrown back. Static functions on the world they are handed, like foes.gd.
+## The two bosses. Neither can be hurt by anything the squirrels own: each one throws things into its room that turn into something to pick up, and those are what gets thrown back. Static functions on the world they are handed, like foes.gd.
 ##
-##   vacuum  the Dustmaw, a canister on wheels at the top of the pipe shaft. It spits lumps of scrap, sucks the robots towards its mouth and rams across the floor. Its shell turns everything away: a throw counts only while the mouth is open, which is while it spits and while it sucks.
+##   vacuum  the Dustmaw, a canister on wheels at the top of the pipe shaft. It spits lumps of scrap, sucks the squirrels towards its mouth and rams across the floor. Its shell turns everything away: a throw counts only while the mouth is open, which is while it spits and while it sucks.
 ##   crane   the Overseer, a trolley on the ceiling rail of the control loft. It drops heavy nuts with its shutter down, then opens its eye, takes aim and slams its claw into the floor, where the claw stays stuck for a moment. From taking aim until the claw is back up it can be hurt: throw upwards at the trolley or sideways at the stuck claw.
 
 const MISS := 0
