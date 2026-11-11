@@ -24,6 +24,11 @@ static func step(world: Variant, boss: Boss, dt: float) -> void:
 				if hero.state == Hero.ALIVE or hero.state == Hero.DYING:
 					hero.score += int(BONUS[boss.kind])
 			world.emit("boss_gone", boss.x, boss.y - boss.h * 0.5, int(BONUS[boss.kind]))
+			# A guardian with floors still above it leaves a heart patch for each knitter who saw it fall.
+			if world.stage < world.Levels.count():
+				for hero: Hero in world.heroes:
+					if hero.state == Hero.ALIVE or hero.state == Hero.DYING:
+						world.drop(Item.HEART, boss.x + (hero.slot * 2 - 1) * 14.0, minf(boss.y, FLOOR_Y) - 10.0)
 			world.boss = null
 		return
 	if boss.kind == Boss.DUCHESS:

@@ -169,6 +169,8 @@ func _react(event: Array) -> void:
 			_say("动作快！静电火花要来了", "HURRY UP! STATIC IS COMING", 2.4)
 		"wave":
 			_say("又来了一批！", "MORE OF THEM!", 1.8)
+		"join_wait":
+			_say("下一层再上场", "BACK ON THE NEXT FLOOR", 2.4)
 		"continue":
 			_say("续关！还剩 %d 次" % world.continues, "CONTINUE! %d LEFT" % world.continues, 2.0)
 		"spark":

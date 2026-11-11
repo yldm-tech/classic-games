@@ -246,6 +246,9 @@ func _test_pickups() -> void:
 	_w(game).drop("long", 200.0, FLOOR_Y)
 	game.advance(0.8)
 	_check("touching a pick-up takes it", _w(game).pickups.is_empty() and hero.score == 2000 + 100 and hero.long_needle and game.snapshot()["gems"] == 1 and game.snapshot()["players"][0]["powers"] == 1)
+	_w(game).drop("button", 470.0, FLOOR_Y)
+	_check("nothing drops under the pause chip in the bottom right corner", _w(game).pickups.size() == 1 and is_equal_approx(_w(game).pickups[0].x, World.DROP_MAX_X))
+	_w(game).pickups.clear()
 	_tap(game, 0, &"b")
 	var reach := 0.0
 	for step in 40:
@@ -261,7 +264,7 @@ func _test_pickups() -> void:
 
 func _test_lives_continues_and_defeat() -> void:
 	var game := _start(1, 61, {"difficulty": 0})
-	_check("the easy setting gives five lives and three continues", game.snapshot()["players"][0]["lives"] == 5 and game.snapshot()["continues_left"] == 3 and game.snapshot()["difficulty"] == 0)
+	_check("the easy setting gives five lives and five continues", game.snapshot()["players"][0]["lives"] == 5 and game.snapshot()["continues_left"] == 5 and game.snapshot()["difficulty"] == 0)
 	game.free()
 
 	game = _start(1, 61)
@@ -282,7 +285,7 @@ func _test_lives_continues_and_defeat() -> void:
 	game.advance(GameModule.STEP)
 	_w(game).foes.remove_at(1)
 	game.advance(1.5)
-	_check("the last life spent uses a continue", hero.state == Hero.ALIVE and hero.lives == 4 and game.snapshot()["continues_left"] == 1 and game.snapshot()["continues_used"] == 1 and results.is_empty())
+	_check("the last life spent uses a continue", hero.state == Hero.ALIVE and hero.lives == 4 and game.snapshot()["continues_left"] == 2 and game.snapshot()["continues_used"] == 1 and results.is_empty())
 	_w(game).continues = 0
 	hero.lives = 1
 	hero.invuln = 0.0
@@ -328,12 +331,23 @@ func _test_hurry() -> void:
 	_check("its touch costs a life", game.snapshot()["deaths"] >= 1)
 	game.free()
 
+	game = _start(1, 72, {"first_floor": 13})
+	var crowd := _w(game).foes.size() + _w(game).pending.size()
+	for foe: Foe in _w(game).foes:
+		foe.timer = 500.0
+	_check("a crowded floor is given longer before the hurry call", crowd == 17 and is_equal_approx(_w(game).hurry_limit, World.HURRY_AT[1] + World.HURRY_PER_FOE * (crowd - World.HURRY_FREE_FOES)))
+	game.advance(World.HURRY_AT[1] + 20.0)
+	_check("so the call does not come at the usual time", not _w(game).hurry)
+	game.advance(_w(game).hurry_limit - World.HURRY_AT[1] - 20.0 + 0.1)
+	_check("but does come when the longer time is up", _w(game).hurry)
+	game.free()
+
 func _test_guardian_and_victory() -> void:
 	var game := _start(1, 81, {"first_floor": 7})
 	game.advance(3.0)
 	var boss := _w(game).boss
 	var state := game.snapshot()
-	_check("floor 7 is guarded: the bar shows and the guardian music plays", boss != null and state["boss_hp"] == 60 and state["boss_max_hp"] == 60 and _w(game).is_boss_stage())
+	_check("floor 7 is guarded: the bar shows and the guardian music plays", boss != null and state["boss_hp"] == 50 and state["boss_max_hp"] == 50 and _w(game).is_boss_stage())
 	var hero := _arrange(game, 190.0)
 	_w(game).hazards.clear()
 	boss.state = "rest"
@@ -342,14 +356,14 @@ func _test_guardian_and_victory() -> void:
 	boss.y = FLOOR_Y
 	_tap(game, 0, &"b")
 	game.advance(0.3)
-	_check("yarn chips at a guardian", boss.hp == 59 and int(game.audio.played.get("boss_hit", 0)) == 1)
+	_check("yarn chips at a guardian", boss.hp == 49 and int(game.audio.played.get("boss_hit", 0)) == 1)
 	hero.x = 150.0
 	var ball := _foe(game, Foe.MOTH, 176.0)
 	_hold_until(game, 0, &"b", 2.0, func() -> bool: return ball.state == Foe.BALL)
 	game.advance(0.3)
 	_tap(game, 0, &"b")
 	game.advance(0.5)
-	_check("a rolling ball hits it hard and bursts", boss.hp == 49 and ball.state == Foe.GONE and boss.state == "hurt" and _w(game).kos == 1)
+	_check("a rolling ball hits it hard and bursts", boss.hp == 39 and ball.state == Foe.GONE and boss.state == "hurt" and _w(game).kos == 1)
 	boss.state = "rest"
 	boss.timer = 30.0
 	boss.y = FLOOR_Y
@@ -363,6 +377,12 @@ func _test_guardian_and_victory() -> void:
 	_check("a beaten guardian takes its brood with it", boss.state == "dying" and _w(game).foes.is_empty() and not game.snapshot().has("boss_hp"))
 	game.advance(3.0)
 	_check("and is counted", game.snapshot()["bosses_defeated"] == 1 and _w(game).boss == null and _w(game).phase == World.CLEAR)
+	var patch: Item = _w(game).pickups[0] if _w(game).pickups.size() == 1 else null
+	_check("it leaves one heart patch for the lone knitter", patch != null and patch.kind == Item.HEART)
+	hero.lives = 2
+	hero.x = patch.x if patch != null else hero.x
+	game.advance(1.0)
+	_check("which can still be picked up before the climb", hero.lives == 3 and _w(game).pickups.is_empty())
 	game.advance(4.5)
 	_check("the tower goes on above it", game.snapshot()["stage"] == 8)
 	game.free()
@@ -372,7 +392,7 @@ func _test_guardian_and_victory() -> void:
 	game.finished.connect(func(result: Dictionary) -> void: results.append(result))
 	game.advance(3.0)
 	boss = _w(game).boss
-	_check("the last guardian is tougher on Hard", boss != null and boss.kind == 1 and boss.max_hp == 96)
+	_check("the last guardian is tougher on Hard", boss != null and boss.kind == 1 and boss.max_hp == 84)
 	hero = _arrange(game, 150.0)
 	_w(game).hazards.clear()
 	boss.state = "recover"
@@ -418,6 +438,21 @@ func _test_two_players() -> void:
 	game.advance(3.5)
 	_check("the partner carries them to the next floor, where they return with one life", _w(game).stage == 2 and first.state == Hero.ALIVE and first.lives == 1)
 	_check("player two can leave again", game.leave(1) and second.state == Hero.ABSENT and game.snapshot()["player_count"] == 1 and (game.snapshot()["players"] as Array).size() == 2)
+	second.lives = 2
+	_check("coming back does not refill the lives the seat had", game.join(1) and second.state == Hero.ALIVE and second.lives == 2)
+	game.leave(1)
+	second.lives = 0
+	_w(game).continues = 1
+	_check("a seat with no lives left comes back on a continue", game.join(1) and second.state == Hero.ALIVE and second.lives == 4 and _w(game).continues == 0 and _w(game).continues_used == 1)
+	game.leave(1)
+	second.lives = 0
+	_check("and with no continue either it waits for the next floor", game.join(1) and second.state == Hero.OUT and game.is_running())
+	_foe(game, Foe.MOTH, 440.0).state = Foe.WRAP
+	game.advance(0.2)
+	for foe: Foe in _w(game).foes:
+		foe.state = Foe.GONE
+	game.advance(3.5)
+	_check("where it returns with one life", _w(game).stage == 3 and second.state == Hero.ALIVE and second.lives == 1)
 	game.free()
 
 func _test_determinism() -> void:

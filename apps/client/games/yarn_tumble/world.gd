@@ -38,11 +38,16 @@ const OVER := 2
 
 ## Per difficulty (0 easy, 1 normal, 2 hard).
 const START_LIVES := [5, 4, 3]
-const CONTINUES := [3, 2, 1]
+const CONTINUES := [5, 3, 1]
 const FOE_SPEED := [0.85, 1.0, 1.15]
 const BALL_TIME := [8.0, 6.5, 5.5]
 const HURRY_AT := [65.0, 50.0, 42.0]
-const BOSS_HP := [[48, 60, 72], [64, 80, 96]]
+## A crowded floor gets this much longer before the hurry call for every creature (both batches counted) beyond the first six.
+const HURRY_PER_FOE := 3.0
+const HURRY_FREE_FOES := 6
+const BOSS_HP := [[40, 50, 62], [52, 66, 84]]
+## Pick-ups are kept left of this so that none comes to rest under the launcher's pause chip in the bottom right corner.
+const DROP_MAX_X := 418.0
 
 var rng: GameRng
 var difficulty := 1
@@ -53,6 +58,8 @@ var phase := PLAY
 var phase_timer := 0.0
 var banner := 0.0
 var stage_time := 0.0
+## Seconds this floor may take before the hurry call.
+var hurry_limit := 50.0
 var stage_deaths := 0
 var hurry := false
 var outcome := ""
@@ -91,6 +98,7 @@ func setup(run_rng: GameRng, level: int, players: int, first_stage: int) -> void
 		if hero.slot < players:
 			hero.state = Hero.ALIVE
 			hero.lives = max_lives
+			hero.seated = true
 	load_stage(clampi(first_stage, 1, Levels.count()))
 
 # ---- floors ----
@@ -116,6 +124,7 @@ func load_stage(number: int) -> void:
 	banner = 2.2
 	_drop_in(def["foes"])
 	pending = (def.get("more", []) as Array).duplicate()
+	hurry_limit = float(HURRY_AT[difficulty]) + HURRY_PER_FOE * maxi(0, foes.size() + pending.size() - HURRY_FREE_FOES)
 	if def.has("boss"):
 		boss = Boss.new(int(def["boss"]))
 		boss.max_hp = int(BOSS_HP[boss.kind][difficulty])
@@ -165,9 +174,22 @@ func _place(hero: Hero, invuln: float) -> void:
 
 func join(slot: int) -> void:
 	var hero := heroes[slot]
-	hero.state = Hero.ALIVE
-	hero.lives = max_lives
 	hero.clear_powers()
+	# A seat that was already played in this run keeps the lives it had: leaving and joining again must not refill them.
+	if not hero.seated:
+		hero.seated = true
+		hero.lives = max_lives
+	if hero.lives <= 0:
+		if continues <= 0:
+			# Nothing left to come back with: wait for the partner to reach the next floor, like any knitter who is out.
+			hero.state = Hero.OUT
+			emit("join_wait", 240.0, 135.0, slot)
+			return
+		continues -= 1
+		continues_used += 1
+		hero.lives = max_lives
+		emit("continue", hero.x, hero.y, slot)
+	hero.state = Hero.ALIVE
 	_place(hero, 2.5)
 	emit("join", hero.x, hero.y, slot)
 
@@ -331,7 +353,7 @@ func _flow(dt: float, active: Array) -> void:
 					pending = []
 					emit("wave", 240.0, 135.0)
 			elif not is_boss_stage():
-				var limit := float(HURRY_AT[difficulty])
+				var limit := hurry_limit
 				if not hurry and stage_time >= limit:
 					hurry = true
 					emit("hurry", 240.0, 135.0)
@@ -528,7 +550,7 @@ func knock_out(foe: Foe, toward: int) -> void:
 	husks.append(husk)
 
 func drop(kind: String, x: float, y: float) -> void:
-	var item := Item.new(kind, clampf(x, 24.0, 456.0), y)
+	var item := Item.new(kind, clampf(x, 24.0, DROP_MAX_X), y)
 	item.vy = -170.0
 	item.life = 10.0
 	pickups.append(item)

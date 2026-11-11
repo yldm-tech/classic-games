@@ -11,6 +11,8 @@ const ABSENT := 3
 
 var slot := 0
 var state := ABSENT
+## Whether this seat has been played at any time in this run.
+var seated := false
 var facing := 1
 var lives := 0
 var score := 0
