@@ -236,10 +236,15 @@ func _game_step(delta: float) -> void:
 			_simulate(delta, false, false)
 			if int(phase_t * 60.0) % 14 == 0:
 				fx.burst(Vector2(cam_x + fx.rng.float_range(40.0, 440.0), fx.rng.float_range(70.0, 170.0)), 14, "5678r", 80.0, 60.0, 0.9)
+			# The last frame stays on screen under the result, so the banner goes first.
+			if phase_t >= 4.3:
+				banner = {}
 			if phase_t >= 4.5:
 				finish(OUTCOME_CLEARED)
 		"game_over":
 			fx.step(delta)
+			if phase_t >= 2.2:
+				banner = {}
 			if phase_t >= 2.4:
 				finish(OUTCOME_DEFEATED)
 

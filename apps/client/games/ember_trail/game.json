@@ -57,5 +57,10 @@
 			"default": 1,
 			"labels": [{"zh": "1-1 烬原古道", "en": "1-1 Cinder Road"}, {"zh": "1-2 熔渣荒原", "en": "1-2 Slag Fields"}, {"zh": "1-3 熔蟾之盆", "en": "1-3 Magmaw's Basin"}, {"zh": "2-1 霜晶洞口", "en": "2-1 Rime Hollow"}, {"zh": "2-2 冰棱深廊", "en": "2-2 Icicle Gallery"}, {"zh": "2-3 霜枭之巢", "en": "2-3 Rimewing's Roost"}]
 		}
-	]
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "烬途提灯局内画面：黄昏的火山高地上，披着绿斗篷的点灯人站在刚点亮的路灯旁，巨大的熔蟾正从他头顶跃过。", "en": "Ember Trail in play: on the volcanic highlands at dusk a lamplighter in a green cloak stands by a lamp post he has just lit while the giant slag toad leaps over his head."},
+		"art_alt": {"zh": "烬途提灯主视觉：披绿斗篷的点灯人提着一盏灯，牵着角上泛着火光的灰羊走过熔岩裂隙间的石径，远处是冒烟的火山和落日。", "en": "Key art of Ember Trail: a lamplighter in a green cloak holds out a lantern and leads a grey ram with ember-bright horns along a rocky path between lava cracks, a smoking volcano and a low sun behind them."}
+	}
 }
