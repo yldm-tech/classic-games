@@ -171,8 +171,8 @@ func _start_module(payload: Dictionary) -> bool:
 	_play_seconds = 0.0
 	_last_score = 0
 	_module.name = "Module"
-	if bool(_stage["pixel_art"]):
-		_module.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Pixel art is drawn with hard edges. Everything else is high-resolution art drawn smaller than it was authored, which needs mipmaps to stay clean; a texture imported without them is simply drawn with linear filtering.
+	_module.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if bool(_stage["pixel_art"]) else GameSprites.FILTER
 	_module.finished.connect(_on_module_finished)
 	_module.score_changed.connect(_on_module_score)
 	add_child(_module)
@@ -363,7 +363,7 @@ func _finish(aborted: bool) -> void:
 		if aborted:
 			_module.audio.stop_all()
 		else:
-			_module.audio.stop_music()
+			_module.audio.stop_music(GameAudio.END_FADE)
 	_run.process_mode = Node.PROCESS_MODE_DISABLED
 	game_ended.emit(result)
 

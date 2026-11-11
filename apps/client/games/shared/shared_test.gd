@@ -210,9 +210,71 @@ func _test_audio() -> void:
 	var buses := true
 	for child in audio.get_children():
 		var player := child as AudioStreamPlayer
-		buses = buses and player.bus == (Audio.BUS_MUSIC if player.name == "Music" else Audio.BUS_SFX)
+		buses = buses and player.bus == (Audio.BUS_SFX if str(player.name).begins_with("Effect") else Audio.BUS_MUSIC)
 	_check("effects go to the SFX bus and music to the Music bus, and both buses exist", buses and AudioServer.get_bus_index(Audio.BUS_SFX) > 0 and AudioServer.get_bus_index(Audio.BUS_MUSIC) > 0)
 	audio.free()
+	_test_synth()
+
+## The layered synthesiser and its preset library. Nothing here can be listened to, so every preset is measured: it must be audible, unclipped, of the length its spec implies, free of clicks at both ends and free of a constant offset.
+func _test_synth() -> void:
+	var rate := float(GameSynth.RATE)
+	var wanted := ["impact", "explosion_small", "explosion_large", "shot_laser", "shot_blaster", "shot_heavy", "shot_light", "jump", "land", "pickup", "coin", "power_up", "hurt", "ui_move", "ui_confirm", "ui_cancel", "door", "splash", "whoosh", "crumble"]
+	var listed := true
+	for preset_name: String in wanted:
+		listed = listed and GameSfx.has(preset_name)
+	_check("the preset library holds every effect the guide promises", listed and GameSfx.names().size() >= wanted.size())
+	var sound := true
+	var faults := PackedStringArray()
+	for preset_name in GameSfx.names():
+		var spec := GameSfx.preset(preset_name)
+		var samples := GameSynth.render(spec)
+		var peak := 0.0
+		var total := 0.0
+		var squares := 0.0
+		for value in samples:
+			peak = maxf(peak, absf(value))
+			total += value
+			squares += value * value
+		var rms := sqrt(squares / float(samples.size()))
+		var seconds := float(samples.size()) / rate
+		var fine := samples.size() == GameSynth.length(spec) and seconds >= 0.03 and seconds <= GameSynth.MAX_SECONDS
+		fine = fine and is_equal_approx(peak, float(spec["volume"])) and peak <= 0.98 and rms > 0.01
+		fine = fine and absf(samples[0]) < 0.05 and absf(samples[samples.size() - 1]) < 0.01 and absf(total / float(samples.size())) < 0.01
+		fine = fine and samples == GameSynth.render(GameSfx.preset(preset_name))
+		if not fine:
+			faults.append("%s (%.2fs, peak %.3f, rms %.3f, first %.3f, last %.3f)" % [preset_name, seconds, peak, rms, samples[0], samples[samples.size() - 1]])
+		sound = sound and fine
+	_check("every preset is audible, unclipped, the length its spec implies, quiet at both ends and deterministic: %s" % ", ".join(faults), sound)
+	var plain := GameSynth.render({"layers": [{"wave": "sine", "freq": 440, "duration": 0.2, "volume": 0.5}]})
+	var ringing := GameSynth.render({"layers": [{"wave": "sine", "freq": 440, "duration": 0.2, "volume": 0.5}], "reverb": {"mix": 0.4}, "tail": 0.5})
+	_check("an echo or a room adds its tail to the body", plain.size() == int(0.2 * rate) and ringing.size() == int(0.7 * rate))
+	var after := 0.0
+	for index in range(int(0.3 * rate), int(0.5 * rate)):
+		after = maxf(after, absf(ringing[index]))
+	_check("and the tail really rings", after > 0.005)
+	var loud := GameSynth.render({"layers": [{"wave": "square", "freq": 200, "duration": 0.1, "volume": 1.0}, {"wave": "square", "freq": 200, "duration": 0.1, "volume": 1.0}]})
+	var top := 0.0
+	for value in loud:
+		top = maxf(top, absf(value))
+	_check("layers that add up past full scale are turned down, not clipped", top <= 0.981 and top > 0.9)
+	_check("a low-pass filter removes the top of a noise layer", _crossings(GameSynth.render({"layers": [{"wave": "white", "duration": 0.2, "filter": {"type": "lowpass", "cutoff": 300}}]})) * 4 < _crossings(GameSynth.render({"layers": [{"wave": "white", "duration": 0.2}]})))
+	_check("a pitch sweep ends lower than it starts", _crossings(GameSynth.render({"wave": "sine", "freq": 2000, "freq_end": 200, "glide": "exp", "duration": 0.2}).slice(0, 1600)) > 3 * _crossings(GameSynth.render({"wave": "sine", "freq": 2000, "freq_end": 200, "glide": "exp", "duration": 0.2}).slice(4800, 6400)))
+	var shifted := GameSfx.preset("jump", {"pitch": 2.0, "speed": 2.0, "volume": 0.2})
+	_check("a preset can be re-pitched, re-timed and turned down without touching its layers by hand", is_equal_approx(float(shifted["layers"][0]["freq"]), 2.0 * float(GameSfx.PRESETS["jump"]["layers"][0]["freq"])) and GameSynth.length(shifted) * 2 == GameSynth.length(GameSfx.preset("jump")) and is_equal_approx(float(shifted["volume"]), 0.2) and is_equal_approx(float(GameSfx.PRESETS["jump"]["volume"]), 0.45))
+	var audio := Audio.new()
+	root.add_child(audio)
+	audio.define("coin", GameSfx.preset("coin"))
+	audio.define("again", GameSfx.preset("coin"))
+	_check("a preset is defined and played like any other effect", audio.play("coin") and audio.play("again", 1.0, -6.0) and int(audio.played["coin"]) == 1)
+	audio.free()
+
+## How often a signal changes sign: a cheap stand-in for how high it sounds.
+func _crossings(samples: PackedFloat32Array) -> int:
+	var count := 0
+	for index in range(1, samples.size()):
+		if (samples[index] >= 0.0) != (samples[index - 1] >= 0.0):
+			count += 1
+	return count
 
 # ---- module base ----
 

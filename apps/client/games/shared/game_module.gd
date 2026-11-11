@@ -17,7 +17,7 @@ extends Node2D
 ##   player_count(), active_players(), is_player_active(slot)
 ##   score                        the run's score; the host records it
 ##   rng                          a GameRng seeded from config.seed
-##   audio                        a GameAudio for procedural effects and music
+##   audio                        a GameAudio: synthesised effects and tunes, and music, stingers and effects from audio files
 ##   stage_size                   the logical stage in pixels, origin at the top left
 ##   elapsed                      simulated seconds, pauses excluded
 ##   finish(outcome, extra)       end the run
@@ -133,7 +133,7 @@ func finish(outcome: StringName, extra: Dictionary = {}) -> void:
 	result["timed_out"] = outcome == OUTCOME_TIMED_OUT
 	_finished = true
 	release_inputs()
-	audio.stop_music()
+	audio.stop_music(GameAudio.END_FADE)
 	finished.emit(result)
 
 # ---- for the host ----
