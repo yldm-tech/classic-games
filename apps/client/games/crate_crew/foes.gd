@@ -298,10 +298,17 @@ static func _step_slime(world: Variant, foe: Dictionary, delta: float, speed: fl
 		"cling":
 			var target: Dictionary = world.nearest_hero(float(foe["x"]), float(foe["y"]))
 			foe["y"] = (foe["home"] as Vector2).y + sin(float(foe["time"]) * 3.0) * 0.6
-			if not target.is_empty() and absf(float(target["x"]) - float(foe["x"])) < 22.0 and float(target["y"]) > float(foe["y"]) and float(target["y"]) - float(foe["y"]) < 160.0:
+			if not target.is_empty() and absf(float(target["x"]) - float(foe["x"])) < 26.0 and float(target["y"]) > float(foe["y"]) and float(target["y"]) - float(foe["y"]) < 160.0:
+				# It wobbles first, so whoever runs on gets past and whoever stops under it has a moment to move.
+				foe["mode"] = "wobble"
+				foe["aim"] = 0.4
+				world.emit("drip", float(foe["x"]), float(foe["y"]))
+		"wobble":
+			foe["aim"] = float(foe["aim"]) - delta
+			foe["y"] = (foe["home"] as Vector2).y + sin(float(foe["time"]) * 40.0) * 0.8
+			if float(foe["aim"]) <= 0.0:
 				foe["mode"] = "drop"
 				foe["vy"] = 40.0
-				world.emit("drip", float(foe["x"]), float(foe["y"]))
 		"drop":
 			foe["vx"] = 0.0
 			var hits := _walk(world, foe, delta)

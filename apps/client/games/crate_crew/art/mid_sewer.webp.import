@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b57mwrdb816q3"
-path="res://.godot/imported/ground0.jpg-48d5c9aca6a1383eba276cb91ae38aae.ctex"
+uid="uid://x8p5tqkrkbwc"
+path="res://.godot/imported/mid_sewer.webp-9d02bda100e18d4927ed19401e803b2d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/ground0.jpg"
-dest_files=["res://.godot/imported/ground0.jpg-48d5c9aca6a1383eba276cb91ae38aae.ctex"]
+source_file="res://games/crate_crew/art/mid_sewer.webp"
+dest_files=["res://.godot/imported/mid_sewer.webp-9d02bda100e18d4927ed19401e803b2d.ctex"]
 
 [params]
 

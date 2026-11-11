@@ -87,7 +87,7 @@ func _game_snapshot() -> Dictionary:
 		var hero: Dictionary = world.heroes[slot] if world != null else {}
 		var playing := bool(hero.get("active", false))
 		players.append({
-			"score": int(hero.get("score", 0)), "hearts": int(hero.get("hearts", 0)) if playing and int(hero.get("state", World.H_OUT)) != World.H_OUT else 0, "max_hearts": hearts,
+			"score": int(hero.get("score", 0)), "hearts": int(hero.get("hearts", 0)) if playing and (int(hero.get("state", World.H_OUT)) != World.H_OUT or world.phase == World.P_MAP) else 0, "max_hearts": hearts,
 			"lives": maxi(0, int(hero.get("lives", 0))) if playing else 0, "x": float(hero.get("x", 0.0)), "y": float(hero.get("y", 0.0)), "state": int(hero.get("state", World.H_OUT)),
 			"carrying": hero.get("carry") != null, "hiding": bool(hero.get("hide", false)), "ground": bool(hero.get("ground", false)),
 		})

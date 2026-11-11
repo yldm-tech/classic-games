@@ -111,6 +111,15 @@ static func _target_x(world: Variant, boss: Dictionary) -> float:
 	var target := _target(world, boss)
 	return float(target["x"]) if not target.is_empty() else (ARENA_LEFT + ARENA_RIGHT) * 0.5
 
+## Where a walking boss heads: towards the nearest squirrel, but it stops `gap` short of it, so nobody is pinned in a corner.
+static func _keep_off(world: Variant, boss: Dictionary, gap: float) -> float:
+	var target := _target_x(world, boss)
+	var x := float(boss["x"])
+	var reach := float(boss["half"]) + gap
+	if absf(target - x) <= reach:
+		return x
+	return target - signf(target - x) * reach
+
 static func _speed(world: Variant) -> float:
 	return float(world.rules["speed"])
 
@@ -160,7 +169,7 @@ static func _choose(world: Variant, boss: Dictionary) -> void:
 		boss["glow"] = 1.0
 		world.emit("boss_tell", float(boss["x"]), float(boss["y"]) - float(boss["tall"]), {"move": mode.trim_suffix("_tell")})
 	if mode == "perch":
-		var spots: Array[Vector2] = [Vector2(72.0, 144.0), Vector2(312.0, 144.0), Vector2(192.0, FLOOR)]
+		var spots: Array[Vector2] = [Vector2(72.0, 160.0), Vector2(312.0, 160.0), Vector2(192.0, FLOOR)]
 		boss["goal"] = spots[world.rng.int_range(0, spots.size() - 1)]
 		boss["time"] = 6.0
 
@@ -171,8 +180,8 @@ static func _step_toaster(world: Variant, boss: Dictionary, delta: float) -> voi
 	var speed := _speed(world)
 	match str(boss["mode"]):
 		"walk":
-			var goal := _target_x(world, boss)
-			boss["face"] = 1 if goal > float(boss["x"]) else -1
+			var goal := _keep_off(world, boss, 64.0)
+			boss["face"] = 1 if _target_x(world, boss) > float(boss["x"]) else -1
 			boss["x"] = clampf(move_toward(float(boss["x"]), goal, (22.0 + 10.0 * float(phase)) * speed * delta), ARENA_LEFT + 30.0, ARENA_RIGHT - 30.0)
 			if float(boss["time"]) <= 0.0:
 				_choose(world, boss)
@@ -230,8 +239,8 @@ static func _step_robot(world: Variant, boss: Dictionary, delta: float) -> void:
 	var speed := _speed(world)
 	match str(boss["mode"]):
 		"walk":
-			var goal := _target_x(world, boss)
-			boss["face"] = 1 if goal > float(boss["x"]) else -1
+			var goal := _keep_off(world, boss, 72.0)
+			boss["face"] = 1 if _target_x(world, boss) > float(boss["x"]) else -1
 			boss["x"] = clampf(move_toward(float(boss["x"]), goal, (20.0 + 8.0 * float(phase)) * speed * delta), ARENA_LEFT + 24.0, ARENA_RIGHT - 24.0)
 			if float(boss["time"]) <= 0.0:
 				_choose(world, boss)
@@ -274,11 +283,11 @@ static func _step_crayfish(world: Variant, boss: Dictionary, delta: float) -> vo
 	var target := _target(world, boss)
 	match str(boss["mode"]):
 		"walk":
-			var goal := clampf(_target_x(world, boss) + 60.0, ARENA_LEFT + 40.0, ARENA_RIGHT - 40.0)
+			var goal := clampf(_keep_off(world, boss, 50.0), ARENA_LEFT + 40.0, ARENA_RIGHT - 40.0)
 			boss["face"] = 1 if _target_x(world, boss) > float(boss["x"]) else -1
 			boss["x"] = move_toward(float(boss["x"]), goal, (18.0 + 8.0 * float(phase)) * speed * delta)
-			# Anyone right in front of the claws gets snapped at.
-			if not target.is_empty() and absf(float(target["x"]) - float(boss["x"])) < 74.0 and float(target["y"]) > FLOOR - 40.0:
+			# Anyone who comes right up to the claws gets snapped at.
+			if not target.is_empty() and absf(float(target["x"]) - float(boss["x"])) < float(boss["half"]) + 30.0 and float(target["y"]) > FLOOR - 24.0:
 				boss["face"] = 1 if float(target["x"]) > float(boss["x"]) else -1
 				boss["mode"] = "snap_tell"
 				boss["time"] = 0.45 / speed
@@ -294,7 +303,7 @@ static func _step_crayfish(world: Variant, boss: Dictionary, delta: float) -> vo
 		"snap":
 			var front := float(boss["x"]) + float(int(boss["face"])) * 40.0
 			for hero: Dictionary in world.heroes:
-				if int(hero["state"]) == world.H_NORMAL and absf(float(hero["x"]) - front) < 22.0 and float(hero["y"]) > FLOOR - 36.0:
+				if int(hero["state"]) == world.H_NORMAL and absf(float(hero["x"]) - front) < 22.0 and float(hero["y"]) > FLOOR - 20.0:
 					world.hurt_hero(hero, float(boss["x"]), true)
 			if float(boss["time"]) <= 0.0:
 				boss["mode"] = "pause"

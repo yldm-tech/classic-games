@@ -128,8 +128,8 @@ func _shelf_tower() -> void:
 			_thing(left + 3, row - 1, "block")
 		else:
 			_acorns(left + 1, row - 1, 3)
-		if count % 4 == 2:
-			_foe("plane", 12, row - 3, 1 if left < 10 else -1, 5)
+		if count % 7 == 3:
+			_foe("plane", 12, row - 3, 1 if left < 10 else -1, 4)
 		row -= 2
 	_shelf(1, 6, 23)
 	_way(12, 5)
@@ -251,8 +251,7 @@ func _robot_room() -> void:
 	_fill(0, 0, 1, 14)
 	_fill(23, 0, 1, 14)
 	_ground(0, 23, 12)
-	_shelf(2, 9, 5)
-	_shelf(17, 9, 5)
+	_shelf(2, 10, 5)
+	_shelf(17, 10, 5)
 	_spawn(4, 11)
-	_steel(9, 11)
 	_boss("robot")

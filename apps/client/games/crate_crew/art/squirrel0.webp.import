@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mu06uvbbf4fa"
-path="res://.godot/imported/back1.jpg-f805748ffc9f0e14405c97b1bd94c5d5.ctex"
+uid="uid://dkwj8otf28tlx"
+path="res://.godot/imported/squirrel0.webp-431d63a2186dbf816b3242e2e128eb2d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/back1.jpg"
-dest_files=["res://.godot/imported/back1.jpg-f805748ffc9f0e14405c97b1bd94c5d5.ctex"]
+source_file="res://games/crate_crew/art/squirrel0.webp"
+dest_files=["res://.godot/imported/squirrel0.webp-431d63a2186dbf816b3242e2e128eb2d.ctex"]
 
 [params]
 

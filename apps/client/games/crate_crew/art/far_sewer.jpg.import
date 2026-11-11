@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dhf0ql43itndg"
-path="res://.godot/imported/foes.png-f4abaaebe0e5ff66c91bec900ae46cd1.ctex"
+uid="uid://cil524y2lhhw7"
+path="res://.godot/imported/far_sewer.jpg-20d5ac5bd47ef66febfb4b778f91c0e3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/foes.png"
-dest_files=["res://.godot/imported/foes.png-f4abaaebe0e5ff66c91bec900ae46cd1.ctex"]
+source_file="res://games/crate_crew/art/far_sewer.jpg"
+dest_files=["res://.godot/imported/far_sewer.jpg-20d5ac5bd47ef66febfb4b778f91c0e3.ctex"]
 
 [params]
 

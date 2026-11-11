@@ -38,7 +38,7 @@ const THROW_UP_SPEED := 340.0
 const THROW_DOWN_SPEED := 300.0
 ## A thrown partner flies straight this long, then falls.
 const BUDDY_SPEED := 270.0
-const BUDDY_FLIGHT := 0.32
+const BUDDY_FLIGHT := 0.4
 const BUDDY_UP_SPEED := 400.0
 ## How long a squirrel is held up by lifting and by throwing.
 const LIFT_TIME := 0.1
@@ -97,8 +97,8 @@ const THINGS := {
 ## What each difficulty changes: hearts per life, lives, continues, enemy speed, boss health per phase.
 const DIFFICULTY := {
 	1: {"hearts": 4, "lives": 5, "continues": 3, "speed": 0.85, "boss": 2},
-	2: {"hearts": 3, "lives": 3, "continues": 2, "speed": 1.0, "boss": 3},
-	3: {"hearts": 3, "lives": 2, "continues": 1, "speed": 1.2, "boss": 4},
+	2: {"hearts": 3, "lives": 3, "continues": 2, "speed": 1.0, "boss": 2},
+	3: {"hearts": 3, "lives": 2, "continues": 1, "speed": 1.2, "boss": 3},
 }
 
 var rng: GameRng
@@ -620,7 +620,7 @@ func _step_hero(hero: Dictionary, pad: GameInput, delta: float) -> void:
 		else:
 			hero["vx"] = move_toward(vx, 0.0, (DECEL if grounded else AIR_DECEL) * delta)
 	if not busy and pad.just_pressed(GameInput.A):
-		if pad.is_down(GameInput.DOWN) and grounded and boss.is_empty() and _standing_on_shelf(hero):
+		if pad.is_down(GameInput.DOWN) and grounded and _standing_on_shelf(hero):
 			hero["drop"] = 0.2
 			hero["ground"] = false
 			hero["stand"] = null
@@ -667,7 +667,8 @@ func _step_hero(hero: Dictionary, pad: GameInput, delta: float) -> void:
 		hero["air_time"] = float(hero["air_time"]) + delta
 	hero["ground"] = landed
 	if thrown:
-		var ended := landed or ((hits & (HIT_WALL | HIT_CEILING)) != 0) or (float(hero["fly"]) <= 0.0 and float(hero["vy"]) >= 0.0)
+		# A thrown partner stays a missile until it lands or hits a wall: straight for a moment, then falling.
+		var ended := landed or ((hits & (HIT_WALL | HIT_CEILING)) != 0)
 		if ended and float(hero["throw_time"]) > 0.05:
 			_end_flight(hero, (hits & HIT_WALL) != 0)
 	# With two squirrels nobody walks out of the picture; in a boss room nobody leaves it.

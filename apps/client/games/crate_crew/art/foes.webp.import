@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://61048mfu1kqc"
-path="res://.godot/imported/back0.jpg-320be2ee3c1f7700a7363eb2e26f5991.ctex"
+uid="uid://b6d4rcvx7vgtx"
+path="res://.godot/imported/foes.webp-7d9b3845bf30819c97d1a7a6b1b4dcb2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/back0.jpg"
-dest_files=["res://.godot/imported/back0.jpg-320be2ee3c1f7700a7363eb2e26f5991.ctex"]
+source_file="res://games/crate_crew/art/foes.webp"
+dest_files=["res://.godot/imported/foes.webp-7d9b3845bf30819c97d1a7a6b1b4dcb2.ctex"]
 
 [params]
 

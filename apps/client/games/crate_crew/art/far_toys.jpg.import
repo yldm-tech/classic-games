@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://0l5chfkuawpq"
-path="res://.godot/imported/back2.jpg-2422e4427f689908bb5ef75eb7346e50.ctex"
+uid="uid://ccele2dgq0x24"
+path="res://.godot/imported/far_toys.jpg-bfa3348eb5362b89f8b0e8b1b7d4a727.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/back2.jpg"
-dest_files=["res://.godot/imported/back2.jpg-2422e4427f689908bb5ef75eb7346e50.ctex"]
+source_file="res://games/crate_crew/art/far_toys.jpg"
+dest_files=["res://.godot/imported/far_toys.jpg-bfa3348eb5362b89f8b0e8b1b7d4a727.ctex"]
 
 [params]
 

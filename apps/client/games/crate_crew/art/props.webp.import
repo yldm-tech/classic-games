@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://8ijnqqk01jhb"
-path="res://.godot/imported/bosses.png-1d2a97f74154e001e0f3a83a1c056156.ctex"
+uid="uid://dlr6bwc7ytsho"
+path="res://.godot/imported/props.webp-4a41455f8eab74176c480a34fd92ba62.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/bosses.png"
-dest_files=["res://.godot/imported/bosses.png-1d2a97f74154e001e0f3a83a1c056156.ctex"]
+source_file="res://games/crate_crew/art/props.webp"
+dest_files=["res://.godot/imported/props.webp-4a41455f8eab74176c480a34fd92ba62.ctex"]
 
 [params]
 

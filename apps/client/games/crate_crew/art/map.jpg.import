@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cv4oss527roaa"
-path="res://.godot/imported/props.png-086ed25fd8cf74bb293ade2f9f1f9404.ctex"
+uid="uid://cynmqaklt1se4"
+path="res://.godot/imported/map.jpg-869c6ab80dc1eaf9a3640dae073f42c2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/props.png"
-dest_files=["res://.godot/imported/props.png-086ed25fd8cf74bb293ade2f9f1f9404.ctex"]
+source_file="res://games/crate_crew/art/map.jpg"
+dest_files=["res://.godot/imported/map.jpg-869c6ab80dc1eaf9a3640dae073f42c2.ctex"]
 
 [params]
 

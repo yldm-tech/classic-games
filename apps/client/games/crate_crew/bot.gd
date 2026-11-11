@@ -22,6 +22,8 @@ var _last := Vector2.ZERO
 var _back := 0.0
 var _map_wait := 0.0
 var _grab_wait := 0.0
+var _waited := 0.0
+var _yield := 0.0
 var _ignore: Array = []
 
 func _init(seat: int = 0, path: int = 0) -> void:
@@ -48,6 +50,14 @@ func controls(world: World) -> Dictionary:
 				want = _in_boss_room(world, hero) if not world.boss.is_empty() else _in_level(world, hero)
 			World.H_CARRIED:
 				want = {"a": not _held.has("a")}
+	if want.has("jump_hold"):
+		want.erase("jump_hold")
+		_jump_hold = 0.4
+	if world.phase == World.P_PLAY and not world.boss.is_empty():
+		var hero: Dictionary = world.heroes[slot]
+		if not bool(hero["ground"]) and _jump_hold > 0.0 and float(hero["vy"]) < 0.0:
+			_jump_hold -= 1.0 / 60.0
+			want["a"] = true
 	# A button that has to be pressed again is let go for one step first.
 	for button: String in ["a", "b"]:
 		if want.get(button + "_tap", false):
@@ -93,7 +103,7 @@ func _in_level(world: World, hero: Dictionary) -> Dictionary:
 	var grounded := bool(hero["ground"])
 	while _index < guide.size():
 		var point: Vector2 = guide[_index]
-		var near := absf(point.x - x) < 10.0 and absf(point.y - y) < 20.0 and grounded
+		var near := absf(point.x - x) < 10.0 and point.y - y > -6.0 and point.y - y < 72.0 and grounded
 		# Past it on the way to the next one, at its height: it counts as reached.
 		if not near and _index + 1 < guide.size() and grounded and absf(point.y - y) < 14.0:
 			var next: Vector2 = guide[_index + 1]
@@ -120,9 +130,11 @@ func _in_level(world: World, hero: Dictionary) -> Dictionary:
 		var best_dx := 1e9
 		for index in guide.size():
 			var point: Vector2 = guide[index]
-			if absf(point.y - y) < 6.0 and absf(point.x - x) < best_dx:
-				best_dx = absf(point.x - x)
-				best = index
+			# The point of the floor it stands on (it may stand on a crate up to two high on it).
+			if point.y - y > -6.0 and point.y - y < 40.0 and absf(point.x - x) < best_dx + 48.0:
+				if best < 0 or point.y < (guide[best] as Vector2).y - 1.0 or (absf(point.y - (guide[best] as Vector2).y) < 1.0 and absf(point.x - x) < best_dx):
+					best_dx = absf(point.x - x)
+					best = index
 		if best >= 0 and best + 1 < _index:
 			_index = best + 1
 			target = guide[_index]
@@ -162,9 +174,13 @@ func _fight(world: World, hero: Dictionary) -> Dictionary:
 	if not flier.is_empty():
 		if carrying and absf(float(flier["x"]) - x) < 12.0:
 			return {"done": true, "up": true, "b_tap": true}
-		# A biplane sweeps the space between shelves: let it go by before jumping up into it.
-		if bool(hero["ground"]) and not carrying and str(flier["kind"]) == "plane":
+		# A biplane sweeps the space between shelves: let it go by before jumping up into it, but never wait long.
+		var coming := (float(flier["x"]) - x) * float(int(flier["face"])) < 0.0
+		if bool(hero["ground"]) and not carrying and str(flier["kind"]) == "plane" and coming and _waited < 1.2:
+			_waited += 1.0 / 60.0
 			return {"done": true}
+	if flier.is_empty():
+		_waited = 0.0
 	if carrying:
 		if not ahead.is_empty():
 			var side := 1 if float(ahead["x"]) > x else -1
@@ -207,6 +223,17 @@ func _move_to(world: World, hero: Dictionary, target: Vector2, want: Dictionary)
 	elif _stuck > 2.5:
 		_back = 0.35
 		_stuck = 0.0
+	# The partner in the way: the second squirrel waits a moment, the first hops over (or onto its head and off).
+	var partner: Dictionary = world.heroes[1 - slot]
+	if dir != 0 and grounded and int(partner["state"]) == World.H_NORMAL and absf(float(partner["y"]) - y) < 8.0:
+		var ahead := (float(partner["x"]) - x) * float(dir)
+		if ahead > 0.0 and ahead < 16.0:
+			if slot == 1 and _yield < 0.6:
+				_yield += step
+				return
+			want["jump_hold"] = true
+	else:
+		_yield = maxf(0.0, _yield - step)
 	if dir > 0:
 		want["right"] = true
 	elif dir < 0:
@@ -281,74 +308,118 @@ func _in_boss_room(world: World, hero: Dictionary) -> Dictionary:
 	var boss: Dictionary = world.boss
 	var x := float(hero["x"])
 	var y := float(hero["y"])
-	var want := {}
 	var bx := float(boss["x"])
 	var by := float(boss["y"])
-	var carrying: Variant = hero["carry"]
+	var kind := str(boss["kind"])
 	var mode := str(boss["mode"])
-	# Out of the way of what is coming down.
+	var carrying: Variant = hero["carry"]
+	var away := 1.0 if x >= bx else -1.0
+	var gap := absf(bx - x)
+	# Out from under whatever is coming down: where it will land is worked out as the game marks it.
 	for shot: Dictionary in world.shots:
-		if absf(float(shot["x"]) - x) < 18.0 and float(shot["y"]) < y and y - float(shot["y"]) < 90.0 and float(shot["vy"]) > 0.0:
-			var away := 1.0 if x >= float(shot["x"]) else -1.0
+		var land := _landing(world, shot)
+		if float(shot["g"]) > 0.0 and absf(land - x) < 20.0 and float(shot["y"]) < y:
+			var side := 1.0 if x >= land else -1.0
 			if x < 50.0:
-				away = 1.0
+				side = 1.0
 			elif x > 334.0:
-				away = -1.0
-			return {"right" if away > 0.0 else "left": true}
-	var charging := mode == "charge" or mode == "hop" or mode == "dive" or mode == "rise_tell" or mode == "snap_tell"
-	if charging and absf(bx - x) < 90.0 and bool(hero["ground"]):
-		if mode == "rise_tell" or mode == "snap_tell":
-			return {"right" if x >= bx else "left": true}
-		return {"a_tap": true, "a": true, "right" if bx < x else "left": true}
+				side = -1.0
+			return {"right" if side > 0.0 else "left": true}
+	# Out of the way of an attack that has been announced.
+	if (mode == "rise_tell" or mode == "snap_tell" or mode == "snap") and gap < 84.0:
+		return _flee(x, away)
+	if mode == "charge_tell" or mode == "charge" or mode == "hop_tell" or mode == "hop":
+		if gap < 160.0 and bool(hero["ground"]):
+			# Up onto a shelf at the side, or over the top.
+			return {"a_tap": true, "jump_hold": true, "right" if x < 192.0 else "left": true} if gap < 60.0 else _flee(x, away)
+		if not bool(hero["ground"]):
+			return {"a": true, "right" if away > 0.0 else "left": true}
+	if kind == "crow" and (mode == "dive_tell" or mode == "dive"):
+		var goal: Vector2 = boss["goal"]
+		if absf(goal.x - x) < 40.0:
+			return _flee(x, 1.0 if x >= goal.x else -1.0)
 	if carrying is Dictionary and bool((carrying as Dictionary)["special"]):
-		if str(boss["kind"]) == "crow" and by < y - 40.0:
-			if absf(bx - x) < 8.0:
-				want["up"] = true
-				want["b_tap"] = true
-			else:
-				want["right" if bx > x else "left"] = true
-			return want
-		var gap := absf(bx - x)
-		var side := 1 if bx > x else -1
-		if gap < float(boss["half"]) + 30.0:
-			want["left" if side > 0 else "right"] = true
-		elif int(hero["face"]) != side:
-			want["right" if side > 0 else "left"] = true
-		elif Bosses.is_open(boss) and absf(by - y) < 24.0:
-			want["b_tap"] = true
-		return want
+		return _aim_at_boss(world, hero, boss)
 	if carrying is Dictionary:
-		# Not the boss's lump: put it down out of the way and go for one.
+		# Not the boss's lump: put it down and go for one.
 		return {"down": true, "b_tap": true}
 	var best: Dictionary = {}
 	var best_distance := 1e9
 	for object: Dictionary in world.objects:
-		if bool(object["special"]) and int(object["state"]) == World.O_REST and absf(float(object["x"]) - bx) > float(boss["half"]) + 4.0:
+		if bool(object["special"]) and int(object["state"]) == World.O_REST and absf(float(object["x"]) - bx) > float(boss["half"]) + 10.0:
 			var distance := absf(float(object["x"]) - x) + absf(float(object["y"]) - y) * 2.0
 			if distance < best_distance:
 				best_distance = distance
 				best = object
+	var want := {}
 	if not best.is_empty():
 		var ox := float(best["x"])
 		var oy := float(best["y"])
-		var reach := float(best["half"]) + World.HERO_HALF + 3.0
+		var reach := float(best["half"]) + World.HERO_HALF + 4.0
 		if absf(oy - y) > 8.0:
 			_move_to(world, hero, Vector2(ox, oy), want)
-			return want
-		if absf(ox - x) > reach:
+		elif absf(ox - x) > reach:
 			want["right" if ox > x else "left"] = true
-			if absf(ox - x) < reach + 10.0 and world.thing_at(x + signf(ox - x) * 9.0, y - 6.0) != null:
-				want["b_tap"] = true
 		elif (int(hero["face"]) > 0) != (ox > x):
 			want["right" if ox > x else "left"] = true
 		else:
 			want["b_tap"] = true
 		return want
-	# Nothing to throw yet: keep a distance and wait.
-	if absf(bx - x) < 110.0:
-		var away := 1 if x > bx else -1
-		if (away < 0 and x < 40.0) or (away > 0 and x > 344.0):
-			want["a_tap"] = true
-			away = -away
-		want["right" if away > 0 else "left"] = true
+	# Nothing to throw yet: keep away from it.
+	if gap < 100.0 and absf(by - y) < 60.0:
+		return _flee(x, away)
 	return want
+
+## Run away from something, turning back with a jump when a wall is reached.
+func _flee(x: float, away: float) -> Dictionary:
+	if (away < 0.0 and x < 40.0) or (away > 0.0 and x > 344.0):
+		return {"a_tap": true, "jump_hold": true, "right" if away < 0.0 else "left": true}
+	return {"right" if away > 0.0 else "left": true}
+
+## Holding the boss's lump: get to a throwing distance on its level, face it and throw when it can be hurt; under the crow, throw up.
+func _aim_at_boss(world: World, hero: Dictionary, boss: Dictionary) -> Dictionary:
+	var x := float(hero["x"])
+	var y := float(hero["y"])
+	var bx := float(boss["x"])
+	var by := float(boss["y"])
+	var side := 1 if bx > x else -1
+	var gap := absf(bx - x)
+	var want := {}
+	var low := absf(by - y) < 30.0 or (str(boss["kind"]) != "crow")
+	if not low:
+		# High above: right under it, then straight up.
+		if gap < 8.0 and Bosses.is_open(boss):
+			return {"up": true, "b_tap": true}
+		want["right" if bx > x else "left"] = true
+		return want
+	var close := float(boss["half"]) + 40.0
+	if gap < close and not ((side < 0 and x > 344.0) or (side > 0 and x < 40.0)):
+		want["left" if side > 0 else "right"] = true
+		return want
+	if int(hero["face"]) != side:
+		want["right" if side > 0 else "left"] = true
+		return want
+	if gap > 170.0:
+		want["right" if side > 0 else "left"] = true
+		return want
+	# The throw flies at waist height: it has to meet the body.
+	var meets := y - 2.0 > by - float(boss["tall"]) + 2.0 and y - 18.0 < by - 2.0
+	if not meets and bool(hero["ground"]) and y < by - 8.0 and world.tile_at_point(x, y + 1.0) == Levels.SHELF:
+		return {"down": true, "a_tap": true}
+	if Bosses.is_open(boss) and bool(hero["ground"]) and meets:
+		want["b_tap"] = true
+	return want
+
+## Where a falling shot will come down, by the same small steps the renderer marks it with.
+func _landing(world: World, shot: Dictionary) -> float:
+	var x := float(shot["x"])
+	var y := float(shot["y"])
+	var vx := float(shot["vx"])
+	var vy := float(shot["vy"])
+	var g := float(shot["g"])
+	for index in 90:
+		var t := float(index) * 0.02
+		var px := x + vx * t
+		if world.is_floor(px, y + vy * t + 0.5 * g * t * t + 3.0):
+			return px
+	return 1e6

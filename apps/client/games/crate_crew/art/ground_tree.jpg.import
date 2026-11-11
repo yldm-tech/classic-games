@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dms232i04dx6x"
-path="res://.godot/imported/back3.jpg-361ea395ce796d3084da8fa357f56022.ctex"
+uid="uid://cqr6l1ytvhl5w"
+path="res://.godot/imported/ground_tree.jpg-bba0729ac377bcb3c23ad6ecbdd29c1d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/back3.jpg"
-dest_files=["res://.godot/imported/back3.jpg-361ea395ce796d3084da8fa357f56022.ctex"]
+source_file="res://games/crate_crew/art/ground_tree.jpg"
+dest_files=["res://.godot/imported/ground_tree.jpg-bba0729ac377bcb3c23ad6ecbdd29c1d.ctex"]
 
 [params]
 

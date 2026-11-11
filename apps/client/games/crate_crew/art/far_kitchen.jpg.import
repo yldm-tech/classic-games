@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://detykbkurj4es"
-path="res://.godot/imported/ground3.jpg-c256161842463a45ce67dcec43eadf60.ctex"
+uid="uid://bfeqoi7a6kp5v"
+path="res://.godot/imported/far_kitchen.jpg-467bff052a97bfc909a4dfa831af1d43.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/art/ground3.jpg"
-dest_files=["res://.godot/imported/ground3.jpg-c256161842463a45ce67dcec43eadf60.ctex"]
+source_file="res://games/crate_crew/art/far_kitchen.jpg"
+dest_files=["res://.godot/imported/far_kitchen.jpg-467bff052a97bfc909a4dfa831af1d43.ctex"]
 
 [params]
 

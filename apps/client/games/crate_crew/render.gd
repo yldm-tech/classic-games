@@ -51,6 +51,11 @@ const ART_NAMES := {"kitchen": "kitchen", "toyshop": "toys", "sewer": "sewer", "
 const FOE_FRAMES := ["ant", "fly", "shaker", "mouse", "jack", "plane", "rat", "frog", "slime", "worm", "hornet", "spider"]
 const BOSS_FRAMES := ["toaster_idle", "toaster_pop", "toaster_crouch", "toaster_hurt", "robot_idle", "robot_throw", "robot_charge", "robot_hurt", "crayfish_idle", "crayfish_snap", "crayfish_dive", "crayfish_hurt", "crow_fly_0", "crow_fly_1", "crow_dive", "crow_perch", "crow_hurt"]
 const PROP_FRAMES := ["wood", "steel", "apple", "can", "block", "nut", "walnut", "pinecone", "toast", "cog", "acorn", "acorn_bag", "heart", "golden_acorn", "flag_off", "flag_on", "exit_closed", "exit_open", "hole", "burrow", "crack", "fx_puff", "fx_star", "fx_splinter", "fx_bolt", "shelf_kitchen", "shelf_toys", "shelf_sewer", "shelf_tree", "hazard_kitchen", "hazard_toys", "hazard_sewer", "hazard_tree"]
+## How much larger than its collision box each enemy is painted, so the small ones read at a glance; the boxes stay as they are.
+const FOE_ZOOM := {"ant": 1.35, "fly": 1.55, "shaker": 1.1, "mouse": 1.25, "jack": 1.15, "plane": 1.45, "rat": 1.1, "frog": 1.15, "slime": 1.25, "worm": 1.2, "hornet": 1.4, "spider": 1.3}
+const BOSS_ZOOM := 1.12
+## Boss pictures that were painted facing right while the rest face left.
+const FACING_RIGHT := ["robot_charge"]
 ## Pick-up kinds of the simulation and the props that show them.
 const PICKUP_FRAMES := {"acorn": "acorn", "bag": "acorn_bag", "heart": "heart", "golden": "golden_acorn"}
 
@@ -828,7 +833,8 @@ func _draw_thing(object: Dictionary, at: Vector2, angle: float, tint: Color) -> 
 		var frame := str(object["foe"]) + "_0"
 		if _has(foes, frame):
 			var size := foes.size(frame)
-			_spin(foes, frame, at - Vector2(0.0, size.y * 0.5), angle + PI, 1.0, tint, int(object.get("face", 1)) < 0)
+			var zoom := float(FOE_ZOOM.get(str(object["foe"]), 1.0))
+			_spin(foes, frame, at - Vector2(0.0, size.y * 0.5 * zoom), angle + PI, zoom, tint, int(object.get("face", 1)) < 0)
 		return
 	var kind := str(object["kind"])
 	if not _has(props, kind):
@@ -954,9 +960,11 @@ func _draw_foe(foe: Dictionary) -> void:
 			frame = "frog_0" if bool(foe["ground"]) else "frog_1"
 		"slime":
 			frame = "slime_1" if mode == "drop" else "slime_%d" % (int(time * 3.0) % 2)
-			if mode == "cling":
-				frame = "slime_0"
+			if mode == "cling" or mode == "wobble":
+				frame = "slime_0" if mode == "cling" else "slime_1"
 				flip_v = true
+				if mode == "wobble":
+					x += sin(time * 60.0) * 0.7
 		"fly", "hornet":
 			frame = kind + "_%d" % (int(time * 24.0) % 2)
 			if mode == "aim":
@@ -970,9 +978,11 @@ func _draw_foe(foe: Dictionary) -> void:
 			draw_line(anchor, Vector2(x, y - tall + 2.0), Color(0.92, 0.92, 0.96, 0.75), 0.5, true)
 			frame = "spider_%d" % (int(time * 3.0) % 2)
 	var flipped := int(foe["face"]) < 0
+	var zoom := float(FOE_ZOOM.get(kind, 1.0))
+	scale *= zoom
 	if state == Foes.KNOCKED_OUT:
 		if _has(foes, frame):
-			_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), 1.0, Color.WHITE, flipped, float(foe["time"]) < 0.1)
+			_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), zoom, Color.WHITE, flipped, float(foe["time"]) < 0.1)
 		return
 	if state == Foes.STUNNED:
 		frame = kind + "_0"
@@ -985,9 +995,9 @@ func _draw_foe(foe: Dictionary) -> void:
 	if not _has(foes, frame):
 		draw_rect(Rect2(x - float(foe["half"]), y - tall, float(foe["half"]) * 2.0, tall), Color("c04060"))
 	elif flip_v:
-		_spin(foes, frame, Vector2(x, y - tall * 0.5), PI, 1.0, Color.WHITE, not flipped, hit)
+		_spin(foes, frame, Vector2(x, y - tall * 0.5), PI, zoom, Color.WHITE, not flipped, hit)
 	elif angle != 0.0 and state == Foes.STUNNED and bool(foe["flies"]):
-		_spin(foes, frame, Vector2(x, y - tall * 0.5), angle, 1.0, Color.WHITE, flipped, hit)
+		_spin(foes, frame, Vector2(x, y - tall * 0.5), angle, zoom, Color.WHITE, flipped, hit)
 	else:
 		_put(foes, frame, Vector2(x, y), flipped, scale, angle, Color.WHITE, hit)
 	if state == Foes.STUNNED or mode == "dizzy":
@@ -1081,7 +1091,7 @@ func _draw_boss(boss: Dictionary) -> void:
 		_shadow(x, Bosses.FLOOR, float(boss["half"]) * 0.6, 0.18)
 	# Pictures face left; a boss facing right is drawn flipped.
 	if _has(bosses, frame):
-		_put(bosses, frame, Vector2(x, y + 1.0), face > 0.0, scale, angle, Color.WHITE, white)
+		_put(bosses, frame, Vector2(x, y + 1.0), (face > 0.0) != (frame in FACING_RIGHT), scale * BOSS_ZOOM, angle, Color.WHITE, white)
 	else:
 		draw_rect(Bosses.body(boss), Color("c04040"))
 
@@ -1458,13 +1468,16 @@ func _draw_map() -> void:
 	var title := Texts.of(shown_id, locale)
 	var theme_name := str(Levels.NODES[shown_id]["theme"])
 	var sub := Texts.of(theme_name, locale) if theme_name != "" else ""
-	var size := 13.0
-	var wide := maxf(text.measure(title, size, 800).x, 120.0)
-	var box := Rect2(VIEW.x * 0.5 - wide * 0.5 - 14.0, VIEW.y - 40.0, wide + 28.0, 34.0)
-	draw_style_box(_plate, box)
-	text.draw(self, Vector2(VIEW.x * 0.5, box.position.y + 16.0), title, size, Color("fff7e0"), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800)
+	var size := 11.0
 	var line := (sub + "  ·  " if sub != "" else "") + Texts.of("map_pick" if open.size() > 1 else "map_go", locale)
-	text.draw(self, Vector2(VIEW.x * 0.5, box.position.y + 28.0), line, 7.0, Color(0.9, 0.85, 0.75), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 600)
+	var wide := maxf(text.measure(title, size, 800).x, text.measure(line, 7.0, 600).x) + 4.0
+	# A label beside the marker, above it in the lower half of the map and below it in the upper half, kept clear of the HUD.
+	var at := marker + Vector2(0.0, -40.0 if marker.y > 110.0 else 14.0)
+	var box := Rect2(clampf(at.x - wide * 0.5 - 10.0, 4.0, VIEW.x - wide - 24.0), clampf(at.y, 38.0, VIEW.y - 34.0), wide + 20.0, 30.0)
+	draw_style_box(_plate, box)
+	var middle := box.position.x + box.size.x * 0.5
+	text.draw(self, Vector2(middle, box.position.y + 14.0), title, size, Color("fff7e0"), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800)
+	text.draw(self, Vector2(middle, box.position.y + 25.0), line, 7.0, Color(0.9, 0.85, 0.75), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 600)
 
 static func theme_boss_frame(theme: String) -> String:
 	return {"kitchen": "toaster_idle", "toyshop": "robot_idle", "sewer": "crayfish_idle", "treehouse": "crow_perch"}.get(theme, "")
