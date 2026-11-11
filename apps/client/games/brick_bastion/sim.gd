@@ -367,13 +367,27 @@ func leave(slot: int) -> void:
 	active[slot] = false
 	rovers[slot].alive = false
 
+## Put a rover on the field: at its own start, or, when a vehicle stands there, one cell above it, or at the partner's start. Returns false when all of those are taken, and the rover tries again a moment later.
 func _place_rover(rover: Dictionary) -> bool:
-	var cell: Vector2i = Stages.PLAYER_CELLS[rover.slot]
-	var x := cell.x * CELL + LANE
-	var y := cell.y * CELL + LANE
-	for raider in raiders:
-		if absi(int(raider.x) - x) < int(raider.half) + ROVER_HALF and absi(int(raider.y) - y) < int(raider.half) + ROVER_HALF:
-			return false
+	var own: Vector2i = Stages.PLAYER_CELLS[rover.slot]
+	var x := -1
+	var y := -1
+	for cell: Vector2i in [own, own + Vector2i(0, -1), Stages.PLAYER_CELLS[1 - int(rover.slot)]]:
+		var code := tiles[cell.y * Stages.COLS + cell.x]
+		if code != Stages.T_EMPTY and code != Stages.T_THICKET:
+			continue
+		var cx := cell.x * CELL + LANE
+		var cy := cell.y * CELL + LANE
+		var taken := false
+		for other in _vehicles():
+			if absi(int(other.x) - cx) < int(other.half) + ROVER_HALF and absi(int(other.y) - cy) < int(other.half) + ROVER_HALF:
+				taken = true
+		if not taken:
+			x = cx
+			y = cy
+			break
+	if x < 0:
+		return false
 	rover.x = x
 	rover.y = y
 	rover.dir = 0

@@ -515,12 +515,19 @@ func _test_losses() -> void:
 	game.advance(Sim.RESPAWN_STEPS * STEP + 0.5)
 	var back := game.snapshot()
 	_check("it comes back at its start, shielded", back["players"][0]["alive"] and back["players"][0]["shielded"] and is_equal_approx(float(back["players"][0]["x"]), 5.0 * 16.0 + 8.0))
+	var squatter := _raider(game, "grunt", 5, 13)
+	game.sim.rovers[0].shield_t = 0
+	game.sim.rovers[0].x = 3 * Sim.CELL + Sim.LANE
+	_shell(game, 3, 9, 2, 1)
+	game.advance(1.2 + Sim.RESPAWN_STEPS * STEP + 0.5)
+	_check("with a raider parked on its start, a rover comes back one cell above instead", game.snapshot()["players"][0]["alive"] and is_equal_approx(float(game.snapshot()["players"][0]["y"]), 12.0 * 16.0 + 8.0) and is_equal_approx(float(game.snapshot()["players"][0]["x"]), 5.0 * 16.0 + 8.0))
+	game.sim.raiders.erase(squatter)
 	game.sim.rovers[0].lives = 1
 	game.sim.rovers[0].shield_t = 0
 	game.sim.rovers[0].score = 700
 	game.sim.score_total = 700
 	game.sim.core = 2
-	_shell(game, 5, 9, 2, 1)
+	_shell(game, 5, 8, 2, 1)
 	game.advance(1.2)
 	_check("the last rover going down stops play, and nothing is decided until the wreck has been seen", game.snapshot()["phase"] == "lost" and results.is_empty())
 	game.advance(Sim.LOST_STEPS * STEP + 0.1)
@@ -533,7 +540,7 @@ func _test_losses() -> void:
 	game.sim.rovers[0].shield_t = 0
 	_shell(game, 5, 9, 2, 1)
 	game.advance(1.2 + Sim.LOST_STEPS * STEP)
-	_check("with no crew left, losing every rover is a defeat", results.size() == 1 and results[0]["defeated"] == true and results[0]["cleared"] == false and results[0]["deaths"] == 3 and results[0]["core"] == 4 and results[0]["crews_used"] == 1)
+	_check("with no crew left, losing every rover is a defeat", results.size() == 1 and results[0]["defeated"] == true and results[0]["cleared"] == false and results[0]["deaths"] == 4 and results[0]["core"] == 4 and results[0]["crews_used"] == 1)
 	game.free()
 
 	game = _start_playing(1, 17)

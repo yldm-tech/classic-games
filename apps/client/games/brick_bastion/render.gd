@@ -230,14 +230,14 @@ static func _raider(ci: CanvasItem, sim: RefCounted, tex: Dictionary, time: floa
 	var tint := Color.WHITE
 	if raider.flash_t > 0:
 		frame = "w"
-	elif raider.carrier and int(time * 8.0) % 4 == 0:
-		frame = "w"
-		tint = GOLD
 	elif sim.freeze_t > 0 or raider.stun_t > 0:
 		tint = Color(0.55, 0.8, 1.0)
 	elif raider.boss and raider.enraged and int(time * 10.0) % 3 == 0:
 		tint = Color(1.0, 0.6, 0.5)
 	ci.draw_texture(tex["%s_%d_%s" % [kind, int(raider.dir), frame]], at, tint)
+	if raider.carrier and raider.flash_t <= 0 and int(time * 8.0) % 4 == 0:
+		# A supply carrier glints gold over its own colours.
+		ci.draw_texture(tex["%s_%d_w" % [kind, int(raider.dir)]], at, Color(GOLD, 0.55))
 	if raider.boss:
 		_muzzle_flash(ci, raider, 17.0, -6.0)
 		_muzzle_flash(ci, raider, 17.0, 6.0)
