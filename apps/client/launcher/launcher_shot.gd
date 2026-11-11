@@ -9,6 +9,8 @@ extends SceneTree
 ##   LAUNCHER_SHOT_ACTIONS  comma-separated LauncherInput action names without the "launcher_" prefix, dispatched in order before the capture (e.g. "down,menu")
 ##   LAUNCHER_SHOT_LOCALE   "zh" (default) or "en"
 ##   LAUNCHER_SHOT_NAME     file name without extension, default "<screen>-<state>"
+##   LAUNCHER_SHOT_MODE     "pc" switches to PC mode before the actions are dispatched
+##   LAUNCHER_SHOT_PC       semicolon-separated steps applied to PC mode after the actions: view=library, layout=list, sort=recent, category=favorites, genre=<English genre>, tab=1, locked, select=<game id>, query=<text>, search (focus the field), many=<n> (n synthetic games on top of the catalog), width=<canvas px> (narrower PC area, to check reflow), hover=<game id>, zone=<search|sidebar|main> (move keyboard focus there and show the ring), menu (the selected game's menu), sort_menu
 ##
 ## The launcher is mounted in a SubViewport of the canvas size, so the PNG does not depend on the size of the window or the display. The profile lives in its own file and never touches the player's real one.
 
@@ -52,9 +54,18 @@ func _initialize() -> void:
 	await process_frame
 	if screen_id != "home":
 		shell.go(StringName(screen_id), {"game": "shooter"})
+	if _env("LAUNCHER_SHOT_MODE", "console") == "pc":
+		shell.toggle_pc_mode()
+		await process_frame
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
 		shell.dispatch(StringName("launcher_" + action.strip_edges()))
 		await process_frame
+	var pc := shell.find_child("PcMode", false, false) as LauncherPcMode
+	if pc != null:
+		for step in _env("LAUNCHER_SHOT_PC", "").split(";", false):
+			_pc_step(pc, step.strip_edges())
+			await process_frame
+			await process_frame
 	# Let the screen fade, the backdrop cross-fade and the card resize finish.
 	await create_timer(1.2).timeout
 	await RenderingServer.frame_post_draw
@@ -71,6 +82,41 @@ func _initialize() -> void:
 		return
 	print("launcher_shot: wrote %s (%dx%d)" % [path, image.get_width(), image.get_height()])
 	quit(0)
+
+func _pc_step(pc: LauncherPcMode, step: String) -> void:
+	var value := step.get_slice("=", 1) if step.contains("=") else ""
+	match step.get_slice("=", 0):
+		"view": pc.set_view(StringName(value))
+		"layout": pc.set_layout(StringName(value))
+		"sort": pc.set_sort(StringName(value))
+		"category": pc.set_category(StringName(value))
+		"genre": pc.set_genre(value)
+		"tab": pc.set_tab(int(value))
+		"locked": pc._detail.only_locked_toggled.emit()
+		"select": pc.select(value)
+		"query": pc.set_query(value)
+		"search": pc.focus_search()
+		"many": pc.set_entries(_many(int(value)))
+		"width":
+			pc.anchor_right = 0.0
+			pc.offset_right = float(value)
+		"hover": (pc._library.item(value) as LauncherPcControls.Clickable)._on_pointer(true)
+		"zone":
+			pc.focus_visible = true
+			pc._enter_zone(StringName(value))
+		"menu": pc.handle_action(LauncherInput.MENU)
+		"sort_menu": pc.open_sort_menu()
+
+## The catalog plus `count` copies of its games under new ids and numbered names, to see the PC library with more games than exist. The copies have no key art and cannot be started.
+func _many(count: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = LauncherCatalog.all().duplicate()
+	var real := LauncherCatalog.all()
+	for index in count:
+		var copy: Dictionary = real[index % real.size()].duplicate(true)
+		copy["id"] = "%s_%02d" % [copy["id"], index + 2]
+		copy["name"] = {"zh": "%s %d" % [copy["name"]["zh"], index + 2], "en": "%s %d" % [copy["name"]["en"], index + 2]}
+		out.append(copy)
+	return out
 
 func _env(name: String, fallback: String) -> String:
 	var value := OS.get_environment(name)
