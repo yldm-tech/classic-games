@@ -356,19 +356,36 @@ func _test_foe_kinds() -> void:
 	game.free()
 
 	game = _arena()
-	var beetle := _foe(game, "beetle", Vector2i(13, 5), false)
+	var beetle := _foe(game, "beetle", Vector2i(7, 3), false)
 	(game.heroes[0] as Actors.Hero).invuln = 99.0
 	var nearest := 99
 	for tick in 900:
 		game.advance(STEP)
 		nearest = mini(nearest, absi(beetle.cell.x - 1) + absi(beetle.cell.y - 1))
 	_check("a beetle makes for the digger", nearest <= 4)
+	var near_by := _foe(game, "beetle", Vector2i(5, 5))
+	var far_off := _foe(game, "beetle", Vector2i(17, 13))
+	_check("but only picks up a trail within its range: from the far corner it does not hunt", Foes._chase(game, near_by) != Vector2i.ZERO and Foes._chase(game, far_off) == Vector2i.ZERO and Foes.CHASE_RANGE < 28)
 	game.free()
 
 	game = _arena()
 	var shell := _foe(game, "shell", Vector2i(7, 1), false)
 	game.advance(0.2)
 	_check("a stoneback charges down a clear line at a digger it can see", shell.charge and shell.dir == Vector2i(-1, 0) and int(game.audio.played.get("charge", 0)) == 1)
+	game.free()
+
+	game = _arena()
+	shell = _foe(game, "shell", Vector2i(7, 1), false)
+	shell.speed *= 1.35
+	game.advance(STEP * 2.0)
+	_check("a stoneback that sees a digger paws the ground before it charges", shell.charge and shell.windup > 0.0 and shell.pos() == Vector2(7, 1))
+	game.advance(Foes.CHARGE_WINDUP - STEP * 4.0)
+	_check("and has not moved while the warning lasts", shell.windup > 0.0 and shell.pos() == Vector2(7, 1))
+	game.advance(STEP * 3.0)
+	var from := shell.pos().x
+	game.advance(0.5)
+	var run := from - shell.pos().x
+	_check("no charge outruns a digger without boots, a cracked shell's included", run > 1.5 and run <= Foes.CHARGE_LIMIT * 0.5 + 0.01 and Foes.CHARGE_LIMIT < Main.HERO_SPEED)
 	game.free()
 
 	game = _arena()
@@ -460,6 +477,21 @@ func _test_two_players() -> void:
 	var next := game.snapshot()
 	_check("the partner is back for the next level with one life", next["stage"] == 2 and not next["players"][1]["out"] and next["players"][1]["lives"] == 1 and _spot(game, 1) == Vector2i(17, 13))
 	_check("leaving takes player two off the field but keeps the seat in the snapshot", game.leave(1) and game.snapshot()["player_count"] == 1 and (game.snapshot()["players"] as Array).size() == 2)
+	game.free()
+
+	game = _arena(2)
+	var late: Actors.Hero = game.heroes[1]
+	late.lives = 1
+	late.invuln = 0.0
+	game.exit_cell = Vector2i(1, 3)
+	game.exit_visible = true
+	_tap(game, 1, &"a")
+	game.advance(Main.FUSE + 0.1)
+	var falling := late.lives == 0 and late.dead > 0.0 and not late.out
+	_walk(game, 0, &"down", 2)
+	game.advance(Main.CLEAR_TIME + 0.1)
+	var carried: Dictionary = game.snapshot()["players"][1]
+	_check("a partner whose last life went as the lift was reached also starts the next level with one life, not with none", falling and game.snapshot()["stage"] == 2 and carried["lives"] == 1 and not carried["out"] and late.in_field())
 	game.free()
 
 	game = _arena(1)

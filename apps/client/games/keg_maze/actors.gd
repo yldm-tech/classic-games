@@ -52,6 +52,8 @@ class Foe extends RefCounted:
 	var anim := 0.0
 	var rest := 0.0
 	var charge := false
+	## Seconds a stoneback still paws the ground before the charge it has announced; it stands where it is, and touching it hurts as usual.
+	var windup := 0.0
 	## Boss only: which boss, seconds to the next attack, seconds left of the warning before a spit, how many attacks it has made.
 	var tier := 0
 	var attack := 0.0

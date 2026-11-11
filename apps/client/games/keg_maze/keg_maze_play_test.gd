@@ -14,11 +14,11 @@ const CONTROLS: Array[StringName] = [&"up", &"right", &"down", &"left", &"a", &"
 const MARGIN := 0.4
 const FAR := 99.0
 
-## The bot is not a strong player, and which run it survives depends on the seed. These seeds were picked with SCAN for the tuning of the day. At that time every one of twelve seeds passed the solo, duo and boss checks, and one in twelve got through the whole game (DEEP_SEED). When the creatures, the levels or the bot change, set SCAN to true, run the test once and pick again.
+## The bot is not a strong player, and which run it survives depends on the seed. These seeds were picked with SCAN for the tuning of the day. At that time every one of twelve seeds passed the solo, duo and boss checks, and three of the first forty-four (34, 41 and 44) got through the whole game on the easy setting; DEEP_SEED is the first of them. When the creatures, the levels or the bot change, set SCAN to true, run the test once and pick again.
 const SCAN := false
 const SOLO_SEED := 7
 const DUO_SEED := 2
-const DEEP_SEED := 12
+const DEEP_SEED := 34
 const CLAW_SEED := 3
 const LAST_SEED := 5
 

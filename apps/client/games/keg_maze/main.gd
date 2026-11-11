@@ -157,8 +157,8 @@ func _load_stage(index: int) -> void:
 		var hero: Actors.Hero = heroes[slot]
 		if not is_player_active(slot):
 			continue
-		# A digger who ran out of lives is hauled back up for the next level with a single life.
-		if hero.out:
+		# A digger who ran out of lives is hauled back up for the next level with a single life. That includes one whose last life went while the partner was already stepping into the lift, before the knock-out had played out.
+		if hero.out or hero.lives <= 0:
 			hero.out = false
 			hero.lives = 1
 		_place(slot, START_INVULN)
@@ -185,6 +185,7 @@ func _daze(around: Vector2i) -> void:
 		if foe.kind != "boss" and foe.dying <= 0.0 and absi(spot.x - around.x) + absi(spot.y - around.y) <= DAZE_REACH:
 			foe.rest = maxf(foe.rest, DAZE_TIME)
 			foe.charge = false
+			foe.windup = 0.0
 			emit_fx("daze", spot)
 
 # ---- step ----

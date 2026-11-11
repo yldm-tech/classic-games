@@ -25,7 +25,13 @@ const BOSSES := [
 ]
 const SPEED_SCALE := [0.85, 1.0, 1.15]
 const CHARGE_SPEED := 2.6
+## Cells a second no charge exceeds, cracked shell or hard setting included: a digger without boots (4 cells a second) can always outrun one.
+const CHARGE_LIMIT := 3.6
+## A stoneback that has seen a digger paws the ground this long before it charges.
+const CHARGE_WINDUP := 0.4
 const SIGHT := 7
+## A beetle picks up a digger's trail only within this many steps of open floor; farther off it ambles like a grub, so nobody is hunted from the far side of a level.
+const CHASE_RANGE := 10
 const HIT_INVULN := 1.0
 const SPIT_REACH := 5
 const SPIT_TELL := 0.9
@@ -69,9 +75,12 @@ static func step(g: Variant, delta: float) -> void:
 		if foe.kind == "boss":
 			_step_boss(g, foe, delta)
 			continue
+		if foe.windup > 0.0:
+			foe.windup -= delta
+			continue
 		if foe.dir == Vector2i.ZERO:
 			_choose(g, foe)
-			if foe.dir == Vector2i.ZERO:
+			if foe.dir == Vector2i.ZERO or foe.windup > 0.0:
 				continue
 		# Something was put down in the cell ahead after the step began: turn back while there is still room.
 		if foe.t < 0.5 and not _can_enter(g, foe, foe.cell + foe.dir, false):
@@ -79,7 +88,7 @@ static func step(g: Variant, delta: float) -> void:
 			foe.dir = -foe.dir
 			foe.t = 1.0 - foe.t
 			foe.charge = false
-		foe.t += foe.speed * (CHARGE_SPEED if foe.charge else 1.0) * delta
+		foe.t += (minf(foe.speed * CHARGE_SPEED, maxf(foe.speed, CHARGE_LIMIT)) if foe.charge else foe.speed) * delta
 		if foe.t >= 1.0:
 			foe.cell += foe.dir
 			foe.t -= 1.0
@@ -142,6 +151,7 @@ static func _choose(g: Variant, foe: Actors.Foe) -> void:
 			if seen != Vector2i.ZERO:
 				foe.dir = seen
 				foe.charge = true
+				foe.windup = CHARGE_WINDUP
 				g.audio.play("charge")
 				return
 			foe.dir = _wander(g, foe, open, 0.75)
@@ -175,13 +185,15 @@ static func _sight(g: Variant, foe: Actors.Foe) -> Vector2i:
 				return dir
 	return Vector2i.ZERO
 
-## First step of the shortest open path to the nearest digger (breadth-first over floor cells without kegs), or zero when none can be reached.
+## First step of the shortest open path to the nearest digger (breadth-first over floor cells without kegs), or zero when none can be reached within CHASE_RANGE steps.
 static func _chase(g: Variant, foe: Actors.Foe) -> Vector2i:
 	var from := PackedInt32Array()
 	from.resize(Levels.COLS * Levels.ROWS)
 	from.fill(-1)
 	var start := Levels.index(foe.cell)
 	from[start] = start
+	var depth := PackedInt32Array()
+	depth.resize(Levels.COLS * Levels.ROWS)
 	var queue: Array[int] = [start]
 	var head := 0
 	while head < queue.size():
@@ -192,11 +204,14 @@ static func _chase(g: Variant, foe: Actors.Foe) -> Vector2i:
 			while from[at] != start:
 				at = from[at]
 			return Levels.cell_of(at) - foe.cell
+		if depth[at] >= CHASE_RANGE:
+			continue
 		for dir in Levels.DIRS:
 			var next := cell + dir
 			var next_at := Levels.index(next)
 			if Levels.inside(next) and from[next_at] < 0 and g.grid[next_at] == Levels.FLOOR and g.keg_at(next) == null:
 				from[next_at] = at
+				depth[next_at] = depth[at] + 1
 				queue.append(next_at)
 	return Vector2i.ZERO
 
@@ -217,6 +232,7 @@ static func damage(g: Variant, foe: Actors.Foe, owner: int, chain: int) -> void:
 		else:
 			foe.speed *= 1.35
 			foe.charge = false
+			foe.windup = 0.0
 			g.audio.play("crack")
 			g.emit_fx("crack", foe.spot())
 		return

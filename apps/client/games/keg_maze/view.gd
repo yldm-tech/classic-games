@@ -4,6 +4,7 @@ extends Node2D
 
 const Levels := preload("res://games/keg_maze/levels.gd")
 const Actors := preload("res://games/keg_maze/actors.gd")
+const Foes := preload("res://games/keg_maze/foes.gd")
 const Sprites := preload("res://games/keg_maze/sprites.gd")
 
 const TILE := float(Levels.TILE)
@@ -203,6 +204,7 @@ func _draw() -> void:
 	_draw_exit()
 	_draw_items()
 	_draw_hazard_shadows()
+	_draw_spit_lanes()
 	_draw_kegs()
 	_draw_foes()
 	_draw_heroes()
@@ -242,6 +244,12 @@ func _bake() -> void:
 			if game.grid[Levels.index(cell)] == Levels.WALL:
 				tile = "pillar" if Levels.inside(cell) else "wall"
 			image.blit_rect(tiles[tile], Rect2i(0, 0, 16, 16), origin + cell * Levels.TILE)
+	# The launcher's lives and boss bars end over the two upper corners of the outer rock: those corners lie in shadow so that the bars stay readable.
+	for x in Levels.TILE * 2:
+		var dim := 0.7 * (1.0 - float(x) / float(Levels.TILE * 2))
+		for y in Levels.TILE:
+			for at: Vector2i in [origin + Vector2i(x, y), origin + Vector2i(Levels.COLS * Levels.TILE - 1 - x, y)]:
+				image.set_pixelv(at, image.get_pixelv(at).darkened(dim))
 	_backdrop = ImageTexture.create_from_image(image)
 
 ## Slow dust in the lamp light on both sides of the field.
@@ -353,6 +361,12 @@ func _draw_foes() -> void:
 			draw_texture_rect(tex[key], Rect2(corner + Vector2(0, 8.0 * foe.rest), Vector2(TILE, TILE - 8.0 * foe.rest)), false, Color(1, 1, 1, 0.7))
 			continue
 		draw_rect(Rect2(corner + Vector2(3, 13), Vector2(10, 2)), Color(0, 0, 0, 0.25))
+		if foe.windup > 0.0:
+			# About to charge: it shudders on the spot, flushed, under a warning mark.
+			draw_texture(tex[key], corner + Vector2(1.0 if int(clock * 30.0) % 2 == 0 else -1.0, 0), Color(1.0, 0.6, 0.55))
+			draw_rect(Rect2(corner + Vector2(7, -7), Vector2(2, 4)), Color("fff6b0"))
+			draw_rect(Rect2(corner + Vector2(7, -2), Vector2(2, 1)), Color("fff6b0"))
+			continue
 		var lift := Vector2(0, -1.0 - roundf(absf(sin(clock * 3.0 + foe.anim)))) if foe.kind == "wisp" else Vector2.ZERO
 		if foe.invuln > 0.0 and int(clock * 20.0) % 2 == 0:
 			draw_texture(tex[key + "_flash"], corner + lift)
@@ -457,11 +471,29 @@ func _draw_hazard_shadows() -> void:
 		draw_rect(Rect2(corner + Vector2(1, 9), Vector2(14, 6)), Color(0, 0, 0, 0.35 * left))
 		draw_texture_rect(tex["boulder"], Rect2(corner + Vector2(-1, 4.0 * (1.0 - left)), Vector2(18, 16.0 - 4.0 * (1.0 - left))), false, Color(1.0, 0.95, 0.9, 0.4 + 0.6 * left))
 
+## While the Molten Claw draws breath, the cells its fire is about to cross glow: the same walk as the fire itself, stopped by rock, blocks and kegs.
+func _draw_spit_lanes() -> void:
+	var chief: Actors.Foe = game.boss()
+	if chief == null or chief.tell <= 0.0:
+		return
+	var glow := 0.18 + 0.3 * (1.0 - chief.tell / Foes.SPIT_TELL) + (0.12 if int(clock * 12.0) % 2 == 0 else 0.0)
+	for d in 4:
+		var dir: Vector2i = Levels.DIRS[d]
+		for side in chief.size:
+			var cell := chief.cell + (Vector2i(side, 0 if dir.y < 0 else chief.size - 1) if dir.x == 0 else Vector2i(0 if dir.x < 0 else chief.size - 1, side))
+			for reach in Foes.SPIT_REACH:
+				cell += dir
+				if not Levels.inside(cell) or game.grid[Levels.index(cell)] != Levels.FLOOR or game.keg_at(cell) != null:
+					break
+				draw_rect(Rect2(Vector2(cell) * TILE + Vector2(1, 1), Vector2(TILE - 2, TILE - 2)), Color(1.0, 0.45, 0.15, glow))
+
 func _draw_hazards() -> void:
 	for hazard: Dictionary in game.hazards:
 		var corner := Vector2(hazard["cell"]) * TILE
 		var height := float(hazard["ttl"]) / float(hazard["total"]) * 150.0
-		draw_texture(tex["boulder"], corner + Vector2(0, -height))
+		# A rock comes into sight at the field's upper edge: higher up it would fall across the score and the clock.
+		if corner.y - height >= 0.0:
+			draw_texture(tex["boulder"], corner + Vector2(0, -height))
 
 func _draw_particles() -> void:
 	for spark: Dictionary in particles:
