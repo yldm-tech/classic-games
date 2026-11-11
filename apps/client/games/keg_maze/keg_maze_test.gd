@@ -224,14 +224,13 @@ func _test_blast_hurts() -> void:
 	hero.blast = 4
 	hero.boots = 2
 	hero.remote = true
-	_tap(game, 0, &"b")
-	game.advance(0.3)
-	hero.remote = false
+	game.advance(Main.START_INVULN)
 	_tap(game, 0, &"a")
-	game.advance(Main.FUSE + 0.1)
+	_tap(game, 0, &"b")
+	game.advance(0.1)
 	var hit := game.snapshot()
 	_check("a digger caught in a blast loses a life", hit["players"][0]["lives"] == 2 and hit["deaths"] == 1 and hit["blast_deaths"] == 1 and int(game.audio.played.get("hurt", 0)) == 1)
-	_check("and drops some gear", hit["players"][0]["kegs"] == 2 and hit["players"][0]["blast"] == 3 and hit["players"][0]["boots"] == 1)
+	_check("and drops the detonator and one step of reach, but keeps kegs and boots", hit["players"][0]["kegs"] == 3 and hit["players"][0]["blast"] == 3 and hit["players"][0]["boots"] == 2 and not hit["players"][0]["remote"])
 	game.advance(Main.DEAD_TIME + 0.1)
 	_check("then comes back at the start corner, blinking", _spot(game, 0) == Vector2i(1, 1) and hero.in_field() and hero.invuln > 1.0)
 	game.advance(Main.RESPAWN_INVULN)
@@ -358,8 +357,12 @@ func _test_foe_kinds() -> void:
 
 	game = _arena()
 	var beetle := _foe(game, "beetle", Vector2i(13, 5), false)
-	game.advance(2.5)
-	_check("a beetle makes for the digger", absi(beetle.cell.x - 1) + absi(beetle.cell.y - 1) <= 12)
+	(game.heroes[0] as Actors.Hero).invuln = 99.0
+	var nearest := 99
+	for tick in 900:
+		game.advance(STEP)
+		nearest = mini(nearest, absi(beetle.cell.x - 1) + absi(beetle.cell.y - 1))
+	_check("a beetle makes for the digger", nearest <= 4)
 	game.free()
 
 	game = _arena()

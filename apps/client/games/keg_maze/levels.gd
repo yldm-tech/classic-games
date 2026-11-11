@@ -70,7 +70,7 @@ const STAGES := [
 	{
 		"name": {"zh": "三层巷", "en": "THREE GALLERIES"},
 		"density": 0.5, "time": 190,
-		"foes": {"grub": 2, "mite": 2, "beetle": 2},
+		"foes": {"grub": 3, "mite": 1, "beetle": 2},
 		"loot": ["keg", "blast", "remote", "heart", "gem", "gem"],
 		"rows": [
 			"###################",
@@ -116,7 +116,7 @@ const STAGES := [
 	{
 		"name": {"zh": "回环晶洞", "en": "THE RINGED GEODE"},
 		"density": 0.5, "time": 200,
-		"foes": {"mite": 3, "beetle": 2, "wisp": 2, "shell": 1},
+		"foes": {"mite": 2, "beetle": 2, "wisp": 2, "shell": 1},
 		"loot": ["keg", "blast", "remote", "clock", "heart", "gem", "gem"],
 		"rows": [
 			"###################",
@@ -163,7 +163,7 @@ const STAGES := [
 	{
 		"name": {"zh": "余烬岔口", "en": "CINDER CROSSING"},
 		"density": 0.52, "time": 200,
-		"foes": {"beetle": 3, "wisp": 2, "shell": 2},
+		"foes": {"mite": 1, "beetle": 2, "wisp": 2, "shell": 2},
 		"loot": ["keg", "blast", "boots", "hat", "gem", "gem", "gem"],
 		"rows": [
 			"###################",
@@ -186,7 +186,7 @@ const STAGES := [
 	{
 		"name": {"zh": "熔渣蜂巢", "en": "THE SLAG HIVE"},
 		"density": 0.55, "time": 210,
-		"foes": {"mite": 3, "beetle": 3, "wisp": 3, "shell": 2},
+		"foes": {"mite": 2, "beetle": 3, "wisp": 2, "shell": 2},
 		"loot": ["keg", "blast", "remote", "heart", "clock", "gem", "gem", "gem"],
 		"rows": [
 			"###################",

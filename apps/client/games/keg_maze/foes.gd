@@ -13,11 +13,11 @@ const Levels := preload("res://games/keg_maze/levels.gd")
 const Actors := preload("res://games/keg_maze/actors.gd")
 
 const SPECS := {
-	"grub": {"speed": 1.5, "hp": 1, "points": 100},
-	"mite": {"speed": 2.8, "hp": 1, "points": 200},
-	"beetle": {"speed": 2.1, "hp": 1, "points": 300},
-	"wisp": {"speed": 1.2, "hp": 1, "points": 400},
-	"shell": {"speed": 1.3, "hp": 2, "points": 500},
+	"grub": {"speed": 1.4, "hp": 1, "points": 100},
+	"mite": {"speed": 2.4, "hp": 1, "points": 200},
+	"beetle": {"speed": 1.8, "hp": 1, "points": 300},
+	"wisp": {"speed": 1.1, "hp": 1, "points": 400},
+	"shell": {"speed": 1.2, "hp": 2, "points": 500},
 }
 const BOSSES := [
 	{"hp": 6, "speed": 1.3, "rage_speed": 1.8, "attack": 4.6, "rage_attack": 3.4, "rocks": 4, "rage_rocks": 6, "pattern": ["rock", "spawn", "rock"], "minions": ["grub"], "points": 5000},

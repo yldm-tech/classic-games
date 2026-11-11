@@ -28,6 +28,8 @@ const IMPACT_TIME := 0.3
 const DEAD_TIME := 1.4
 const RESPAWN_INVULN := 2.5
 const START_INVULN := 1.0
+const DAZE_REACH := 4
+const DAZE_TIME := 3.0
 const SHIELD_INVULN := 1.5
 const INTRO_TIME := 2.0
 const CLEAR_TIME := 2.8
@@ -79,6 +81,8 @@ var continues_left := 2
 var continues_used := 0
 var deaths := 0
 var blast_deaths := 0
+## Lives lost by cause ("blast", "foe", "rock", "time"), for tests and tuning.
+var causes: Dictionary = {}
 var best_chain := 0
 var best_streak := 0
 var kills := 0
@@ -101,6 +105,7 @@ func _game_start(config: Dictionary) -> void:
 	continues_used = 0
 	deaths = 0
 	blast_deaths = 0
+	causes.clear()
 	best_chain = 0
 	best_streak = 0
 	kills = 0
@@ -175,6 +180,15 @@ func _place(slot: int, invuln: float = RESPAWN_INVULN) -> void:
 	hero.invuln = invuln
 	hero.act = 0.0
 
+## The cage that brings a digger back down rattles the creatures near the start corner: they stand dazed and harmless for a moment, so that nobody loses a second life to one that was waiting there.
+func _daze(around: Vector2i) -> void:
+	for foe: Actors.Foe in foes:
+		var spot := foe.spot()
+		if foe.kind != "boss" and foe.dying <= 0.0 and absi(spot.x - around.x) + absi(spot.y - around.y) <= DAZE_REACH:
+			foe.rest = maxf(foe.rest, DAZE_TIME)
+			foe.charge = false
+			emit_fx("daze", spot)
+
 # ---- step ----
 
 func _game_step(delta: float) -> void:
@@ -247,7 +261,9 @@ func _step_hero(slot: int, delta: float) -> void:
 		if hero.dead <= 0.0:
 			if hero.lives > 0:
 				_place(slot)
+				_daze(starts[slot])
 				audio.play("respawn")
+				emit_fx("join", starts[slot], slot)
 			else:
 				hero.out = true
 		return
@@ -523,18 +539,17 @@ func _hurt(slot: int, cause: String, force: bool = false) -> void:
 			return
 	hero.lives -= 1
 	deaths += 1
+	causes[cause] = int(causes.get(cause, 0)) + 1
 	if cause == "blast":
 		blast_deaths += 1
 	hero.cell = hero.spot()
 	hero.dir = Vector2i.ZERO
 	hero.t = 0.0
 	hero.dead = DEAD_TIME
-	# Gear is dropped on the way out: the detonator goes, the rest loses one step.
+	# Some gear is dropped on the way out: the detonator and one step of reach. Kegs and boots stay.
 	hero.remote = false
 	hero.shield = false
-	hero.cap = maxi(1, hero.cap - 1)
 	hero.blast = maxi(BASE_BLAST, hero.blast - 1)
-	hero.boots = maxi(0, hero.boots - 1)
 	audio.play("hurt" if hero.lives > 0 else "out")
 	emit_fx("hurt", hero.cell, slot)
 

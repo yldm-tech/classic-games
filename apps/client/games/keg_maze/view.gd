@@ -148,6 +148,8 @@ func _on_event(event: Dictionary) -> void:
 			_burst(at, 14, [HERO_TINTS[int(extra) % 2], Color("7a6a86"), Color.WHITE], 85.0, 0.7, 120.0, 1.5)
 		"shield":
 			_burst(at, 12, [Color("f2b233"), Color("fff6b0")], 90.0, 0.4, 0.0, 1.5)
+		"daze":
+			_burst(at + Vector2(0, -6), 6, [Color("f6d365"), Color.WHITE], 30.0, 0.8, -10.0, 1.0)
 		"join":
 			_burst(at, 12, [HERO_TINTS[int(extra) % 2], Color.WHITE], 60.0, 0.6, -20.0, 1.5)
 		"timeup":
@@ -338,6 +340,13 @@ func _draw_foes() -> void:
 			var fade := clampf(foe.dying / 0.5, 0.0, 1.0)
 			var grow := (1.0 - fade) * 6.0
 			draw_texture_rect(tex[key + "_flash"], Rect2(corner - Vector2(grow, grow) * 0.5, Vector2(TILE + grow, TILE + grow)), false, Color(1, 1, 1, fade))
+			continue
+		if foe.rest > 0.0 and foe.anim >= 0.8:
+			# Dazed or winded: it stands still under a ring of little stars and can be walked past.
+			draw_texture(tex[key], corner, Color(0.75, 0.75, 0.85))
+			for star in 3:
+				var angle := clock * 6.0 + float(star) * TAU / 3.0
+				draw_rect(Rect2((corner + Vector2(7, -1) + Vector2(cos(angle) * 5.0, sin(angle) * 2.0)).floor(), Vector2(2, 2)), Color("f6d365"))
 			continue
 		if foe.rest > 0.0 and foe.anim < 0.8:
 			# Just dug its way out next to the boss.
