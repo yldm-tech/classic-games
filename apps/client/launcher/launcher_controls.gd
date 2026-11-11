@@ -136,7 +136,7 @@ class FocusRow:
 		super()
 		custom_minimum_size = Vector2(0, min_height)
 		set_padding(T.ROW_PADDING)
-		var row := W.hbox(20)
+		var row := W.hbox(24)
 		add_child(row)
 		_label = W.text(label, font_size, 400, T.fg(T.A_ROW_IDLE), 2)
 		_label.name = "Label"

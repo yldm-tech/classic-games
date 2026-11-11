@@ -104,7 +104,11 @@ func _start(id: String) -> void:
 	_paused.visible = false
 	var entry := LauncherCatalog.by_id(id)
 	_title.text = LauncherCatalog.text(entry, "name", shell.locale)
-	if not shell.game_host.launch(id):
+	# launch() first ends whatever is still on the stage; that run's result must not be read as "the player quit this screen".
+	_leaving = true
+	var launched := shell.game_host.launch(id)
+	_leaving = false
+	if not launched:
 		shell.toast(tf("launcher.game.error_fmt", [_title.text if _title.text != "" else id]))
 		shell.go_back.call_deferred()
 		return

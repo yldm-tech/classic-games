@@ -115,8 +115,8 @@ func _paint_road(primary: Color, secondary: Color, base: Color) -> void:
 	_vertical_gradient(Rect2(0, 470, FRAME.x, 430), base.lerp(primary, 0.1), base.lerp(Color.BLACK, 0.35))
 	# The same kind of bent road the runtime's baseline stage uses, drawn here in art coordinates.
 	var road := PackedVector2Array([Vector2(420, 620), Vector2(820, 620), Vector2(820, 800), Vector2(1180, 800), Vector2(1180, 520), Vector2(1640, 520)])
-	draw_polyline(road, Color(0, 0, 0, 0.45), 84.0, true)
-	draw_polyline(road, base.lerp(primary, 0.3), 64.0, true)
+	_thick_path(road, 84.0, base.lerp(Color.BLACK, 0.5))
+	_thick_path(road, 64.0, base.lerp(primary, 0.3))
 	draw_polyline(road, Color(primary.lightened(0.4), 0.35), 2.0, true)
 	var walkers := [Vector2(520, 620), Vector2(640, 620), Vector2(760, 620), Vector2(820, 700), Vector2(930, 800), Vector2(1060, 800)]
 	for at: Vector2 in walkers:
@@ -154,6 +154,13 @@ func _stars(seed_value: int, count: int, color: Color, max_y: float = FRAME.y) -
 	for i in count:
 		var at := Vector2(rng.randf_range(0.0, FRAME.x), rng.randf_range(0.0, max_y))
 		draw_circle(at, rng.randf_range(0.8, 2.0), Color(color, color.a * rng.randf_range(0.35, 1.0)))
+
+## A wide path with round joints. draw_polyline leaves gaps and overlaps at sharp corners when it is this wide, so each segment and each joint is drawn on its own in an opaque colour.
+func _thick_path(points: PackedVector2Array, width: float, color: Color) -> void:
+	for i in points.size() - 1:
+		draw_line(points[i], points[i + 1], color, width)
+	for point in points:
+		draw_circle(point, width / 2.0, color)
 
 func _on_ellipse(center: Vector2, radius: float, squash: float, tilt: float, angle: float) -> Vector2:
 	return center + (Vector2.from_angle(angle) * Vector2(radius, radius * squash)).rotated(tilt)
