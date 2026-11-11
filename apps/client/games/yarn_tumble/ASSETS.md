@@ -4,5 +4,6 @@ Every file in this directory that is not code or the manifest, with where it cam
 
 | File | What it is | Source | Licence |
 |---|---|---|---|
+| `key_art.jpg` | 16:9 key art (1920x1080) shown by the launcher and the website: the two knitters, a rolling ball of yarn, four of the tower's pests and Duchess Dustwing | Generated for this project with the image model `doubao-seedream-5.0-pro` from a prompt written for this game; an original composition that depicts no character or artwork of any existing game | Distributed with the project under Apache-2.0. AI-generated images may not be protected by copyright in some jurisdictions; judge for yourself before reusing it |
 
 All in-game art is pixel art written for this project as palette-indexed rows and procedural drawing code in `sprites.gd`, `backdrop.gd` and `view.gd`. All sound is synthesised at run time by `games/shared/game_audio.gd` from the definitions in `sounds.gd`. There are no audio files.

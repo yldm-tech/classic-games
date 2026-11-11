@@ -167,6 +167,8 @@ func _react(event: Array) -> void:
 				_particles.append({"x": randf_range(20.0, 460.0), "y": randf_range(-40.0, 30.0), "vx": randf_range(-12.0, 12.0), "vy": randf_range(30.0, 80.0), "gravity": 20.0, "life": randf_range(1.6, 2.6), "span": 2.6, "color": [GOLD, _yarn(0), _yarn(1), Color("ff9ec4"), CREAM].pick_random(), "size": 2.0})
 		"hurry":
 			_say("动作快！静电火花要来了", "HURRY UP! STATIC IS COMING", 2.4)
+		"wave":
+			_say("又来了一批！", "MORE OF THEM!", 1.8)
 		"continue":
 			_say("续关！还剩 %d 次" % world.continues, "CONTINUE! %d LEFT" % world.continues, 2.0)
 		"spark":

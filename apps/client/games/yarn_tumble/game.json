@@ -10,7 +10,7 @@
 	"tagline": {"zh": "把织塔里的捣蛋鬼缠成毛线球，一脚踢下去撞翻一整层。", "en": "Wrap the tower's pests into balls of yarn and kick them down through the rest."},
 	"players": {"min": 1, "max": 2, "join_in_progress": true},
 	"colors": {"title": "FFF3D6", "shadow": "5A2A4A", "glow": "F08A3C"},
-	"art": {"top": "2B1D3A", "bottom": "7A3B4E", "primary": "4F8FE8", "secondary": "F08A3C"},
+	"art": {"top": "2B1D3A", "bottom": "7A3B4E", "primary": "4F8FE8", "secondary": "F08A3C", "image": "key_art.jpg"},
 	"achievements": [
 		{"id": "first_ball", "icon": "bolt", "name": {"zh": "第一团毛线", "en": "First Ball"}, "desc": {"zh": "把一只捣蛋鬼缠成球并踢出去。", "en": "Wrap a pest into a ball and send it rolling."}, "when": {"min": {"kos": 1}}},
 		{"id": "triple_roll", "icon": "star", "name": {"zh": "一球三响", "en": "Three in One"}, "desc": {"zh": "一颗毛线球连同自己一共撞翻三只。", "en": "Knock out three pests with a single ball, the one inside included."}, "when": {"min": {"best_roll": 3}}},

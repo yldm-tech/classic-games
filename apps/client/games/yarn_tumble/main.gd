@@ -85,7 +85,7 @@ func _game_snapshot() -> Dictionary:
 			"alive": hero.state == Hero.ALIVE, "powers": int(hero.long_needle) + int(hero.rapid) + int(hero.thick) + int(hero.swift),
 		})
 	var out := {
-		"stage": world.stage, "stages_total": World.Levels.count(), "foes_left": world.foes.size(), "difficulty": world.difficulty,
+		"stage": world.stage, "stages_total": World.Levels.count(), "foes_left": world.foes.size() + world.pending.size(), "difficulty": world.difficulty,
 		"deaths": world.deaths, "continues_left": world.continues, "continues_used": world.continues_used,
 		"kos": world.kos, "best_roll": world.best_roll, "bosses_defeated": world.bosses_defeated, "gems": world.gems,
 		"players": players,

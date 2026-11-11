@@ -25,6 +25,7 @@ func _initialize() -> void:
 	_test_ball_drops_between_ledges()
 	_test_pickups()
 	_test_lives_continues_and_defeat()
+	_test_second_batch()
 	_test_hurry()
 	_test_guardian_and_victory()
 	_test_two_players()
@@ -97,7 +98,8 @@ func _test_data() -> void:
 		if def.has("boss"):
 			bosses += 1
 		sound = sound and (def["spawn"] as Array).size() == 2 and Levels.build(def).size() == Levels.COLS * Levels.ROWS
-		for entry: Array in def["foes"]:
+		var listed: Array = (def["foes"] as Array) + (def.get("more", []) as Array)
+		for entry: Array in listed:
 			kinds[entry[0]] = true
 			sound = sound and Foe.KINDS.has(entry[0]) and int(entry[1]) >= 1 and int(entry[1]) <= 28
 			if entry[0] != Foe.SNIP:
@@ -115,7 +117,7 @@ func _test_data() -> void:
 func _test_start_and_movement() -> void:
 	var game := _start(2, 11)
 	var first := game.snapshot()
-	_check("a run starts on floor 1 with full lives for both knitters", first["stage"] == 1 and first["stages_total"] == 14 and first["players"][0]["lives"] == 3 and first["players"][1]["lives"] == 3 and first["players"][0]["max_lives"] == 3 and first["foes_left"] == 3 and first["score"] == 0)
+	_check("a run starts on floor 1 with full lives for both knitters", first["stage"] == 1 and first["stages_total"] == 14 and first["players"][0]["lives"] == 4 and first["players"][1]["lives"] == 4 and first["players"][0]["max_lives"] == 4 and first["foes_left"] == 3 and first["score"] == 0)
 	_check("the stage music starts and no guardian bar shows", game.audio.music_playing and not first.has("boss_hp"))
 	game.feed(0, &"left", 1.0)
 	game.feed(1, &"right", 1.0)
@@ -267,7 +269,7 @@ func _test_lives_continues_and_defeat() -> void:
 	hero.thick = true
 	_foe(game, Foe.MOTH, 203.0)
 	game.advance(GameModule.STEP)
-	_check("touching a roaming pest costs a life and the power-ups", hero.state == Hero.DYING and hero.lives == 2 and not hero.thick and game.snapshot()["deaths"] == 1 and int(game.audio.played.get("hurt", 0)) == 1)
+	_check("touching a roaming pest costs a life and the power-ups", hero.state == Hero.DYING and hero.lives == 3 and not hero.thick and game.snapshot()["deaths"] == 1 and int(game.audio.played.get("hurt", 0)) == 1)
 	_w(game).foes.clear()
 	_foe(game, Foe.MOTH, 440.0)
 	game.advance(1.5)
@@ -278,13 +280,32 @@ func _test_lives_continues_and_defeat() -> void:
 	game.advance(GameModule.STEP)
 	_w(game).foes.remove_at(1)
 	game.advance(1.5)
-	_check("the last life spent uses a continue", hero.state == Hero.ALIVE and hero.lives == 3 and game.snapshot()["continues_left"] == 1 and game.snapshot()["continues_used"] == 1 and results.is_empty())
+	_check("the last life spent uses a continue", hero.state == Hero.ALIVE and hero.lives == 4 and game.snapshot()["continues_left"] == 1 and game.snapshot()["continues_used"] == 1 and results.is_empty())
 	_w(game).continues = 0
 	hero.lives = 1
 	hero.invuln = 0.0
 	_foe(game, Foe.MOTH, hero.x + 2.0)
 	game.advance(5.0)
 	_check("with no lives and no continues the run is lost", results.size() == 1 and results[0]["defeated"] == true and results[0]["cleared"] == false and results[0]["deaths"] == 3 and results[0]["stage"] == 1 and not game.audio.music_playing)
+	game.free()
+
+func _test_second_batch() -> void:
+	var game := _start(1, 75, {"first_floor": 5})
+	var world := _w(game)
+	var first := world.foes.size()
+	_check("an upper floor holds a second batch back", world.pending.size() == 3 and game.snapshot()["foes_left"] == first + 3)
+	for foe: Foe in world.foes:
+		foe.state = Foe.GONE
+	game.advance(0.1)
+	_check("which drops in when the first is gone, instead of the floor being cleared", world.phase == World.PLAY and world.foes.size() == 3 and world.pending.is_empty() and world.foes[0].state == Foe.SPAWN)
+	var hero := _arrange(game, 200.0)
+	var late := _foe(game, Foe.MOTH, 202.0)
+	late.state = Foe.SPAWN
+	late.timer = 0.5
+	game.advance(0.3)
+	_check("a pest that is still appearing cannot hurt", hero.state == Hero.ALIVE)
+	game.advance(0.4)
+	_check("but can as soon as it is there", hero.state == Hero.DYING)
 	game.free()
 
 func _test_hurry() -> void:
@@ -367,7 +388,7 @@ func _test_two_players() -> void:
 	_check("a lone run has an empty second seat in the snapshot", (game.snapshot()["players"] as Array).size() == 2 and game.snapshot()["players"][1]["lives"] == 0 and _w(game).heroes[1].state == Hero.ABSENT)
 	_w(game).foes.clear()
 	_foe(game, Foe.MOTH, 440.0).state = Foe.WRAP
-	_check("player two can join a run in progress", game.join(1) and _w(game).heroes[1].state == Hero.ALIVE and game.snapshot()["players"][1]["lives"] == 3 and game.snapshot()["player_count"] == 2)
+	_check("player two can join a run in progress", game.join(1) and _w(game).heroes[1].state == Hero.ALIVE and game.snapshot()["players"][1]["lives"] == 4 and game.snapshot()["player_count"] == 2)
 	var second: Hero = _w(game).heroes[1]
 	var from_x := second.x
 	game.feed(1, &"left", 1.0)

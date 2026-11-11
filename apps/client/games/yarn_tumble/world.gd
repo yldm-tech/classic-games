@@ -37,7 +37,7 @@ const CLEAR := 1
 const OVER := 2
 
 ## Per difficulty (0 easy, 1 normal, 2 hard).
-const START_LIVES := [5, 3, 2]
+const START_LIVES := [5, 4, 3]
 const CONTINUES := [3, 2, 1]
 const FOE_SPEED := [0.85, 1.0, 1.15]
 const BALL_TIME := [8.0, 6.5, 5.5]
@@ -68,8 +68,10 @@ var spark: Item
 var spark_stun := 0.0
 var events: Array = []
 var spawn_points: Array = []
+## The floor's second batch of creatures, not yet on the floor.
+var pending: Array = []
 
-var max_lives := 3
+var max_lives := 4
 var continues := 2
 var continues_used := 0
 var deaths := 0
@@ -112,19 +114,8 @@ func load_stage(number: int) -> void:
 	stage_deaths = 0
 	phase = PLAY
 	banner = 2.2
-	var order := 0
-	for entry: Array in def["foes"]:
-		var foe := Foe.new(str(entry[0]))
-		foe.x = (float(entry[1]) + 0.5) * TILE
-		foe.y = float(entry[2]) * TILE + OFFSET_Y
-		foe.facing = -1 if foe.x > 240.0 else 1
-		foe.timer = 1.1 + 0.12 * order
-		foe.ai_timer = rng.float_range(0.4, 1.6)
-		foe.phase = rng.float_range(0.0, TAU)
-		if difficulty == 2:
-			foe.need += 1
-		foes.append(foe)
-		order += 1
+	_drop_in(def["foes"])
+	pending = (def.get("more", []) as Array).duplicate()
 	if def.has("boss"):
 		boss = Boss.new(int(def["boss"]))
 		boss.max_hp = int(BOSS_HP[boss.kind][difficulty])
@@ -140,6 +131,22 @@ func load_stage(number: int) -> void:
 			hero.state = Hero.ALIVE
 			_place(hero, 1.5)
 	emit("stage", 240.0, 135.0, stage)
+
+## Bring a batch of creatures onto the floor; each takes a moment to appear and is harmless until it has.
+func _drop_in(entries: Array) -> void:
+	var order := 0
+	for entry: Array in entries:
+		var foe := Foe.new(str(entry[0]))
+		foe.x = (float(entry[1]) + 0.5) * TILE
+		foe.y = float(entry[2]) * TILE + OFFSET_Y
+		foe.facing = -1 if foe.x > 240.0 else 1
+		foe.timer = 1.1 + 0.12 * order
+		foe.ai_timer = rng.float_range(0.4, 1.6)
+		foe.phase = rng.float_range(0.0, TAU)
+		if difficulty == 2:
+			foe.need += 1
+		foes.append(foe)
+		order += 1
 
 func _place(hero: Hero, invuln: float) -> void:
 	var point: Array = spawn_points[hero.slot]
@@ -314,7 +321,12 @@ func _flow(dt: float, active: Array) -> void:
 				phase_timer = 2.4
 				emit("gameover", 240.0, 135.0)
 			elif foes.is_empty() and boss == null and minions() == 0:
-				_clear_floor()
+				if pending.is_empty():
+					_clear_floor()
+				else:
+					_drop_in(pending)
+					pending = []
+					emit("wave", 240.0, 135.0)
 			elif not is_boss_stage():
 				var limit := float(HURRY_AT[difficulty])
 				if not hurry and stage_time >= limit:

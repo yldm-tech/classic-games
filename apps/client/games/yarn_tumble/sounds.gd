@@ -40,7 +40,7 @@ const EFFECTS := {
 }
 
 ## World event -> effect, where the names differ or one effect serves several events.
-const EVENT_SOUNDS := {"respawn": "hop", "join": "power", "boss_gone": "burst"}
+const EVENT_SOUNDS := {"respawn": "hop", "join": "power", "boss_gone": "burst", "wave": "alert"}
 
 ## Short tunes played one note per entry: [steps to wait after the previous note, pitch factor of "note"].
 const JINGLE_CLEAR := [[0, 1.0], [6, 1.26], [6, 1.5], [6, 2.0], [9, 1.5], [6, 2.0]]
