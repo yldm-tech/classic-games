@@ -96,6 +96,14 @@ static func step(g: Variant, delta: float) -> void:
 			if foe.dir == Vector2i.ZERO:
 				foe.t = 0.0
 
+## Between levels nothing walks, but a creature that was already going down finishes doing so: otherwise a boss beaten a moment before the lift was reached would hang half-faded over the banner and the result screen.
+static func fade(g: Variant, delta: float) -> void:
+	for foe: Actors.Foe in g.foes.duplicate():
+		if foe.dying > 0.0:
+			foe.dying -= delta
+			if foe.dying <= 0.0:
+				g.foes.erase(foe)
+
 ## Whether a foe may step into a cell. `wary` foes also refuse a cell that is on fire.
 static func _can_enter(g: Variant, foe: Actors.Foe, cell: Vector2i, wary: bool = true) -> bool:
 	if not Levels.inside(cell):

@@ -29,6 +29,7 @@ func _initialize() -> void:
 	_test_air()
 	_test_two_players()
 	_test_boss()
+	_test_fading()
 	_test_final_clear()
 	_test_determinism()
 	print("keg_maze_test: %d passed, %d failed" % [_passed, _failed])
@@ -559,6 +560,18 @@ func _test_boss() -> void:
 	game.advance(Foes.SPIT_TELL + 0.05)
 	var burnt := game.snapshot()
 	_check("its fire hurts a digger in line and spares its own kind", burnt["players"][0]["lives"] == 2 and burnt["flames"] > 0 and bystander.alive() and burnt["boss_hp"] == 10)
+	game.free()
+
+func _test_fading() -> void:
+	var game := _arena()
+	game.exit_cell = Vector2i(1, 3)
+	game.exit_visible = true
+	var going := _foe(game, "grub", Vector2i(9, 9))
+	going.dying = 1.0
+	_walk(game, 0, &"down", 2)
+	_check("the lift opens and is reached while a creature is still going down", game.phase == Levels.Phase.CLEAR and game.foes.has(going))
+	game.advance(1.0)
+	_check("which finishes going down under the banner instead of hanging there", game.phase == Levels.Phase.CLEAR and game.foes.is_empty())
 	game.free()
 
 func _test_final_clear() -> void:

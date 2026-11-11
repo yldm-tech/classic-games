@@ -202,6 +202,7 @@ func _game_step(delta: float) -> void:
 			_step_play(delta)
 		Levels.Phase.CLEAR:
 			_step_fire(delta)
+			Foes.fade(self, delta)
 			phase_time -= delta
 			if phase_time <= 0.0:
 				if stage >= Levels.STAGE_COUNT - 1:
@@ -210,6 +211,7 @@ func _game_step(delta: float) -> void:
 					_load_stage(stage + 1)
 		Levels.Phase.CONTINUE:
 			_step_fire(delta)
+			Foes.fade(self, delta)
 			phase_time -= delta
 			if phase_time <= 0.0:
 				continues_left -= 1
@@ -221,6 +223,7 @@ func _game_step(delta: float) -> void:
 				_load_stage(stage)
 		Levels.Phase.DEFEAT:
 			_step_fire(delta)
+			Foes.fade(self, delta)
 			phase_time -= delta
 			if phase_time <= 0.0:
 				finish(OUTCOME_DEFEATED)

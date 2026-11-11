@@ -564,7 +564,9 @@ func _gear(corner: Vector2, slot: int) -> void:
 	if not active:
 		return
 	if hero.out:
-		draw_multiline_string(font, corner + Vector2(4, 58), _t("out"), HORIZONTAL_ALIGNMENT_CENTER, 72.0, 9, 3, Color(0.85, 0.8, 0.7, 0.9))
+		# Only while a partner plays on: when everybody is out the banner speaks of the continue or the defeat instead.
+		if game.phase == Levels.Phase.PLAY or game.phase == Levels.Phase.CLEAR:
+			draw_multiline_string(font, corner + Vector2(4, 58), _t("out"), HORIZONTAL_ALIGNMENT_CENTER, 72.0, 9, 3, Color(0.85, 0.8, 0.7, 0.9))
 		return
 	var rows := [["keg", hero.cap, 6, 48], ["blast", hero.blast, 44, 48], ["boots", hero.boots, 6, 64]]
 	for row: Array in rows:
