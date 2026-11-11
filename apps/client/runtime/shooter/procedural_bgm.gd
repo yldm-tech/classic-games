@@ -20,6 +20,8 @@ func configure(value: String) -> void:
 		var sample := clampi(roundi((sin(t * TAU * base) * .12 * beat + sin(t * TAU * base * 1.5) * .04) * 32767.0), -32768, 32767)
 		pcm[i * 2] = sample & 0xff; pcm[i * 2 + 1] = (sample >> 8) & 0xff
 	wav.data = pcm; stream = wav; volume_db = -18.0; set_meta("bgm_key", key)
+	# Music goes to its own bus (default_bus_layout.tres) so it has its own volume; a missing bus falls back to Master.
+	bus = &"Music"
 
 func _ready() -> void:
 	if DisplayServer.get_name() != "headless": play()

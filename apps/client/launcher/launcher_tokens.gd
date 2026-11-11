@@ -16,6 +16,7 @@ const CARD_BG := Color("0B0E16")
 const TOAST_BG := Color(12.0 / 255.0, 14.0 / 255.0, 22.0 / 255.0, 0.95)
 const FAVORITE := Color("FF6B7A")
 const DANGER := Color("FF6B7A")
+const DIALOG_BG := Color("0C0E16")
 
 ## Foreground alpha steps. Use these names instead of ad-hoc alphas so the hierarchy stays the same on every screen.
 const A_STRONG := 0.9
@@ -57,6 +58,13 @@ const CARD_SIZE_SELECTED := Vector2(336, 189)
 const CARD_RING := 3.0
 const CARD_RING_OFFSET := 3.0
 const SIDE_PANEL_WIDTH := 560.0
+## Settings rows, the modal dialog and its buttons.
+const SETTING_ROW_HEIGHT := 72.0
+const SWITCH_SIZE := Vector2(56, 30)
+const SEGMENT_SIZE := Vector2(22, 10)
+const BUTTON_HEIGHT := 44.0
+const DIALOG_WIDTH := 640.0
+const DIALOG_BUTTON_HEIGHT := 52.0
 
 # ---- motion ----
 
@@ -82,6 +90,11 @@ const SIZE_BODY := 15
 const SIZE_SUB := 14
 const SIZE_SMALL := 12
 const SIZE_MICRO := 11
+const SIZE_DIALOG_TITLE := 28
+const SIZE_HELP_TITLE := 24
+const SIZE_SETTING_ROW := 20
+const SIZE_SETTING_VALUE := 19
+const SIZE_HELP := 17
 
 ## The repository ships no font files, so both faces are resolved from the system at run time. The first installed family in each list wins.
 const CJK_FAMILIES: PackedStringArray = ["Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", "sans-serif"]

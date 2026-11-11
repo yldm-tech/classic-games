@@ -17,6 +17,7 @@ const Strings := preload("res://i18n/strings.gd")
 
 const HOME_SCREEN := "res://launcher/home_screen.gd"
 const GAME_SCREEN := "res://launcher/game_screen.gd"
+const SETTINGS_SCREEN := "res://launcher/settings_screen.gd"
 const UNAVAILABLE_SCREEN := "res://launcher/unavailable_screen.gd"
 
 const HOME := &"home"
@@ -32,7 +33,7 @@ const SCREENS := {
 	HOME: HOME_SCREEN,
 	LIBRARY: UNAVAILABLE_SCREEN,
 	ACHIEVEMENTS: UNAVAILABLE_SCREEN,
-	SETTINGS: UNAVAILABLE_SCREEN,
+	SETTINGS: SETTINGS_SCREEN,
 	MENU: UNAVAILABLE_SCREEN,
 	GAME: GAME_SCREEN,
 	PAUSE: UNAVAILABLE_SCREEN,
@@ -82,6 +83,9 @@ var _pc_node: Control
 var _console_layers: Array[Control] = []
 var _axis_held: Dictionary = {}
 var _view_held := -1.0
+## The direction a gamepad is holding (&"" for none) and the seconds until it fires again.
+var _repeat_action := &""
+var _repeat_wait := 0.0
 
 func _ready() -> void:
 	name = "LauncherRoot"
@@ -92,6 +96,7 @@ func _ready() -> void:
 		store.load_from_disk()
 	locale = _stored_locale()
 	In.apply_bindings(store.bindings())
+	LauncherSettings.apply_all(store, LauncherSettings.drives_window(self))
 	_build_layers()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	go(HOME)
@@ -313,21 +318,45 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		if action == In.VIEW:
 			_view_held = 0.0
+		if event is InputEventJoypadButton:
+			_start_repeat(action)
 		dispatch(action)
-	elif In.released_action(event) == In.VIEW:
-		_view_held = -1.0
+	else:
+		var released := In.released_action(event)
+		if released == In.VIEW:
+			_view_held = -1.0
+		if event is InputEventJoypadButton:
+			_stop_repeat(released)
 
 ## A stick or trigger counts as one press when it crosses the deadzone, not once per motion event.
 func _route_axis(event: InputEventJoypadMotion) -> void:
+	# Matched by axis alone (no exact match): an exact match also compares the sign, and a stick that settles on exactly 0 has the sign of the positive direction only, so Up and Left would never be seen to be released.
 	for action in In.ALL:
-		if not InputMap.event_is_action(event, action, true):
+		if not InputMap.event_is_action(event, action, false):
 			continue
-		var held := event.is_action_pressed(action, true, true)
+		var held := event.is_action_pressed(action, true, false)
 		if held and not _axis_held.get(action, false):
 			_axis_held[action] = true
+			_start_repeat(action)
 			dispatch(action)
-		elif not held:
+		elif not held and _axis_held.get(action, false):
 			_axis_held[action] = false
+			_stop_repeat(action)
+
+## A direction pressed on the d-pad or a stick starts repeating after In.REPEAT_DELAY; _process fires it every In.REPEAT_INTERVAL until it is released. Keyboard keys repeat through the OS's own echo events instead.
+func _start_repeat(action: StringName) -> void:
+	if action in In.REPEATING:
+		_repeat_action = action
+		_repeat_wait = In.REPEAT_DELAY
+
+func _stop_repeat(action: StringName) -> void:
+	if action == _repeat_action:
+		_repeat_action = &""
+
+func _notification(what: int) -> void:
+	# A release that happens while the window is not focused never arrives, so a held direction must not keep firing.
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_repeat_action = &""
 
 func _process(delta: float) -> void:
 	if _view_held >= 0.0:
@@ -335,6 +364,12 @@ func _process(delta: float) -> void:
 		if _view_held >= VIEW_HOLD_SECONDS:
 			_view_held = -1.0
 			toggle_pc_mode()
+	if _repeat_action != &"":
+		_repeat_wait -= delta
+		# At most one repeat per frame, so a long frame cannot turn into a burst of moves.
+		if _repeat_wait <= 0.0:
+			_repeat_wait = In.REPEAT_INTERVAL
+			dispatch(_repeat_action)
 
 ## The single entry point for input: every key, gamepad press and footer-hint click arrives here as a LauncherInput action. Order: PC-mode toggle, PC mode's own handler, toast undo, the current screen, then the shell defaults (tab switching and back).
 func dispatch(action: StringName) -> void:
@@ -534,12 +569,17 @@ func _sync_nav() -> void:
 
 func _tick_clock() -> void:
 	var time := Time.get_time_dict_from_system()
-	_clock_label.text = "%02d:%02d" % [int(time["hour"]), int(time["minute"])]
+	_clock_label.text = LauncherSettings.clock_text(int(time["hour"]), int(time["minute"]), bool(LauncherSettings.value(store, LauncherSettings.CLOCK_24H)), locale)
 
 func clock_text() -> String:
 	return _clock_label.text
 
+## Redraw the clock now, e.g. after the 12/24-hour setting changed.
+func refresh_clock() -> void:
+	_tick_clock()
+
 func _on_joy_connection_changed(_device: int, _connected: bool) -> void:
+	_repeat_action = &""
 	var count := Input.get_connected_joypads().size()
 	_gamepad_icon.visible = count > 0
 	_gamepad_icon.tooltip_text = tf("launcher.nav.gamepads_fmt", [count])

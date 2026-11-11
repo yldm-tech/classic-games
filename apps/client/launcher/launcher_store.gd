@@ -256,3 +256,40 @@ static func _string_array(values: Array) -> Array[String]:
 	for value in values:
 		out.append(str(value))
 	return out
+
+# ---- export / import ----
+
+## Write the whole profile (same versioned JSON as the store's own file) to `target`. Returns false when the file cannot be written.
+func export_to(target: String) -> bool:
+	var file := FileAccess.open(target, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify(_data, "\t"))
+	file.close()
+	return true
+
+## Read a profile file through the same version check and normalisation as load_from_disk, without touching this store. Returns {} when the file is missing, unreadable, of the wrong shape, or of an unsupported version.
+static func read_profile(source: String) -> Dictionary:
+	if not FileAccess.file_exists(source):
+		return {}
+	var json := JSON.new()
+	var parsed: Variant = json.data if json.parse(FileAccess.get_file_as_string(source)) == OK else null
+	if not parsed is Dictionary or not _is_supported(parsed):
+		return {}
+	return _normalised(parsed)
+
+## A copy of everything wipe_progress forgets (favourites, recents, stats, achievements), for replace_progress to restore.
+func progress() -> Dictionary:
+	var out := {}
+	for section in ["favorites", "recents", "stats", "achievements"]:
+		out[section] = _data[section].duplicate(true)
+	return out
+
+## Replace the progress sections with those of `profile` (the result of read_profile or progress). Settings and key bindings stay, as with wipe_progress.
+func replace_progress(profile: Dictionary) -> void:
+	var clean := _normalised(profile)
+	for section in ["favorites", "recents", "stats", "achievements"]:
+		_data[section] = clean[section]
+	save()
+	for section in [SECTION_FAVORITES, SECTION_RECENTS, SECTION_STATS, SECTION_ACHIEVEMENTS]:
+		changed.emit(section)
