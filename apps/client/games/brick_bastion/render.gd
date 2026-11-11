@@ -7,6 +7,7 @@ extends RefCounted
 const Stages := preload("res://games/brick_bastion/stages.gd")
 const Texts := preload("res://games/brick_bastion/texts.gd")
 const Sprites := preload("res://games/brick_bastion/sprites.gd")
+const Glyphs := preload("res://games/brick_bastion/glyphs.gd")
 
 const STAGE := Vector2i(480, 270)
 const FIELD := Vector2(96, 38)
@@ -80,9 +81,38 @@ static func _ring(ci: CanvasItem, at: Vector2, radius: int, thick: int, color: C
 			ci.draw_rect(Rect2(roundf(at.x) - outer_half, y, outer_half - inner_half, 1), color)
 			ci.draw_rect(Rect2(roundf(at.x) + inner_half + 1, y, outer_half - inner_half, 1), color)
 
+## Write a line of text. Whatever has a glyph in glyphs.gd (Latin capitals, digits, punctuation) is drawn from that pixel lettering, twice the size for headings; the rest (Chinese) goes through the system font. `at` is the left end of the baseline; with a width the line is centred or right-aligned inside it.
 static func _text(ci: CanvasItem, g: Node, at: Vector2, text: String, size: int, color: Color, align: int = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
-	ci.draw_string_outline(g.font, at, text, align, width, size, 2, INK)
-	ci.draw_string(g.font, at, text, align, width, size, color)
+	var scale := 2 if size >= 14 else 1
+	var runs: Array = g.text_runs(text)
+	var total := 0.0
+	for run: Array in runs:
+		total += float(Glyphs.advance_of(run[1], scale)) if run[0] else (g.font as Font).get_string_size(run[1], HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 1.0
+	var x := floorf(at.x)
+	if width >= 0.0 and align == HORIZONTAL_ALIGNMENT_CENTER:
+		x += floorf((width - total) / 2.0)
+	elif width >= 0.0 and align == HORIZONTAL_ALIGNMENT_RIGHT:
+		x += floorf(width - total) + scale
+	var ink := Color(INK, color.a)
+	# Beside Chinese characters, which reach below the baseline, the lettering sits a pixel lower so the two share a middle.
+	var top := floorf(at.y) - Glyphs.HEIGHT * scale + (1.0 if runs.size() > 1 else 0.0)
+	for run: Array in runs:
+		var words: String = run[1]
+		if not run[0]:
+			ci.draw_string_outline(g.font, Vector2(x, at.y), words, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 2, ink)
+			ci.draw_string(g.font, Vector2(x, at.y), words, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+			x += (g.font as Font).get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 1.0
+			continue
+		for index in words.length():
+			var key := words.substr(index, 1)
+			if key == " ":
+				x += Glyphs.SPACE * scale
+				continue
+			var source := Rect2(int(g.glyph_columns[key]) * Glyphs.CELL_W, 0, Glyphs.CELL_W, Glyphs.CELL_H)
+			var target := Rect2(x - scale, top - scale, Glyphs.CELL_W * scale, Glyphs.CELL_H * scale)
+			ci.draw_texture_rect_region(g.outline_tex, target, source, ink)
+			ci.draw_texture_rect_region(g.glyph_tex, target, source, color)
+			x += Glyphs.ADVANCE * scale
 
 static func _px(units: int) -> float:
 	return floorf(float(units) / 16.0)
@@ -311,7 +341,7 @@ static func _panels(ci: CanvasItem, g: Node, sim: RefCounted, fx: RefCounted, te
 	var left := Vector2(10, 88)
 	_text(ci, g, left + Vector2(0, 10), Texts.of("sector", locale) % [sim.stage + 1, Stages.count()], body, GOLD)
 	var name := str(info["name"][locale])
-	if zh or name.length() <= 14:
+	if zh or name.length() <= 12:
 		_text(ci, g, left + Vector2(0, 23), name, body, PAPER)
 	else:
 		var cut := name.find(" ")
@@ -319,7 +349,7 @@ static func _panels(ci: CanvasItem, g: Node, sim: RefCounted, fx: RefCounted, te
 		_text(ci, g, left + Vector2(0, 31), name.substr(cut + 1), body, PAPER)
 	ci.draw_rect(Rect2(left + Vector2(0, 36), Vector2(74, 1)), Color("2b3348"))
 	_text(ci, g, left + Vector2(0, 49), Texts.of("reserve", locale), body, DIM)
-	_text(ci, g, left + Vector2(0, 170), Texts.of("crews", locale) % sim.crews, body if zh else 7, CYAN if sim.crews > 0 else DIM)
+	_text(ci, g, left + Vector2(0, 170), Texts.of("crews", locale) % sim.crews, body, CYAN if sim.crews > 0 else DIM)
 	# One pip per raider still to arrive, in arrival order, coloured by kind; a gold dot marks a supply carrier.
 	var shown := 0
 	for position in range(sim.next_raider, sim.roster.size()):
@@ -339,7 +369,7 @@ static func _panels(ci: CanvasItem, g: Node, sim: RefCounted, fx: RefCounted, te
 	_text(ci, g, left + Vector2(0, 103), Texts.of("supplies", locale), body, DIM)
 	var legend: Array[String] = ["coil", "aegis", "stasis", "mason", "surge", "spare"]
 	for index in legend.size():
-		var at := left + Vector2(-4 + (index % 2) * 41, 107 + (index / 2) * 17)
+		var at := left + Vector2(-4 + (index % 2) * 40, 107 + (index / 2) * 17)
 		ci.draw_texture(tex["chip_" + legend[index]], at)
 		_text(ci, g, at + Vector2(17, 12), Texts.of("legend_" + legend[index], locale), body, PAPER)
 	# Right well: each crew's firepower and bricks as pictures, then the effects that are running, each with a bar that drains.
@@ -421,7 +451,7 @@ static func _banners(ci: CanvasItem, g: Node, sim: RefCounted, tex: Dictionary, 
 			_band(ci, 80, 54, RED)
 			_centred(ci, g, 104, Texts.of("lost_core" if sim.core <= 0 else "lost_rovers", locale), big, RED)
 			if sim.crews > 0:
-				_centred(ci, g, 122, Texts.of("relief", locale), body, PAPER)
+				_centred(ci, g, 122, Texts.of("relief_boss" if sim.lost_at_boss() else "relief", locale), body, PAPER)
 
 static func _tally(ci: CanvasItem, g: Node, sim: RefCounted, tex: Dictionary, time: float) -> void:
 	var locale: String = g.locale

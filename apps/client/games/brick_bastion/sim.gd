@@ -54,7 +54,7 @@ const BOSS_PRESENT := 2
 const BOSS_DOWN := 3
 
 ## Rovers and beacon integrity by difficulty (easy, normal, hard), and how the gap between raider shots scales.
-const LIVES := [5, 3, 2]
+const LIVES := [5, 4, 2]
 const CORE := [6, 4, 3]
 ## Reserve crews: how many times a lost sector may be taken up again before the run is lost.
 const CREWS := [3, 2, 1]
@@ -315,8 +315,13 @@ func _clear_stage() -> void:
 	audio.play("stage_clear")
 	_emit({"t": "cleared"})
 
-## A reserve crew takes the sector over: it starts again from its opening with a mended beacon and full garages. The score stays.
+## Whether the sector was lost with its boss already called: the reserve crew then takes the fight up at the boss instead of facing the whole column again.
+func lost_at_boss() -> bool:
+	return boss_state == BOSS_WARNING or boss_state == BOSS_PRESENT
+
+## A reserve crew takes the sector over: it starts again from its opening with a mended beacon and full garages, or, when the boss had already been called, from the boss's arrival on a rebuilt field. The score stays.
 func _relieve() -> void:
+	var at_boss := lost_at_boss()
 	crews -= 1
 	crews_used += 1
 	core = core_max
@@ -325,6 +330,9 @@ func _relieve() -> void:
 		rover.power = 0
 		rover.bricks = START_BRICKS
 	start_stage(stage)
+	if at_boss:
+		next_raider = roster.size()
+		destroyed = roster.size()
 
 func _lose() -> void:
 	phase = "lost"
@@ -804,9 +812,10 @@ func _destroy_raider(raider: Dictionary, slot: int) -> void:
 		boss_state = BOSS_DOWN
 		boss_hp = 0
 		bosses_down += 1
-		for index in range(shots.size() - 1, -1, -1):
-			if shots[index].team == 1:
-				shots.remove_at(index)
+		# This runs while _step_shots walks the shells, so raider shells are marked rather than taken out of the list under it; it sweeps them at the end of the step.
+		for shot in shots:
+			if shot.team == 1:
+				shot.dead = true
 		for escort in raiders.duplicate():
 			raiders.erase(escort)
 			_emit({"t": "boom", "x": escort.x, "y": escort.y, "size": 1})

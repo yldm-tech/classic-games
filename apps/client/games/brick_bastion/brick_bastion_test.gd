@@ -10,6 +10,7 @@ const Sim := preload("res://games/brick_bastion/sim.gd")
 const Stages := preload("res://games/brick_bastion/stages.gd")
 const Sprites := preload("res://games/brick_bastion/sprites.gd")
 const Texts := preload("res://games/brick_bastion/texts.gd")
+const Glyphs := preload("res://games/brick_bastion/glyphs.gd")
 
 const STAGE_SIZE := Vector2i(480, 270)
 const STEP := GameModule.STEP
@@ -309,6 +310,19 @@ func _test_data() -> void:
 	_check("the six sectors are sound: " + ", ".join(Stages.problems()), Stages.problems().is_empty() and Stages.count() == 6)
 	_check("the sprite rows are sound: " + ", ".join(Sprites.problems()), Sprites.problems().is_empty())
 	_check("every text has both languages: " + ", ".join(Texts.problems()), Texts.problems().is_empty())
+	_check("the pixel lettering is sound: " + ", ".join(Glyphs.problems()), Glyphs.problems().is_empty())
+	var unlettered := ""
+	for key: String in Texts.TEXT:
+		for locale in ["zh", "en"]:
+			unlettered += Glyphs.missing(Texts.of(key, locale))
+	for index in Stages.count():
+		unlettered += Glyphs.missing(str(Stages.STAGES[index]["name"]["en"])) + Glyphs.missing(str(Stages.STAGES[index]["name"]["zh"]))
+	_check("every Latin letter, digit and sign the game writes has a pixel glyph, missing: '%s'" % unlettered, unlettered == "")
+	var mixed := Glyphs.runs("防区 3 / 6 · x2")
+	_check("a line is split into system-font and pixel runs, small letters drawn as capitals", mixed.size() == 2 and mixed[0] == [false, "防区"] and mixed[1] == [true, " 3 / 6 · x2"] and Glyphs.runs("Forgeheart") == [[true, "FORGEHEART"]] and Glyphs.runs("×3") == [[true, "x3"]])
+	var lettering := Glyphs.images()
+	_check("the lettering atlas has a cell per glyph and an outline wider than the letter", (lettering["glyph"] as Image).get_width() == Glyphs.ROWS.size() * Glyphs.CELL_W and (lettering["glyph"] as Image).get_pixel(int(Glyphs.columns()["T"]) * Glyphs.CELL_W + 1, 1).a > 0.5 and (lettering["glyph"] as Image).get_pixel(int(Glyphs.columns()["T"]) * Glyphs.CELL_W, 0).a < 0.5 and (lettering["outline"] as Image).get_pixel(int(Glyphs.columns()["T"]) * Glyphs.CELL_W, 0).a > 0.5)
+	_check("the left panel's English lines fit its 74 pixels", Glyphs.advance_of(Glyphs.runs(Texts.of("crews", "en") % 3)[0][1], 1) <= 74 and Glyphs.advance_of(Glyphs.runs(Texts.of("reserve", "en"))[0][1], 1) <= 74 and Glyphs.advance_of(Glyphs.runs(Texts.of("supplies", "en"))[0][1], 1) <= 74 and Glyphs.advance_of(Glyphs.runs(Texts.of("sector", "en") % [6, 6])[0][1], 1) <= 74)
 	var layouts := {}
 	for index in Stages.count():
 		layouts["".join(PackedStringArray(Stages.STAGES[index]["map"]))] = true
@@ -321,7 +335,7 @@ func _test_start() -> void:
 	var game := _start(2, 3)
 	var first := game.snapshot()
 	_check("a run opens on sector 1 of 6 with its banner up", first["stage"] == 1 and first["stages"] == 6 and first["phase"] == "intro")
-	_check("normal difficulty gives three rovers each, a beacon of four and two reserve crews", first["players"][0]["lives"] == 3 and first["players"][1]["lives"] == 3 and first["players"][0]["max_lives"] == 3 and first["core"] == 4 and first["core_max"] == 4 and first["difficulty"] == 1 and first["crews"] == 2)
+	_check("normal difficulty gives four rovers each, a beacon of four and two reserve crews", first["players"][0]["lives"] == 4 and first["players"][1]["lives"] == 4 and first["players"][0]["max_lives"] == 4 and first["core"] == 4 and first["core_max"] == 4 and first["difficulty"] == 1 and first["crews"] == 2)
 	_check("two players face a longer column than one", first["foes_left"] == 20)
 	_check("both rovers start beside the beacon with three bricks and no upgrades", first["players"][0]["alive"] and first["players"][1]["alive"] and first["players"][0]["x"] < first["players"][1]["x"] and first["players"][0]["bricks"] == 3 and first["players"][0]["power"] == 0)
 	_check("the stage tune is playing", game.audio.music_playing)
@@ -441,7 +455,7 @@ func _test_shells_and_bricks() -> void:
 	game.feed(0, &"a", 1.0)
 	game.advance(1.2)
 	game.feed(0, &"a", 0.0)
-	_check("shells of the two sides knock each other down", int(game.audio.played.get("deflect", 0)) >= 1 and game.snapshot()["players"][0]["lives"] == 3 and game.snapshot()["deaths"] == 0)
+	_check("shells of the two sides knock each other down", int(game.audio.played.get("deflect", 0)) >= 1 and game.snapshot()["players"][0]["lives"] == 4 and game.snapshot()["deaths"] == 0)
 	game.free()
 
 func _test_raiders_and_score() -> void:
@@ -505,13 +519,13 @@ func _test_losses() -> void:
 	game.sim.freeze_t = 100000
 	_shell(game, 5, 9, 2, 1)
 	game.advance(1.2)
-	_check("a rover that has just arrived is shielded", game.snapshot()["players"][0]["lives"] == 3 and game.snapshot()["players"][0]["shielded"] and int(game.audio.played.get("deflect", 0)) == 1)
+	_check("a rover that has just arrived is shielded", game.snapshot()["players"][0]["lives"] == 4 and game.snapshot()["players"][0]["shielded"] and int(game.audio.played.get("deflect", 0)) == 1)
 	game.sim.rovers[0].shield_t = 0
 	game.sim.rovers[0].power = 2
 	_shell(game, 5, 9, 2, 1)
 	game.advance(1.2)
 	var hit := game.snapshot()
-	_check("a raider's shell destroys an unshielded rover and costs one of its upgrades", hit["players"][0]["lives"] == 2 and hit["players"][0]["alive"] == false and hit["deaths"] == 1 and hit["players"][0]["power"] == 1 and int(game.audio.played.get("rover_down", 0)) == 1)
+	_check("a raider's shell destroys an unshielded rover and costs one of its upgrades", hit["players"][0]["lives"] == 3 and hit["players"][0]["alive"] == false and hit["deaths"] == 1 and hit["players"][0]["power"] == 1 and int(game.audio.played.get("rover_down", 0)) == 1)
 	game.advance(Sim.RESPAWN_STEPS * STEP + 0.5)
 	var back := game.snapshot()
 	_check("it comes back at its start, shielded", back["players"][0]["alive"] and back["players"][0]["shielded"] and is_equal_approx(float(back["players"][0]["x"]), 5.0 * 16.0 + 8.0))
@@ -532,7 +546,7 @@ func _test_losses() -> void:
 	_check("the last rover going down stops play, and nothing is decided until the wreck has been seen", game.snapshot()["phase"] == "lost" and results.is_empty())
 	game.advance(Sim.LOST_STEPS * STEP + 0.1)
 	var relieved := game.snapshot()
-	_check("a reserve crew takes the sector over from its opening: full garage, mended beacon, the score kept", results.is_empty() and relieved["phase"] == "intro" and relieved["stage"] == 1 and relieved["crews"] == 1 and relieved["crews_used"] == 1 and relieved["players"][0]["lives"] == 3 and relieved["players"][0]["alive"] and relieved["core"] == 4 and relieved["score"] == 700 and relieved["foes_left"] == 16)
+	_check("a reserve crew takes the sector over from its opening: full garage, mended beacon, the score kept", results.is_empty() and relieved["phase"] == "intro" and relieved["stage"] == 1 and relieved["crews"] == 1 and relieved["crews_used"] == 1 and relieved["players"][0]["lives"] == 4 and relieved["players"][0]["alive"] and relieved["core"] == 4 and relieved["score"] == 700 and relieved["foes_left"] == 16)
 	game.advance(Sim.INTRO_STEPS * STEP)
 	game.sim.freeze_t = 100000
 	game.sim.crews = 0
@@ -573,7 +587,7 @@ func _test_losses() -> void:
 	game.advance(1.0)
 	_check("the beacon going dark ends play", game.snapshot()["core"] == 0 and game.snapshot()["phase"] == "lost" and int(game.audio.played.get("core_lost", 0)) == 1)
 	game.advance(Sim.LOST_STEPS * STEP + 0.1)
-	_check("losing the beacon is a defeat even with rovers left", results.size() == 1 and results[0]["defeated"] == true and results[0]["core_hits"] == 3 and results[0]["players"][0]["lives"] == 3 and not game.audio.music_playing)
+	_check("losing the beacon is a defeat even with rovers left", results.size() == 1 and results[0]["defeated"] == true and results[0]["core_hits"] == 3 and results[0]["players"][0]["lives"] == 4 and not game.audio.music_playing)
 	game.free()
 
 func _test_chips() -> void:
@@ -609,10 +623,10 @@ func _test_chips() -> void:
 	var before: int = game.snapshot()["kills"]
 	game.sim.take_chip(rover, "surge")
 	_check("surge destroys every raider on the field", game.sim.raiders.is_empty() and game.snapshot()["kills"] >= before + 2)
-	rover.lives = 2
+	rover.lives = int(rover.max_lives) - 1
 	game.sim.take_chip(rover, "spare")
 	game.sim.take_chip(rover, "spare")
-	_check("a spare rover adds one, up to the full garage", game.snapshot()["players"][0]["lives"] == 3)
+	_check("a spare rover adds one, up to the full garage", game.snapshot()["players"][0]["lives"] == 4 and game.snapshot()["players"][0]["max_lives"] == 4)
 	rover.power = 3
 	game.advance(STEP)
 	var score: int = game.snapshot()["score"]
@@ -674,6 +688,48 @@ func _test_boss() -> void:
 	_check("a boss flattens brick it drives over", _tile(game, 8, 2) == Stages.T_EMPTY or int(crusher.y) == Sim.CELL)
 	game.free()
 
+	# The boss going down takes every raider shell with it in that same step, however many are in the air.
+	game = _start_playing(1, 29, {"start_stage": 3, "quota": -1})
+	game.advance(Sim.BOSS_WARN_STEPS * STEP + 3.0)
+	game.sim.freeze_t = 100000
+	var doomed: Dictionary = game.sim.raiders[0]
+	doomed.hp = 1
+	game.sim.rovers[0].shield_t = 100000
+	for column in [1, 3, 5, 12, 14, 16]:
+		_shell(game, column, 6, 2, 1)
+	game.sim.shots.insert(3, {"x": int(doomed.x), "y": int(doomed.y) + Sim.BOSS_HALF + 40, "dir": 0, "speed": 40, "team": 0, "owner": 0, "power": 1, "dmg": 1, "dead": false})
+	game.advance(STEP)
+	var raider_shells := 0
+	for shot: Dictionary in game.sim.shots:
+		if shot.team == 1:
+			raider_shells += 1
+	_check("a boss's fall clears every raider shell at once", game.sim.boss_state == Sim.BOSS_DOWN and raider_shells == 0 and game.sim.shots.is_empty() and game.snapshot()["bosses_down"] == 1)
+	game.free()
+
+	# Losing to a boss with a reserve crew in hand: the crew takes the fight up at the boss, not at the head of the column.
+	game = _start_playing(1, 29, {"start_stage": 3})
+	var boss_results := _results(game)
+	game.sim.destroyed = game.sim.roster.size()
+	game.sim.next_raider = game.sim.roster.size()
+	game.advance(Sim.BOSS_WARN_STEPS * STEP + 3.0)
+	game.sim.freeze_t = 100000
+	game.sim.raiders[0].hp = 5
+	game.sim.rovers[0].lives = 1
+	game.sim.rovers[0].shield_t = 0
+	game.sim.rovers[0].power = 2
+	_set_tile(game, 8, 5, Stages.T_EMPTY)
+	_shell(game, 5, 9, 2, 1)
+	game.advance(1.2)
+	_check("the last rover lost in a boss fight", game.snapshot()["phase"] == "lost" and game.sim.lost_at_boss())
+	game.advance(Sim.LOST_STEPS * STEP + 0.1)
+	var retry := game.snapshot()
+	_check("the reserve crew skips the column: only the boss is left, on a rebuilt field, with a full garage and no upgrades", boss_results.is_empty() and retry["phase"] == "intro" and retry["stage"] == 3 and retry["foes_left"] == 1 and retry["crews_used"] == 1 and retry["players"][0]["lives"] == 4 and retry["players"][0]["power"] == 0 and _tile(game, 8, 5) == Stages.T_THICKET and not retry.has("boss_hp"))
+	game.sim.rovers[0].shield_t = 100000
+	game.advance(Sim.INTRO_STEPS * STEP + Sim.BOSS_WARN_STEPS * STEP + 1.0)
+	var rematch := game.snapshot()
+	_check("and the boss arrives again at full strength, with no raider of the column before it", rematch.has("boss_hp") and rematch["boss_hp"] == 22 and rematch["boss_max_hp"] == 22 and game.sim.raiders.size() == 1 and int(game.audio.played.get("boss_in", 0)) == 2)
+	game.free()
+
 func _test_two_players() -> void:
 	var game := _start_playing(1, 31)
 	game.sim.freeze_t = 100000
@@ -681,7 +737,7 @@ func _test_two_players() -> void:
 	_check("a second player can join a live run", game.join(1))
 	game.advance(0.2)
 	var joined := game.snapshot()
-	_check("the newcomer arrives at their own start with a full garage", joined["players"][1]["alive"] and joined["players"][1]["lives"] == 3 and joined["player_count"] == 2 and float(joined["players"][1]["x"]) > float(joined["players"][0]["x"]))
+	_check("the newcomer arrives at their own start with a full garage", joined["players"][1]["alive"] and joined["players"][1]["lives"] == 4 and joined["player_count"] == 2 and float(joined["players"][1]["x"]) > float(joined["players"][0]["x"]))
 	game.feed(1, &"up", 1.0)
 	game.advance(0.5)
 	game.feed(1, &"up", 0.0)

@@ -2,7 +2,7 @@ extends GameModule
 
 ## Brick Bastion: a top-down base defence on a grid. One or two sentinel rovers keep waves of raiders away from the beacon at the bottom of the field, across six hand-built sectors and two bosses.
 ##
-## This script is the thin shell the host talks to. The rules live in sim.gd (stepped from _game_step, exact integer arithmetic on the seeded rng), the pictures in sprites.gd, the drawing in render.gd, particles and weather in fx.gd, sound in sounds.gd, sector layouts in stages.gd and the words in texts.gd.
+## This script is the thin shell the host talks to. The rules live in sim.gd (stepped from _game_step, exact integer arithmetic on the seeded rng), the pictures in sprites.gd, the pixel lettering in glyphs.gd, the drawing in render.gd, particles and weather in fx.gd, sound in sounds.gd, sector layouts in stages.gd and the words in texts.gd.
 
 const Sim := preload("res://games/brick_bastion/sim.gd")
 const Stages := preload("res://games/brick_bastion/stages.gd")
@@ -10,6 +10,7 @@ const Sprites := preload("res://games/brick_bastion/sprites.gd")
 const Render := preload("res://games/brick_bastion/render.gd")
 const Fx := preload("res://games/brick_bastion/fx.gd")
 const Sounds := preload("res://games/brick_bastion/sounds.gd")
+const Glyphs := preload("res://games/brick_bastion/glyphs.gd")
 
 var sim: RefCounted
 var fx: RefCounted
@@ -17,10 +18,14 @@ var tex: Dictionary = {}
 var ground_tex: Texture2D
 var frame_tex: Texture2D
 var font: SystemFont
+var glyph_tex: Texture2D
+var outline_tex: Texture2D
+var glyph_columns: Dictionary = {}
 var time := 0.0
 
 var _music := ""
 var _painted_theme := ""
+var _runs: Dictionary = {}
 
 func _game_start(config: Dictionary) -> void:
 	sim = Sim.new()
@@ -82,6 +87,14 @@ func _game_player_joined(slot: int) -> void:
 func _game_player_left(slot: int) -> void:
 	sim.leave(slot)
 
+## A text split into pixel-lettering and system-font runs, remembered so that drawing the same words every frame does not split them again.
+func text_runs(text: String) -> Array:
+	if not _runs.has(text):
+		if _runs.size() >= 256:
+			_runs.clear()
+		_runs[text] = Glyphs.runs(text)
+	return _runs[text]
+
 func _draw() -> void:
 	if sim == null:
 		return
@@ -89,12 +102,16 @@ func _draw() -> void:
 		font = SystemFont.new()
 		font.font_names = PackedStringArray(["Noto Sans SC", "PingFang SC", "Microsoft YaHei", "sans-serif"])
 		font.allow_system_fallback = true
-		# Chinese glyphs stay crisp without smoothing at this size; Latin letters turn to mush without it.
-		font.antialiasing = TextServer.FONT_ANTIALIASING_NONE if locale == "zh" else TextServer.FONT_ANTIALIASING_GRAY
+		# Only Chinese goes through this font (Latin letters and digits have pixel glyphs of their own), and at this size it stays crisp without smoothing.
+		font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 		font.hinting = TextServer.HINTING_NORMAL
 		font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 		font.font_weight = 600
 		frame_tex = ImageTexture.create_from_image(Render.frame_image())
+		var lettering := Glyphs.images()
+		glyph_tex = ImageTexture.create_from_image(lettering["glyph"])
+		outline_tex = ImageTexture.create_from_image(lettering["outline"])
+		glyph_columns = Glyphs.columns()
 	var theme := str(sim.stage_info()["theme"])
 	if theme != _painted_theme:
 		# A new sector: repaint the ground and the tiles in its colours, and change the weather.
