@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxmf16aperchf"
-path="res://.godot/imported/site_screenshot.png-b7f4fe7fb642250c167249e96280dd66.ctex"
+uid="uid://mu06uvbbf4fa"
+path="res://.godot/imported/back1.jpg-f805748ffc9f0e14405c97b1bd94c5d5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://games/crate_crew/site_screenshot.png"
-dest_files=["res://.godot/imported/site_screenshot.png-b7f4fe7fb642250c167249e96280dd66.ctex"]
+source_file="res://games/crate_crew/art/back1.jpg"
+dest_files=["res://.godot/imported/back1.jpg-f805748ffc9f0e14405c97b1bd94c5d5.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

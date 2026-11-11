@@ -2,7 +2,7 @@
 
 本页归集 Classic Games 自身的许可证，以及仓库和构建产物中包含的第三方组件的许可证。本页只作索引，不改变各组件原许可条款；条款以各组件随附的许可文本为准。
 
-最近一次逐项核对 Go 依赖：2026-11-10，依据当时的 `go.mod` 与 Go 模块缓存中各模块随附的许可文件；「随仓库分发的第三方内容」一表于 2026-11-11 随手机端的移除和游戏素材改为按目录记录而更新。依赖升级后以对应模块的许可文件为准。
+最近一次逐项核对 Go 依赖：2026-11-10，依据当时的 `go.mod` 与 Go 模块缓存中各模块随附的许可文件；「随仓库分发的第三方内容」一表于 2026-11-11 随手机端的移除和游戏素材改为按目录记录而更新，同日补充了关于音频文件和 AI 生成素材的说明。依赖升级后以对应模块的许可文件为准。
 
 ## Classic Games 自身
 
@@ -17,7 +17,9 @@ Classic Games 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与�
 
 本表不为每款游戏单列一行：加一款游戏时在它自己的目录里写 `ASSETS.md`（格式见 [20-adding-a-game](../20-adding-a-game.md) 第 6 节），不需要改本页。
 
-仓库目前不包含字体文件和音频文件：界面在运行时使用操作系统里已安装的字体（`apps/client/launcher/launcher_tokens.gd`），Shooter 的 BGM 由 `apps/client/runtime/shooter/procedural_bgm.gd` 在运行时合成，游戏模块的音效与音乐由 `apps/client/games/shared/game_audio.gd` 在运行时合成。
+仓库不包含字体文件：界面和游戏里的文字在运行时使用操作系统里已安装的字体（`apps/client/launcher/launcher_tokens.gd`、`apps/client/games/shared/game_text.gd`）。Shooter 的 BGM 由 `apps/client/runtime/shooter/procedural_bgm.gd` 在运行时合成；游戏模块的音效由 `apps/client/games/shared/game_synth.gd` 在运行时合成，音乐或者同样在运行时合成，或者是游戏目录里的音频文件（Ogg Vorbis），后者与图片一样逐个记在该游戏的 `ASSETS.md` 里。
+
+**关于 AI 生成的图像和音乐。** 一部分游戏素材（主视觉、高清美术、音乐）是用生成模型按本项目自己写的提示词制作的，各 `ASSETS.md` 逐个文件写明了模型、提示词和后续处理。提示词只描述本项目自己的设计，不指向任何现有作品、角色或作者（[20-adding-a-game](../20-adding-a-game.md) 第 8.7 节）。这些文件随项目以 Apache-2.0 分发；但纯由模型生成的内容在一些司法辖区可能不受著作权保护，Apache-2.0 授予的只是本项目对它们实际拥有的权利，复用前请自行判断。制作这些素材的工具在 `scripts/assets/`，它调用的生成服务不随仓库分发，也不是运行或构建本项目所必需的。
 
 ## 构建产物中包含的组件
 

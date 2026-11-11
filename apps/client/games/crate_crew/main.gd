@@ -1,6 +1,6 @@
 extends GameModule
 
-## Crate Crew: two small repair robots cross a runaway workshop with nothing but what they can lift. This entry script joins the parts: world.gd simulates, render.gd draws, sounds.gd holds the effects and tunes. All play happens in _game_step; _game_frame only animates.
+## Crate Crew: two small red squirrels cross a runaway workshop with nothing but what they can lift. This entry script joins the parts: world.gd simulates, render.gd draws, sounds.gd holds the effects and names the recorded themes and fanfares. All play happens in _game_step; _game_frame only animates.
 
 const World := preload("res://games/crate_crew/world.gd")
 const Levels := preload("res://games/crate_crew/levels.gd")
@@ -12,7 +12,6 @@ const HEARD := ["jump", "land", "lift", "put_down", "throw", "throw_up", "break"
 
 var world: World
 var _view: Render
-var _music := ""
 
 func _game_start(config: Dictionary) -> void:
 	var chosen: Dictionary = config["options"]
@@ -28,8 +27,7 @@ func _game_start(config: Dictionary) -> void:
 	_view.setup(world, locale)
 	_view.players = player_count()
 	Sounds.define_all(audio)
-	_music = ""
-	_play_music("stage%d" % (world.stage % 2))
+	audio.play_track(Sounds.stage_track(world.stage), 0.0)
 
 func _game_step(delta: float) -> void:
 	world.step([input(0), input(1)], delta)
@@ -38,13 +36,22 @@ func _game_step(delta: float) -> void:
 		if name in HEARD:
 			audio.play(name)
 		match name:
-			"boss_start":
-				_play_music("boss")
 			"stage_start":
-				_play_music("stage%d" % (world.stage % 2))
-			"boss_down", "game_over", "continue":
-				audio.stop_music()
-				_music = ""
+				audio.play_track(Sounds.stage_track(world.stage))
+			"boss_start":
+				audio.play_track("theme_boss", 0.5)
+			"boss_down":
+				audio.stop_music(1.0)
+			"stage_clear":
+				# The last stage ends the run: its fanfare takes the music with it. After any other stage the next theme fades in under the tail of the short one.
+				if world.stage + 1 >= Levels.COUNT:
+					audio.play_stinger("fanfare_won", GameAudio.STINGER_STOP)
+				else:
+					audio.play_stinger("fanfare_clear")
+			"continue":
+				audio.stop_music(0.4)
+			"game_over":
+				audio.play_stinger("fanfare_lost", GameAudio.STINGER_STOP)
 		_view.note(event)
 	world.events.clear()
 	score = int(world.heroes[0]["score"]) + int(world.heroes[1]["score"])
@@ -52,18 +59,6 @@ func _game_step(delta: float) -> void:
 		finish(OUTCOME_CLEARED)
 	elif world.phase == World.P_LOST:
 		finish(OUTCOME_DEFEATED)
-
-func _play_music(which: String) -> void:
-	if which == _music:
-		return
-	_music = which
-	match which:
-		"boss":
-			audio.play_music(Sounds.boss_music(), -7.0)
-		"stage1":
-			audio.play_music(Sounds.stage_music(1), -8.0)
-		_:
-			audio.play_music(Sounds.stage_music(0), -8.0)
 
 func _game_frame(delta: float) -> void:
 	_view.players = player_count()

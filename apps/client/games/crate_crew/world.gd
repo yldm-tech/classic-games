@@ -1,6 +1,6 @@
 extends RefCounted
 
-## The simulation of Crate Crew: the stage's tiles, the two robots, everything that can be lifted and thrown, pick-ups, lifts, flags and the flow from stage to stage. It advances only through step(), reads nothing but the two GameInput objects it is handed and the seeded generator, and says what happened through `events`, which the entry script turns into sound and the renderer into particles. Enemies live in foes.gd and the bosses in bosses.gd; both work on this object.
+## The simulation of Crate Crew: the stage's tiles, the two squirrels, everything that can be lifted and thrown, pick-ups, lifts, flags and the flow from stage to stage. It advances only through step(), reads nothing but the two GameInput objects it is handed and the seeded generator, and says what happened through `events`, which the entry script turns into sound and the renderer into particles. Enemies live in foes.gd and the bosses in bosses.gd; both work on this object.
 
 const Levels := preload("res://games/crate_crew/levels.gd")
 const Foes := preload("res://games/crate_crew/foes.gd")
@@ -121,7 +121,7 @@ func emit(name: String, x: float, y: float, extra: Dictionary = {}) -> void:
 
 # ---- stages ----
 
-## Build a stage and put the playing robots at its start, or at the flag with this index.
+## Build a stage and put the playing squirrels at its start, or at the flag with this index.
 func load_stage(index: int, from_flag: int = -1) -> void:
 	stage = index
 	level = Levels.new().build(index)
@@ -164,7 +164,7 @@ func load_stage(index: int, from_flag: int = -1) -> void:
 		if not bool(hero["active"]):
 			hero["state"] = H_OUT
 			continue
-		# A robot that ran out of lives gets one back for the new stage.
+		# A squirrel that ran out of lives gets one back for the new stage.
 		if int(hero["lives"]) <= 0:
 			hero["lives"] = 1
 		_place_hero(hero, start.x + (10.0 if int(hero["slot"]) == 1 else -4.0), start.y)
@@ -189,11 +189,11 @@ func _place_hero(hero: Dictionary, x: float, y: float) -> void:
 	hero["off_time"] = 0.0
 	hero["safe"] = Vector2(x, y)
 
-## A player joined: their robot appears beside the partner.
+## A player joined: their squirrel appears beside the partner.
 func add_hero(slot: int) -> void:
 	var hero := heroes[slot]
 	hero["active"] = true
-	# A robot that left and comes back keeps the lives it left with (at least one), so leaving and joining again is not a refill.
+	# A squirrel that left and comes back keeps the lives it left with (at least one), so leaving and joining again is not a refill.
 	hero["lives"] = maxi(1, int(hero["lives"])) if bool(hero["left"]) else int(rules["lives"])
 	hero["energy"] = int(rules["energy"])
 	var at: Vector2 = level.get("spawn", Vector2.ZERO)
@@ -206,7 +206,7 @@ func add_hero(slot: int) -> void:
 	hero["inv"] = 2.0
 	emit("respawn", at.x, at.y)
 
-## A player left: their robot lets go of everything and disappears.
+## A player left: their squirrel lets go of everything and disappears.
 func remove_hero(slot: int) -> void:
 	var hero := heroes[slot]
 	_let_go(hero)
@@ -319,7 +319,7 @@ func land_on_things(body: Dictionary, half: float, previous: float) -> Variant:
 func is_active_at(x: float, y: float) -> bool:
 	return absf(x - (camera.x + VIEW.x * 0.5)) < ACTIVE_X and absf(y - (camera.y + VIEW.y * 0.5)) < ACTIVE_Y
 
-## The robot nearest to a point among those an enemy can see, or an empty dictionary.
+## The squirrel nearest to a point among those an enemy can see, or an empty dictionary.
 func nearest_hero(x: float, y: float) -> Dictionary:
 	var best := {}
 	var best_distance := 1e12
@@ -411,7 +411,7 @@ func _step_hero(hero: Dictionary, pad: GameInput, delta: float) -> void:
 			_respawn(hero)
 		return
 	if state == H_CARRIED:
-		# A carried robot can only hop off.
+		# A carried squirrel can only hop off.
 		if pad.just_pressed(GameInput.A):
 			var carrier := heroes[int(hero["rider_of"])]
 			carrier["lifting"] = -1
@@ -501,7 +501,7 @@ func _step_hero(hero: Dictionary, pad: GameInput, delta: float) -> void:
 		hero["vx"] = 0.0
 		hero["inv"] = maxf(float(hero["inv"]), 0.4)
 		emit("land", float(hero["x"]), float(hero["y"]))
-	# With two robots nobody walks out of the picture.
+	# With two squirrels nobody walks out of the picture.
 	if _alive_count() > 1 or boss_fight:
 		var left := camera.x + 6.0
 		var right := camera.x + VIEW.x - 6.0
@@ -613,7 +613,7 @@ func _press_grab(hero: Dictionary, pad: GameInput, hiding: bool) -> void:
 			hero["lift_time"] = 0.16
 			emit("lift", x, y)
 
-## Set a carried crate down in front of the robot, on top of a crate that is already there.
+## Set a carried crate down in front of the squirrel, on top of a crate that is already there.
 func _put_down(hero: Dictionary, object: Dictionary) -> void:
 	var x := float(hero["x"]) + float(int(hero["face"])) * 14.0
 	var y := float(hero["y"])
@@ -631,7 +631,7 @@ func _put_down(hero: Dictionary, object: Dictionary) -> void:
 	hero["lift_time"] = 0.12
 	emit("put_down", x, y)
 
-## Drop whatever the robot carries, crate or partner.
+## Drop whatever the squirrel carries, crate or partner.
 func _let_go(hero: Dictionary) -> void:
 	var carried: Variant = hero["carry"]
 	if carried is Dictionary:
@@ -648,7 +648,7 @@ func _let_go(hero: Dictionary) -> void:
 		hero["lifting"] = -1
 	hero["hide"] = false
 
-## Take one unit of energy from a robot, unless it is flashing, hidden under a crate, carried or thrown. `forced` ignores the crate (tacks from below, a boss ramming).
+## Take one unit of energy from a squirrel, unless it is flashing, hidden under a crate, carried or thrown. `forced` ignores the crate (tacks from below, a boss ramming).
 func hurt_hero(hero: Dictionary, from_x: float, forced: bool = false) -> bool:
 	if int(hero["state"]) != H_NORMAL or float(hero["inv"]) > 0.0 or phase != P_PLAY:
 		return false
@@ -690,7 +690,7 @@ func _fell_out(hero: Dictionary) -> void:
 	hero["safe"] = back
 	hero["inv"] = 2.0
 
-## Where a robot comes back: beside a living partner, else where it last stood safely.
+## Where a squirrel comes back: beside a living partner, else where it last stood safely.
 func _return_point(hero: Dictionary) -> Vector2:
 	var partner := heroes[1 - int(hero["slot"])]
 	if int(partner["state"]) == H_NORMAL and bool(partner["ground"]):
@@ -992,7 +992,7 @@ func _step_camera() -> void:
 	var target := _camera_target()
 	camera.x = move_toward(camera.x, target.x, maxf(1.0, absf(target.x - camera.x) * 0.14))
 	camera.y = move_toward(camera.y, target.y, maxf(1.0, absf(target.y - camera.y) * 0.1))
-	# A robot left far outside the picture is brought back to its partner.
+	# A squirrel left far outside the picture is brought back to its partner.
 	if _alive_count() < 2:
 		return
 	for hero in heroes:

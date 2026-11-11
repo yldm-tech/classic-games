@@ -15,6 +15,8 @@ const NOW := 1794393000
 const GAME := "fixture_duo"
 ## The second fixture: one seat, a smooth stage, achievements that read what finish() added to the result.
 const SOLO := "fixture_arena"
+## The third fixture: high-resolution art and recorded audio. Its own test and testing/media_test.gd cover it; here it only has to be in the catalog.
+const GALLERY := "fixture_gallery"
 
 var _passed := 0
 var _failed := 0
@@ -44,7 +46,7 @@ func _initialize() -> void:
 # ---- guide ----
 
 func _test_guide() -> void:
-	_check("the catalog reads the fixture root", Catalog.ids() == [SOLO, GAME] and Catalog.problems().is_empty() and Guide.is_module(GAME))
+	_check("the catalog reads the fixture root", Catalog.ids() == [SOLO, GAME, GALLERY] and Catalog.problems().is_empty() and Guide.is_module(GAME))
 	_check("the player range and join rule come from the manifest", Guide.player_range(GAME) == Vector2i(1, 2) and Guide.joins_in_progress(GAME) and Catalog.players_label(Catalog.by_id(GAME)) == "1–2P" and Catalog.supports_two(Catalog.by_id(GAME)))
 	var controls := Guide.controls(GAME)
 	var ids: Array = []

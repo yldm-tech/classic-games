@@ -10,6 +10,7 @@ GO         ?= go
 GOFMT      ?= gofmt
 GODOT      ?= godot
 PNPM       ?= pnpm
+PYTHON     ?= python3
 SERVER_DIR := apps/server
 CLIENT_DIR := apps/client
 CLI_DIR    := apps/cli
@@ -170,7 +171,7 @@ game-flow-test: ## 跑游戏流程测试(游戏菜单、局内 HUD 与输入、�
 	GODOT="$(GODOT)" scripts/run-godot-test.sh res://launcher/game_flow_test.gd '^game_flow_test: [0-9]+ passed, 0 failed$$'
 
 .PHONY: games-check
-games-check: ## 校验每个游戏目录(games/*/ 与测试夹具):清单 schema、模块入口、自带测试、ASSETS.md 覆盖全部素材
+games-check: ## 校验每个游戏目录(games/*/ 与测试夹具):清单 schema、模块入口、自带测试、ASSETS.md 覆盖全部素材、素材预算与格式
 	GODOT="$(GODOT)" GAME_CHECK_ROOTS="res://games,res://testing/games" scripts/run-godot-test.sh res://games/shared/manifest_check.gd '^manifest_check: [0-9]+ games, 0 problems$$'
 
 .PHONY: games-test
@@ -178,12 +179,16 @@ games-test: ## 自动发现并跑每个游戏目录的 *_test.gd 与模块契约
 	GODOT="$(GODOT)" scripts/run-game-tests.sh
 
 .PHONY: export-test
-export-test: ## 导出资源包并在包内运行游戏发现(验证导出版里 res://games 仍可枚举、清单在包内、测试夹具不随包发布)
+export-test: ## 导出资源包并在包内运行游戏发现与素材加载(验证导出版里 res://games 仍可枚举、清单在包内、图片与音频可加载、测试夹具不随包发布)
 	GODOT="$(GODOT)" scripts/check-export-discovery.sh
 
 .PHONY: launcher-shot
 launcher-shot: ## 把启动器某一屏渲染成 1920x1080 PNG(需桌面会话,不进 CI;SCREEN=home STATE=played;局内截图用 SCREEN=game 加 LAUNCHER_SHOT_GAME / LAUNCHER_SHOT_PLAYERS / LAUNCHER_SHOT_INPUT)
 	GODOT="$(GODOT)" scripts/run-launcher-shot.sh $(SCREEN) $(STATE)
+
+.PHONY: assets-test
+assets-test: ## 测试素材工具 scripts/assets(抠图、图集打包、无缝纹理、循环裁切、响度;不调用生成接口;需 Python 的 Pillow 与 numpy)
+	$(PYTHON) -m unittest discover -s scripts/assets -p 'test_*.py'
 
 .PHONY: script-test
 script-test: ## 测试构建/测试脚本自身的 fail-closed 契约
@@ -199,7 +204,7 @@ publish-check: ## 公开前门禁:任何 ref 的历史都不得含内部文档(�
 # ---- aggregate ----
 
 .PHONY: ci
-ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test boundary-test architecture-test spike launcher-test settings-test library-test launch-test pc-mode-test game-flow-test games-check games-test export-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
+ci: fmt-check tidy-check vet go-test go-standalone cli-build mcp-build script-test assets-test boundary-test architecture-test spike launcher-test settings-test library-test launch-test pc-mode-test game-flow-test games-check games-test export-test ## 本地复现 Go 与 Godot 的全部 CI 门禁
 
 .PHONY: ci-web
 ci-web: web-install web-check web-build ## 本地复现官网 CI 门禁(需 Node 与 pnpm)

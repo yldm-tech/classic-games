@@ -1,0 +1,3 @@
+# Python 3.10 or newer. Everything else the asset tools use is the standard library, plus the ffmpeg and sox command-line programs for audio (see README.md).
+Pillow>=10.0
+numpy>=1.26

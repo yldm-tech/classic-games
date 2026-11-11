@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "fixture_gallery",
+  "kind": "module",
+  "entry": "main.gd",
+  "stage": { "size": [640, 360], "pixel_art": false },
+  "name": { "zh": "夜巷点灯", "en": "LAMP LANE" },
+  "initials": "yxdd",
+  "genre": { "zh": "漫步", "en": "STROLL" },
+  "tagline": { "zh": "沿着石板路点亮每一盏灯", "en": "Light every lamp along the cobbled lane" },
+  "players": { "min": 1, "max": 1 },
+  "colors": { "title": "F4E8C8", "shadow": "10162C", "glow": "FFB040" },
+  "art": { "top": "243056", "bottom": "10162C", "primary": "FFB040", "secondary": "38A890" },
+  "achievements": [
+    { "id": "lit", "icon": "star", "name": { "zh": "灯火通明", "en": "All Aglow" }, "desc": { "zh": "点亮所有的灯", "en": "Light every lamp" }, "when": { "cleared": true } },
+    { "id": "brisk", "icon": "bolt", "name": { "zh": "脚步轻快", "en": "Brisk" }, "desc": { "zh": "剩余 50 秒以上时点亮所有的灯", "en": "Light every lamp with 50 seconds or more left" }, "when": { "cleared": true, "min": { "seconds_left": 50 } } }
+  ],
+  "how": { "zh": "左右走动，经过路灯就会把它点亮。时间用完之前点亮全部路灯即通关。", "en": "Walk left and right; passing a lamp lights it. Light them all before time runs out." },
+  "controls": [
+    { "id": "move", "name": { "zh": "走动", "en": "Walk" }, "inputs": ["move"] },
+    { "id": "jump", "name": { "zh": "跳", "en": "Hop" }, "inputs": ["a"] }
+  ],
+  "hud": {
+    "clock": { "mode": "countdown", "field": "time_left" },
+    "stats": [ { "label": { "zh": "路灯", "en": "LAMPS" }, "fields": ["lit", "lamps_total"] } ]
+  },
+  "options": [
+    { "id": "lamps", "name": { "zh": "路灯数量", "en": "Lamps" }, "note": { "zh": "小巷里路灯的数量", "en": "How many lamps stand along the lane" }, "values": [2, 3, 5], "default": 3 }
+  ]
+}

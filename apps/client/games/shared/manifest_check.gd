@@ -6,7 +6,8 @@ extends SceneTree
 ##   - a module started with its default options and its largest player count reports every snapshot field its HUD names;
 ##   - a module has at least one *_test.gd of its own, at the top of its directory where the test runner looks;
 ##   - the website screenshot a manifest names (site.screenshot) is there;
-##   - the directory has an ASSETS.md, and every file in it that is not source is named there.
+##   - the directory has an ASSETS.md, and every file in it that is not source is named there;
+##   - its media fit the budget (MEDIA_FILE_BYTES per file, MEDIA_BUDGET_BYTES per game), audio is in a format that loops cleanly, no image is larger than a GPU on the web or a phone takes, and on a stage that is not pixel art every image is imported with mipmaps.
 ## Prints one line per problem and ends with "manifest_check: <n> games, <m> problems".
 
 const Registry := preload("res://games/shared/game_registry.gd")
@@ -22,6 +23,18 @@ const MANIFESTS_ONLY_ENV := "GAME_CHECK_MANIFESTS_ONLY"
 const BASE_METHODS := ["_process", "_physics_process", "start", "set_paused", "snapshot", "feed", "release_inputs", "join", "leave", "advance", "finish", "input", "active_players", "player_count", "is_player_active", "is_running", "is_finished", "is_paused", "_tick"]
 ## Files that are code, data written for the game, or engine bookkeeping. Anything else is an asset and needs a line in ASSETS.md.
 const SOURCE_EXTENSIONS := ["gd", "uid", "import", "json", "md", "tscn", "tres", "gdshader", "gdshaderinc", "txt", "cfg"]
+
+## The media budget: what one asset file and what all the assets of one game may weigh in the repository. Every clone and every web build carries these bytes. The environment variables override them in kilobytes; the check's own test uses that to try the rule on files of a few kilobytes.
+const MEDIA_FILE_BYTES := 4 * 1024 * 1024
+const MEDIA_BUDGET_BYTES := 16 * 1024 * 1024
+const MEDIA_FILE_ENV := "GAME_CHECK_MEDIA_FILE_KB"
+const MEDIA_BUDGET_ENV := "GAME_CHECK_MEDIA_BUDGET_KB"
+## Largest side of an image. Larger textures fail to load on WebGL and on many phones.
+const MAX_IMAGE_SIDE := 4096
+const IMAGE_EXTENSIONS := ["png", "jpg", "jpeg", "webp"]
+## Audio a game may ship: Ogg Vorbis for everything, WAV for short effects. The rest either cannot loop without a gap (MP3, AAC) or is not imported by the engine.
+const AUDIO_EXTENSIONS := ["ogg", "wav"]
+const OTHER_AUDIO_EXTENSIONS := ["mp3", "m4a", "aac", "flac", "opus", "wma", "aif", "aiff"]
 
 func _initialize() -> void:
 	var games := 0
@@ -85,7 +98,45 @@ func _directory_problems(game: Dictionary) -> PackedStringArray:
 	for file in files:
 		if not file.get_extension().to_lower() in SOURCE_EXTENSIONS and not listed.contains("`%s`" % file):
 			out.append("%s: does not list `%s`" % [ASSETS_FILE, file])
+	out.append_array(_media_problems(game, dir, files))
 	return out
+
+## Size, format and import settings of a game's asset files.
+func _media_problems(game: Dictionary, dir: String, files: PackedStringArray) -> PackedStringArray:
+	var out := PackedStringArray()
+	var file_limit := _limit(MEDIA_FILE_ENV, MEDIA_FILE_BYTES)
+	var budget := _limit(MEDIA_BUDGET_ENV, MEDIA_BUDGET_BYTES)
+	var smooth: bool = game["kind"] == Manifest.KIND_MODULE and not bool(Manifest.stage(game)["pixel_art"])
+	# The key art and the website screenshot are shown by the launcher and the website at their own size, not drawn on the stage.
+	var off_stage := [str((game.get("art", {}) as Dictionary).get("image", "")), str((game.get("site", {}) as Dictionary).get("screenshot", ""))]
+	var total := 0
+	for file in files:
+		var extension := file.get_extension().to_lower()
+		if extension in SOURCE_EXTENSIONS:
+			continue
+		var handle := FileAccess.open(dir.path_join(file), FileAccess.READ)
+		var bytes := handle.get_length() if handle != null else 0
+		total += bytes
+		if bytes > file_limit:
+			out.append("media: `%s` is %s; one asset file may be at most %s (a smaller picture, a lossy format for an opaque one, a shorter or lower-quality audio file)" % [file, _size_text(bytes), _size_text(file_limit)])
+		if extension in OTHER_AUDIO_EXTENSIONS:
+			out.append("media: `%s`: games ship audio as Ogg Vorbis (.ogg), which loops without a gap; convert it with scripts/assets/assets.py audio" % file)
+		if extension in IMAGE_EXTENSIONS:
+			var texture := load(dir.path_join(file)) as Texture2D
+			if texture != null and maxi(texture.get_width(), texture.get_height()) > MAX_IMAGE_SIDE:
+				out.append("media: `%s` is %dx%d; no side of an image may exceed %d pixels" % [file, texture.get_width(), texture.get_height(), MAX_IMAGE_SIDE])
+			if smooth and not file in off_stage and not FileAccess.get_file_as_string(dir.path_join(file) + ".import").contains("mipmaps/generate=true"):
+				out.append("media: `%s` is imported without mipmaps, so it shimmers when drawn smaller than it is; set mipmaps/generate=true in %s.import (new imports get it from the project's defaults) and run make import" % [file, file])
+	if total > budget:
+		out.append("media: the assets weigh %s in all; a game's budget is %s" % [_size_text(total), _size_text(budget)])
+	return out
+
+func _limit(variable: String, fallback: int) -> int:
+	var text := OS.get_environment(variable)
+	return int(text) * 1024 if text.is_valid_int() and int(text) > 0 else fallback
+
+func _size_text(bytes: int) -> String:
+	return "%.1f MB" % (float(bytes) / 1048576.0) if bytes >= 1048576 else "%.1f KB" % (float(bytes) / 1024.0)
 
 ## Base-class methods the entry script defines itself, read from its source: a subclass method of the same name replaces the base one without any error.
 func _redefined_methods(game: Dictionary) -> PackedStringArray:

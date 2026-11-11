@@ -6,8 +6,6 @@ extends SceneTree
 const Main := preload("res://games/crate_crew/main.gd")
 const World := preload("res://games/crate_crew/world.gd")
 const Levels := preload("res://games/crate_crew/levels.gd")
-const Sprites := preload("res://games/crate_crew/sprites.gd")
-const Backdrops := preload("res://games/crate_crew/backdrops.gd")
 const Sounds := preload("res://games/crate_crew/sounds.gd")
 const Texts := preload("res://games/crate_crew/texts.gd")
 
@@ -660,18 +658,33 @@ func _test_stages_can_be_walked() -> void:
 	_check("two stages end in a boss room and two at a door", not (Levels.new().build(1)["boss"] as Dictionary).is_empty() and not (Levels.new().build(3)["boss"] as Dictionary).is_empty() and Levels.new().build(0)["door"] is Vector2 and Levels.new().build(2)["door"] is Vector2)
 
 func _test_art_and_sound() -> void:
-	var sprites := Sprites.new()
-	var textures := sprites.build()
-	_check("every sprite row has the right width and known colours", sprites.errors.is_empty())
-	var wanted := ["hero0_idle_open", "hero1_apart_open", "hero0_squat_open", "hero1_fall_hurt", "hero0_arms_up", "wood", "steel", "scrap", "hexnut", "bug1", "hopper1", "drone1", "turret1", "roller_bare1", "magnet1", "vac_1_1", "crane_0", "claw_shut", "door_open", "tile3_belt3", "tile0_top", "bug0#w"]
-	_check("the sprites the renderer asks for exist", wanted.all(func(name: String) -> bool: return textures.has(name)))
-	var layers := Backdrops.new().build(1)
-	_check("each stage has a far and a near backdrop that tile", (layers["far_image"] as Image).get_size() == Vector2i(256, 256) and (layers["near_image"] as Image).get_pixel(200, 120).a < 0.5)
 	var game := _start(1, 1)
+	var view: Node = game.get_node("View")
+	_check("every picture the renderer draws from is loaded: both squirrels with their carry spots, the enemies, the bosses, the props, a ground texture and a far wall per stage", bool(view.art_ready()))
+	_check("each squirrel has a six-frame run cycle, a four-frame carrying cycle and the poses of every action", [0, 1].all(func(slot: int) -> bool: return view.heroes[slot].has_animation("run") and is_equal_approx(view.heroes[slot].animation_length("run") * 15.0, 6.0) and is_equal_approx(view.heroes[slot].animation_length("carry_run") * 11.0, 4.0) and view.heroes[slot].has_frame("throw_1") and view.heroes[slot].has_frame("cheer")))
+	_check("in every carrying frame the crate rests on the paws above the squirrel's 14 pixel box, on its own column", [0, 1].all(func(slot: int) -> bool: return ["carry", "carry_run_0", "carry_run_1", "carry_run_2", "carry_run_3"].all(func(frame: String) -> bool: return (view._holds[slot][frame] as Vector2).y < -World.HERO_TALL - 4.0 and absf((view._holds[slot][frame] as Vector2).x) < 0.5)))
 	_check("every event the game can make a sound for has an effect defined", Main.HEARD.all(func(name: String) -> bool: return game.audio.has_sound(name)))
 	_check("stage text exists in both languages and the English is in capitals", Texts.TEXT.values().all(func(entry: Dictionary) -> bool: return str(entry["zh"]) != "" and str(entry["en"]) != "" and str(entry["en"]).replace("%d", "") == str(entry["en"]).replace("%d", "").to_upper()))
-	_check("there are two stage tunes and a boss tune", Sounds.stage_music(0) != Sounds.stage_music(1) and Sounds.boss_music() != Sounds.stage_music(0))
+	_check("two stage themes, a boss theme and three fanfares are registered", Sounds.TRACKS.keys().all(func(name: String) -> bool: return game.audio.has_track(name)) and Sounds.STINGERS.keys().all(func(name: String) -> bool: return game.audio.has_stinger(name)))
+	_check("the workbench opens with the bright theme", game.audio.music_track == "theme_bench")
 	game.free()
+	var shaft := _start(1, 21, {"stage": 2, "flag": 4, "difficulty": 1})
+	_check("the pipe shaft plays the darker theme", shaft.audio.music_track == "theme_shaft")
+	_walk_to(shaft, 0, 40.0)
+	for jump in 2:
+		_hold(shaft, 0, &"a", 0.5)
+		shaft.advance(0.4)
+	_check("the boss room cross-fades to the boss theme", shaft.world.boss_fight and shaft.audio.music_track == "theme_boss")
+	shaft.free()
+	var lost := _start(1, 5, {"difficulty": 3})
+	var ended := _results(lost)
+	lost.feed(0, &"right", 1.0)
+	for second in 240:
+		lost.advance(1.0)
+		if not ended.is_empty():
+			break
+	_check("a lost run ends on the defeat fanfare with the music gone", not ended.is_empty() and int(lost.audio.played.get("fanfare_lost", 0)) == 1 and not lost.audio.music_playing)
+	lost.free()
 
 func _check(label: String, condition: bool) -> void:
 	if condition:

@@ -77,6 +77,19 @@ jobs:
       - name: Build site and check links
         run: make web-build
 
+  assets:
+    name: asset tools (python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The runner's own Python refuses packages outside a virtual environment. The tests need Pillow and numpy only; the two that encode audio skip themselves where ffmpeg or an Ogg Vorbis encoder is missing.
+      - name: Install Pillow and numpy
+        run: |
+          python3 -m venv "$RUNNER_TEMP/assets-venv"
+          "$RUNNER_TEMP/assets-venv/bin/python" -m pip install --disable-pip-version-check -r scripts/assets/requirements.txt
+      - name: Test asset tools
+        run: make assets-test PYTHON="$RUNNER_TEMP/assets-venv/bin/python"
+
   client-spike:
     name: client spike (godot headless)
     runs-on: ubuntu-latest

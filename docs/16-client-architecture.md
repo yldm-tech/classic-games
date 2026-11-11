@@ -64,12 +64,18 @@ apps/client/games/
 ├── shared/                 # 共用支持库，不是游戏
 │   ├── game_module.gd      # GameModule：模块契约的全部（生命周期、输入、快照、结束、信号）
 │   ├── game_input.gd       # GameInput：一位玩家的逻辑输入状态，与固定步对齐
-│   ├── game_audio.gd       # GameAudio：程序合成的音效与循环音乐，输出到 SFX / Music 总线
+│   ├── game_audio.gd       # GameAudio：合成的音效与曲子，以及音频文件的音乐（循环、交叉淡化）、过场短曲（压低或暂停音乐）和音效，输出到 SFX / Music 总线
+│   ├── game_synth.gd       # GameSynth：音效合成器（叠层振荡器与噪声、ADSR、音高包络、滤波扫频、FM / 环形调制、回声与混响）
+│   ├── game_sfx.gd         # GameSfx：现成的音效预设
+│   ├── game_sprites.gd     # GameSprites：高清美术的图集与帧表、按逻辑坐标绘制、帧动画、平铺与九宫格
+│   ├── game_text.gd        # GameText：游戏里的平滑文字（系统字体）
 │   ├── game_rng.gd         # GameRng：确定性的随机数（xorshift32）
 │   ├── game_fixed_step.gd  # GameFixedStep：把可变帧时间换成整数个固定步
 │   ├── game_manifest.gd    # GameManifest：清单 schema 与校验
 │   ├── game_registry.gd    # GameRegistry：发现 games/*/game.json
 │   ├── manifest_check.gd   # make games-check 运行的检查脚本
+│   ├── media_check.gd      # make export-test 在导出包内运行：加载每款游戏的每张图片、每个音频文件、每份帧表
+│   ├── synth_dump.gd       # 把音效预设写成 WAV 的小工具
 │   └── shared_test.gd      # 支持库自己的测试
 ├── shooter/ survivor/ tower_defense/   # kind: "dsl"，各有 game.json、key_art.jpg、site_screenshot.png、ASSETS.md
 └── <id>/                   # 以后的游戏：kind: "module"，另有入口脚本、素材和 *_test.gd
@@ -79,7 +85,8 @@ apps/client/games/
 - **无效的清单不会让启动器崩溃。** 该游戏不进目录；启动器启动时用 toast 说明有几款没能加载以及第一条原因，「设置 › 关于」逐条列出，`make games-check` 则直接失败。
 - **启动器不持有任何单款游戏的数据。** `launcher_catalog.gd` 与 `launcher_game_guide.gd` 只剩查询逻辑：名称、类型、人数、配色、成就及其条件、玩法说明、操作表、HUD 字段、开局选项全部读自清单。原有三款游戏的清单是 `kind: "dsl"`，照旧运行各自运行时的基线 DSL；它们特有的字段（`runtime`、`options[].path`、`towers`、`tuning`）也在清单里。
 - **游戏模块的契约**见 [20-adding-a-game](./20-adding-a-game.md)：入口脚本的 API、清单字段、舞台与缩放、每位玩家的输入、能碰与不能碰的东西。
-- **测试夹具** `apps/client/testing/games/fixture_duo/` 是一个用到整个契约的最小模块（双人、卷轴、倒计时、生命、首领、选项、合成声音），`fixture_arena/` 补上它没有的部分（单人座位、平滑舞台、模拟量移动、成就读取 `finish()` 附带的字段）。两者只供测试使用，不在随附的目录里；`LauncherCatalog.use_root()` 让测试把目录指向它们。`testing/unfit_games/` 是清单有效但目录不合格的样本，供清单检查的自测使用。
+- **测试夹具** `apps/client/testing/games/fixture_duo/` 是一个用到整个契约的最小模块（双人、卷轴、倒计时、生命、首领、选项、合成声音），`fixture_arena/` 补上它没有的部分（单人座位、平滑舞台、模拟量移动、成就读取 `finish()` 附带的字段），`fixture_gallery/` 覆盖高清美术与录制音频（精灵图集与帧表、平铺贴图、平滑文字、循环音乐文件、过场短曲、文件音效、预设音效）。三者只供测试使用，不在随附的目录里；`LauncherCatalog.use_root()` 让测试把目录指向它们。`testing/unfit_games/` 是清单有效但目录不合格的样本，供清单检查的自测使用。
+- **舞台渲染。** 舞台是启动器里一个固定 1920×1080 的 `SubViewport`。像素舞台（`stage.pixel_art: true`）按逻辑分辨率渲染，由容器以整数倍、最近邻过滤放大；平滑舞台把 `size_2d_override` 设为逻辑尺寸并开启拉伸，逻辑坐标映射到 1920×1080 上再栅格化，模块节点的贴图过滤是线性加 mipmap（`GameSprites.FILTER`，由 `GameSession` 在挂载模块时设置），项目的导入默认值让新导入的贴图都生成 mipmap。高清美术按「画多大就多大」的逻辑坐标绘制，源图的分辨率由帧表里的 `scale` 换算，详见 [20-adding-a-game](./20-adding-a-game.md) 第 8 节。
 
 ## 3. 主机风格启动器（launcher）
 
@@ -136,7 +143,7 @@ apps/client/launcher/
 - 设置项的键（存档 `settings` 段）：`lang`（`zh` / `en`）、`clock_24h`（布尔，外壳时钟 24 / 12 小时制）、`default_mode`（`console` / `pc`）、`window_mode`（`windowed` / `fullscreen` / `exclusive`）、`vsync`（布尔）、`max_fps`（`0` 为不限，或 30 / 60 / 120 / 144）、`volume_master`、`volume_music` 与 `volume_sfx`（0 至 10 的音量档位）、`audio_mute`（布尔）。
 - `default_mode` 由设置屏写入，设置屏自己不读取：`LauncherRoot._ready` 在启动时读取它，决定是否直接进入 PC 模式（3.4）。
 - 窗口模式与垂直同步只在启动器就是真实窗口的内容时才会应用（`LauncherSettings.drives_window`）；headless 测试和把启动器挂在离屏视口里的截图脚本不会改动窗口。
-- 音频总线定义在 `apps/client/default_bus_layout.tres`：`Master` 之下有 `Music` 与 `SFX` 两条总线。运行时和游戏模块的背景音乐输出到 `Music`，游戏模块经 `GameAudio` 播放的音效输出到 `SFX`，设置屏「声音」页的「音乐」「音效」两行分别控制它们。
+- 音频总线定义在 `apps/client/default_bus_layout.tres`：`Master` 之下有 `Music` 与 `SFX` 两条总线。运行时和游戏模块的背景音乐（合成的曲子、音乐文件和过场短曲）输出到 `Music`，游戏模块经 `GameAudio` 播放的音效（合成的和文件的）输出到 `SFX`，设置屏「声音」页的「音乐」「音效」两行分别控制它们。
 - 「玩家按键」页列出游戏模块用的两套键盘方案（`project.godot` 里的 `game_p1_*` 与 `game_p2_*`，各十个控制：四个方向和 A B X Y L R），和「控制」页一样可以逐个改键、按页恢复默认。冲突只在两套方案之间检查（界面的键和玩家的键可以相同，二者不会同时生效），替换时照样交换，所以哪位玩家都不会失去某个控制的按键；暂停用的键（Menu、Back）和玩家按键不能共用，哪一侧想占用对方的键都会被拒绝并提示。手柄不经 `InputMap`：`LauncherPlayers.PAD_BUTTONS` 按位置固定映射。
 - 改键只改键盘按键，保存在存档的 `bindings` 段（只保存与 `project.godot` 默认值不同的操作），由 `LauncherInput.reset_and_apply` 应用。一次改键把该操作换成单独一个新键；新键已被别的操作占用时先弹出确认，替换后对方若因此没有按键，就接过本操作原来的按键，所以任何操作都不会失去键盘按键。`LauncherInput.apply_bindings` 会跳过不含有效按键的条目。手柄按键是固定的，设置屏只按 `InputMap` 的内容把它们列出来。
 - 手柄连发：十字键或摇杆的方向保持按下时，`LauncherRoot` 在 `LauncherInput.REPEAT_DELAY` 秒后开始按 `REPEAT_INTERVAL` 的间隔重复派发该方向，每帧至多一次；松开、手柄断开或窗口失去焦点时停止。键盘方向键仍依靠系统自身的按键重复。
