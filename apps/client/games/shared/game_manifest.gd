@@ -36,7 +36,7 @@ const KEYS_COMMON := ["schema", "id", "kind", "name", "initials", "genre", "tagl
 const KEYS_MODULE := ["entry", "stage"]
 const KEYS_DSL := ["runtime", "towers", "tuning"]
 
-## Every problem of a manifest, each as "<field>: <what is wrong>". Empty when it is valid. `dir` is the game's directory ("res://games/<id>"), used to check that the files it names exist.
+## Every problem of a manifest, each as "<field>: <what is wrong>". Empty when it is valid. `dir` is the game's directory (the games root plus its id), used to check that the files it names exist.
 static func validate(manifest: Dictionary, dir: String) -> PackedStringArray:
 	var errors := PackedStringArray()
 	var folder := dir.get_file()

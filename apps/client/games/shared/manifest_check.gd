@@ -12,19 +12,29 @@ const Manifest := preload("res://games/shared/game_manifest.gd")
 const Module := preload("res://games/shared/game_module.gd")
 
 const ASSETS_FILE := "ASSETS.md"
-## The shipped games and the test fixture. Both are held to the same rules.
-const ROOTS := ["res://games", "res://testing/games"]
+## Environment variable with the games roots to check, comma-separated. The Makefile passes the shipped games and the test fixture, which is held to the same rules; without it only the shipped games are checked.
+const ROOTS_ENV := "GAME_CHECK_ROOTS"
+## Set to 1 to check the manifests alone. An exported pack holds no ASSETS.md and no tests, so the export check (scripts/check-export-discovery.sh) runs this script inside the pack that way.
+const MANIFESTS_ONLY_ENV := "GAME_CHECK_MANIFESTS_ONLY"
 ## Files that are code, data written for the game, or engine bookkeeping. Anything else is an asset and needs a line in ASSETS.md.
 const SOURCE_EXTENSIONS := ["gd", "uid", "import", "json", "md", "tscn", "tres", "gdshader", "gdshaderinc", "txt", "cfg"]
 
 func _initialize() -> void:
 	var games := 0
 	var problems := PackedStringArray()
-	for root_dir: String in ROOTS:
+	var roots := OS.get_environment(ROOTS_ENV).split(",", false)
+	if roots.is_empty():
+		roots = PackedStringArray([Registry.GAMES_ROOT])
+	for root_dir: String in roots:
+		root_dir = root_dir.strip_edges()
 		var found := Registry.discover(root_dir)
 		problems.append_array(Registry.problem_lines(found["problems"]))
+		if (found["games"] as Array).is_empty() and (found["problems"] as Array).is_empty():
+			problems.append("%s: no game found there" % root_dir)
 		for game: Dictionary in found["games"]:
 			games += 1
+			if OS.get_environment(MANIFESTS_ONLY_ENV) == "1":
+				continue
 			for line in _directory_problems(game):
 				problems.append("%s: %s" % [game["id"], line])
 	for line in problems:

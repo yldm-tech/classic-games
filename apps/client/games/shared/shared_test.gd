@@ -44,6 +44,10 @@ class Probe:
 	func _game_paused(paused: bool) -> void:
 		journal.append("paused" if paused else "resumed")
 
+## Directories the manifest tests validate against: one that does not exist, and this one, whose files do.
+var SAMPLE_DIR := Registry.GAMES_ROOT.path_join("sample")
+var SHARED_DIR := Registry.GAMES_ROOT.path_join(Registry.SHARED_DIR)
+
 var _passed := 0
 var _failed := 0
 
@@ -281,10 +285,10 @@ func _valid_manifest() -> Dictionary:
 func _errors_with(change: Callable) -> String:
 	var manifest := _valid_manifest()
 	change.call(manifest)
-	return "\n".join(Manifest.validate(manifest, "res://games/sample"))
+	return "\n".join(Manifest.validate(manifest, SAMPLE_DIR))
 
 func _test_manifest_schema() -> void:
-	_check("the sample manifest is valid", Manifest.validate(_valid_manifest(), "res://games/sample").is_empty())
+	_check("the sample manifest is valid", Manifest.validate(_valid_manifest(), SAMPLE_DIR).is_empty())
 	var cases := {
 		"schema: must be 1": func(m: Dictionary) -> void: m["schema"] = 2,
 		"must equal the directory name": func(m: Dictionary) -> void: m["id"] = "other",
@@ -335,12 +339,12 @@ func _test_manifest_schema() -> void:
 	module["controls"] = [{"id": "move", "name": {"zh": "移动", "en": "Move"}, "inputs": ["move"]}, {"id": "jump", "name": {"zh": "跳", "en": "Jump"}, "inputs": ["a", "up"]}]
 	module["options"][0].erase("path")
 	module["id"] = "shared"
-	_check("a module manifest is valid with an entry, a stage and logical inputs", Manifest.validate(module, "res://games/shared").is_empty())
+	_check("a module manifest is valid with an entry, a stage and logical inputs", Manifest.validate(module, SHARED_DIR).is_empty())
 	_check("its stage is resolved to a size and a whole scale", Manifest.stage(module) == {"size": Vector2i(480, 270), "pixel_art": true, "scale": 4})
 	var sizes_ok := true
 	for size: Array in [[1920, 1080], [960, 540], [640, 360], [480, 270], [384, 216], [320, 180], [240, 135]]:
 		module["stage"] = {"size": size}
-		sizes_ok = sizes_ok and Manifest.validate(module, "res://games/shared").is_empty()
+		sizes_ok = sizes_ok and Manifest.validate(module, SHARED_DIR).is_empty()
 	_check("every whole division of the canvas is a stage size", sizes_ok)
 	var module_cases := {
 		"stage.size: [500, 300] must be 1920x1080 divided by a whole number": func(m: Dictionary) -> void: m["stage"] = {"size": [500, 300]},
@@ -357,7 +361,7 @@ func _test_manifest_schema() -> void:
 		var broken := module.duplicate(true)
 		broken["stage"] = {"size": [480, 270], "pixel_art": true}
 		(module_cases[expected] as Callable).call(broken)
-		_check("a module manifest with a wrong field says so: %s" % expected, "\n".join(Manifest.validate(broken, "res://games/shared")).contains(expected))
+		_check("a module manifest with a wrong field says so: %s" % expected, "\n".join(Manifest.validate(broken, SHARED_DIR)).contains(expected))
 
 # ---- registry ----
 
@@ -389,7 +393,7 @@ func _test_registry() -> void:
 	var remembered: Dictionary = Registry.catalog()
 	Registry.forget()
 	_check("forget reads again", not is_same(remembered, Registry.catalog()))
-	var nowhere := Registry.discover("res://games/does_not_exist")
+	var nowhere := Registry.discover(Registry.GAMES_ROOT.path_join("does_not_exist"))
 	_check("a root that is not there is empty, not a crash", (nowhere["games"] as Array).is_empty() and (nowhere["problems"] as Array).is_empty())
 	var missing := Registry.read("res://games/shared/game.json")
 	_check("a missing manifest is an error", (missing["errors"] as PackedStringArray)[0] == "game.json: missing")

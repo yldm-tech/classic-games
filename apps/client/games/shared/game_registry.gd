@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Finds the games: every directory under the games root that is not SHARED_DIR is one game, described by its MANIFEST_FILE. Nothing lists the games anywhere else, so adding a directory adds a game. A directory whose manifest is missing, unreadable or invalid is reported in `problems` and left out; it never stops the others from loading.
 ##
-## Works the same in the editor and in an exported build: DirAccess lists the directories packed into the PCK, and the manifests are packed because export_presets.cfg includes *.json.
+## Works the same in the editor and in an exported build: DirAccess lists the directories packed into the PCK, and the manifests are in it (Godot packs .json with the "all resources" export filter, and export_presets.cfg also names *.json in include_filter so a narrower filter cannot drop them). scripts/check-export-discovery.sh exports a pack and runs the discovery inside it.
 
 const Manifest := preload("res://games/shared/game_manifest.gd")
 

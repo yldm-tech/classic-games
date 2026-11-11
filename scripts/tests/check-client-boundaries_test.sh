@@ -11,7 +11,7 @@ trap 'rm -rf "$TASK_TMP"' EXIT
 fixture() {
 	local dir
 	dir="$(mktemp -d "$TASK_TMP/fixture.XXXXXX")"
-	mkdir -p "$dir/apps/client/launcher" "$dir/apps/client/runtime/shooter" "$dir/apps/client/i18n"
+	mkdir -p "$dir/apps/client/launcher" "$dir/apps/client/runtime/shooter" "$dir/apps/client/i18n" "$dir/apps/client/games/shared"
 	printf '%s\n' "$dir"
 }
 
@@ -40,7 +40,16 @@ expect_fail() {
 LAUNCHER_PATHS="the launcher may import only res://launcher/, res://i18n/ and res://runtime/game_session.gd:"
 LAUNCHER_CLASSES="the launcher may reach a runtime only through GameSession, never its classes:"
 LAUNCHER_LOCAL="the launcher is local-only: no network classes, endpoints or URLs:"
-RUNTIME_PATHS="the runtime may import only res://runtime/:"
+RUNTIME_PATHS="the runtime may import only res://runtime/ and res://games/shared/:"
+LAUNCHER_GAME_CLASSES="the launcher may reach a game only through GameSession, never the game library's classes:"
+SHARED_PATHS="the shared game library may import only res://games/shared/:"
+SHARED_HOST="the shared game library must not depend on the launcher or the runtime:"
+SHARED_NETWORK="the shared game library must not open network connections or own URLs:"
+GAME_PATHS="a game may import only its own directory and res://games/shared/:"
+GAME_HOST="a game must not depend on the launcher, the runtime or GameSession:"
+GAME_NETWORK="a game must not open network connections or own URLs:"
+GAME_APIS="a game reads input, sound and the stage through GameModule only"
+GAME_CLASS_NAME="a game must not declare global class names (use preload):"
 RUNTIME_LAUNCHER="the runtime must not depend on the launcher:"
 RUNTIME_NETWORK="the runtime must not open network connections or own URLs:"
 I18N_PATHS="i18n may import only res://i18n/:"
@@ -56,7 +65,18 @@ printf '%s\n' 'class_name GameSession' 'extends Node' 'const Loader := preload("
 printf '%s\n' 'class_name Strings' 'const LauncherTable := preload("res://i18n/launcher_strings.gd")' > "$case_dir/apps/client/i18n/strings.gd"
 expect_pass "launcher screen, i18n and GameSession use" "$case_dir"
 
-for required in launcher runtime i18n; do
+# A game module, the shared library it builds on, the session that hosts it, and a test fixture game.
+mkdir -p "$case_dir/apps/client/games/maze/levels" "$case_dir/apps/client/testing/games/fixture"
+printf '%s\n' 'class_name GameModule' 'extends Node2D' 'const PlayerInput := preload("res://games/shared/game_input.gd")' > "$case_dir/apps/client/games/shared/game_module.gd"
+printf '%s\n' 'class_name GameRegistry' 'const GAMES_ROOT := "res://games"' > "$case_dir/apps/client/games/shared/game_registry.gd"
+printf '%s\n' 'class_name GameSession' 'extends Node' 'const Registry := preload("res://games/shared/game_registry.gd")' 'const Loader := preload("res://runtime/runtime_loader.gd")' > "$case_dir/apps/client/runtime/game_session.gd"
+printf '%s\n' 'extends GameModule' 'const Level := preload("res://games/maze/levels/level.gd")' 'const Rng := preload("res://games/shared/game_rng.gd")' 'func _game_step(_delta: float) -> void:' '	if input(0).just_pressed(GameInput.A):' '		audio.play("bomb")' '	var player_input := input(1)' > "$case_dir/apps/client/games/maze/main.gd"
+printf '%s\n' 'extends RefCounted' 'const DATA := "res://games/maze/levels/one.json"' > "$case_dir/apps/client/games/maze/levels/level.gd"
+printf '%s\n' 'extends SceneTree' 'const Main := preload("res://games/maze/main.gd")' > "$case_dir/apps/client/games/maze/maze_test.gd"
+printf '%s\n' 'extends GameModule' 'const Part := preload("res://testing/games/fixture/part.gd")' > "$case_dir/apps/client/testing/games/fixture/main.gd"
+expect_pass "a game module, the shared library, the hosting session and a fixture game" "$case_dir"
+
+for required in launcher runtime i18n games games/shared; do
 	case_dir="$(fixture)"
 	rm -rf "${case_dir:?}/apps/client/$required"
 	expect_fail "missing $required" "$case_dir" "client boundary check: missing $case_dir/apps/client/$required"
@@ -108,6 +128,26 @@ case_dir="$(fixture)"
 printf '%s\n' 'const SCORES := "/api/v1/scores"' > "$case_dir/apps/client/launcher/launcher_store.gd"
 expect_fail "launcher owns an endpoint" "$case_dir" "$LAUNCHER_LOCAL"
 
+case_dir="$(fixture)"
+printf '%s\n' 'const Maze := preload("res://games/maze/main.gd")' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher loads a game's script" "$case_dir" "$LAUNCHER_PATHS"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const Registry := preload("res://games/shared/game_registry.gd")' > "$case_dir/apps/client/launcher/launcher_catalog.gd"
+expect_fail "launcher imports the game library by path" "$case_dir" "$LAUNCHER_PATHS"
+
+case_dir="$(fixture)"
+printf '%s\n' 'func find() -> Dictionary:' '	return GameRegistry.catalog()' > "$case_dir/apps/client/launcher/launcher_catalog.gd"
+expect_fail "launcher uses the game registry by name" "$case_dir" "$LAUNCHER_GAME_CLASSES"
+
+case_dir="$(fixture)"
+printf '%s\n' 'var _module: GameModule' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher holds a game module" "$case_dir" "$LAUNCHER_GAME_CLASSES"
+
+case_dir="$(fixture)"
+printf '%s\n' 'var _guide: LauncherGameGuide' 'var _session: GameSession' > "$case_dir/apps/client/launcher/game_screen.gd"
+expect_pass "launcher names of its own that contain Game are not the game library" "$case_dir"
+
 # ---- runtime ----
 
 case_dir="$(fixture)"
@@ -129,6 +169,117 @@ expect_fail "runtime opens a connection itself" "$case_dir" "$RUNTIME_NETWORK"
 case_dir="$(fixture)"
 printf '%s\n' 'const ROOMS := "wss://example.test/rooms"' > "$case_dir/apps/client/runtime/network_match_session.gd"
 expect_fail "runtime owns an address" "$case_dir" "$RUNTIME_NETWORK"
+
+case_dir="$(fixture)"
+mkdir -p "$case_dir/apps/client/games/maze"
+printf '%s\n' 'const Maze := preload("res://games/maze/main.gd")' > "$case_dir/apps/client/runtime/game_session.gd"
+expect_fail "runtime imports a game instead of loading it from its manifest" "$case_dir" "$RUNTIME_PATHS"
+
+# ---- shared game library ----
+
+case_dir="$(fixture)"
+mkdir -p "$case_dir/apps/client/games/maze"
+printf '%s\n' 'const Maze := preload("res://games/maze/main.gd")' > "$case_dir/apps/client/games/shared/game_registry.gd"
+expect_fail "shared library imports a game" "$case_dir" "$SHARED_PATHS"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const Session := preload("res://runtime/game_session.gd")' > "$case_dir/apps/client/games/shared/game_module.gd"
+expect_fail "shared library imports the runtime" "$case_dir" "$SHARED_PATHS"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const GAMES_ROOT := "res://games"; const Maze := preload("res://games/maze/main.gd")' > "$case_dir/apps/client/games/shared/game_registry.gd"
+expect_fail "shared library hides a game import behind the games root" "$case_dir" "$SHARED_PATHS"
+
+case_dir="$(fixture)"
+printf '%s\n' 'func best() -> int:' '	return LauncherStore.new().stats("maze")["best_score"]' > "$case_dir/apps/client/games/shared/game_module.gd"
+expect_fail "shared library uses a launcher class" "$case_dir" "$SHARED_HOST"
+
+case_dir="$(fixture)"
+printf '%s\n' 'var session := GameSession.new()' > "$case_dir/apps/client/games/shared/game_module.gd"
+expect_fail "shared library uses the session that hosts it" "$case_dir" "$SHARED_HOST"
+
+case_dir="$(fixture)"
+printf '%s\n' 'var request := HTTPRequest.new()' > "$case_dir/apps/client/games/shared/game_audio.gd"
+expect_fail "shared library makes a network request" "$case_dir" "$SHARED_NETWORK"
+
+# ---- games ----
+
+# game_case <file content lines...>: a fixture with one game, games/maze/main.gd, holding those lines.
+game_case() {
+	case_dir="$(fixture)"
+	mkdir -p "$case_dir/apps/client/games/maze" "$case_dir/apps/client/games/tank"
+	printf '%s\n' "$@" > "$case_dir/apps/client/games/maze/main.gd"
+}
+
+game_case 'const Tank := preload("res://games/tank/main.gd")'
+expect_fail "game imports another game" "$case_dir" "$GAME_PATHS"
+
+game_case 'const Own := preload("res://games/maze/level.gd"); const Tank := preload("res://games/tank/main.gd")'
+expect_fail "game hides another game behind its own import" "$case_dir" "$GAME_PATHS"
+
+game_case 'const Tokens := preload("res://launcher/launcher_tokens.gd")'
+expect_fail "game imports launcher code" "$case_dir" "$GAME_PATHS"
+
+game_case 'const Session := preload("res://runtime/game_session.gd")'
+expect_fail "game imports the runtime" "$case_dir" "$GAME_PATHS"
+
+game_case 'const Strings := preload("res://i18n/strings.gd")'
+expect_fail "game imports the launcher strings" "$case_dir" "$GAME_PATHS"
+
+game_case 'const DATA := "res://games/mazes/level.json"'
+expect_fail "game reads a directory whose name merely starts like its own" "$case_dir" "$GAME_PATHS"
+
+game_case 'func best() -> int:' '	return LauncherStore.new().stats("maze")["best_score"]'
+expect_fail "game uses a launcher class by name" "$case_dir" "$GAME_HOST"
+
+game_case 'var session := GameSession.new()'
+expect_fail "game uses GameSession" "$case_dir" "$GAME_HOST"
+
+game_case 'var socket := WebSocketPeer.new()'
+expect_fail "game opens a socket" "$case_dir" "$GAME_NETWORK"
+
+game_case 'const SCORES := "https://example.test/scores"'
+expect_fail "game owns a URL" "$case_dir" "$GAME_NETWORK"
+
+game_case 'func _game_step(_delta: float) -> void:' '	if Input.is_action_pressed("launcher_accept"):' '		pass'
+expect_fail "game polls global input" "$case_dir" "$GAME_APIS"
+
+game_case 'func _unhandled_input(event) -> void:' '	pass'
+expect_fail "game handles raw input events" "$case_dir" "$GAME_APIS"
+
+game_case 'func _input(event) -> void:' '	pass'
+expect_fail "game handles raw input events early" "$case_dir" "$GAME_APIS"
+
+game_case 'func keys() -> Array:' '	return InputMap.get_actions()'
+expect_fail "game reads the input map" "$case_dir" "$GAME_APIS"
+
+game_case 'const SAVE := "user://maze.save"'
+expect_fail "game writes its own save file" "$case_dir" "$GAME_APIS"
+
+game_case 'func mute() -> void:' '	AudioServer.set_bus_mute(0, true)'
+expect_fail "game touches the audio buses" "$case_dir" "$GAME_APIS"
+
+game_case 'func grow() -> void:' '	DisplayServer.window_set_size(Vector2i(100, 100))'
+expect_fail "game touches the window" "$case_dir" "$GAME_APIS"
+
+game_case 'func stop() -> void:' '	get_tree().paused = true'
+expect_fail "game pauses the whole tree" "$case_dir" "$GAME_APIS"
+
+game_case 'func home() -> String:' '	return OS.get_environment("HOME")'
+expect_fail "game reads the operating system" "$case_dir" "$GAME_APIS"
+
+game_case 'class_name MazePlayer' 'extends Node2D'
+expect_fail "game declares a global class name" "$case_dir" "$GAME_CLASS_NAME"
+
+case_dir="$(fixture)"
+mkdir -p "$case_dir/apps/client/testing/games/fixture"
+printf '%s\n' 'const Shooter := preload("res://runtime/shooter/shooter_play.gd")' > "$case_dir/apps/client/testing/games/fixture/main.gd"
+expect_fail "a fixture game is held to the same import rule" "$case_dir" "$GAME_PATHS"
+
+case_dir="$(fixture)"
+mkdir -p "$case_dir/apps/client/testing/games/fixture"
+printf '%s\n' 'func _game_step(_delta: float) -> void:' '	Input.get_vector("a", "b", "c", "d")' > "$case_dir/apps/client/testing/games/fixture/main.gd"
+expect_fail "and to the same input rule" "$case_dir" "$GAME_APIS"
 
 # ---- i18n ----
 
