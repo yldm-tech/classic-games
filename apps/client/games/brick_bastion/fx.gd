@@ -7,7 +7,6 @@ const FIRE := ["f2f4f8", "ffd24a", "e08a1e", "d0403c"]
 const SMOKE := ["33364a", "5d6480", "2a2c3c"]
 const BRICK := ["e89a62", "c0603a", "8a3f2c", "3d2226"]
 const STEEL := ["f2f4f8", "9aa3bd", "5d6480"]
-const SLOT_COLORS := ["b5f5dc", "f0ffa6"]
 
 var particles: Array[Dictionary] = []
 var rings: Array[Dictionary] = []
@@ -144,7 +143,7 @@ func update(delta: float) -> void:
 		if _celebrate_t <= 0.0:
 			_celebrate_t = 0.22
 			var at := Vector2(_dice.randf_range(20.0, _field.x - 20.0), _dice.randf_range(20.0, _field.y - 60.0))
-			_burst(at, 22, [["5ef2ff", "f2f4f8"], ["ffd24a", "f2f4f8"], ["ff8a6a", "ffd24a"], ["a4d636", "f0ffa6"]][_dice.randi() % 4], 58.0, 0.9, 2)
+			_burst(at, 22, [["5ef2ff", "f2f4f8"], ["ffd24a", "f2f4f8"], ["ff8a6a", "ffd24a"], ["f2a83a", "ffe9a8"]][_dice.randi() % 4], 58.0, 0.9, 2)
 			rings.append({"at": at, "age": 0.0, "span": 0.5, "radius": 20.0, "color": Color("f2f4f8")})
 
 func _add(at: Vector2, speed: Vector2, span: float, color: Color, size: int) -> void:

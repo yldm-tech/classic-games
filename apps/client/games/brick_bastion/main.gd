@@ -89,7 +89,8 @@ func _draw() -> void:
 		font = SystemFont.new()
 		font.font_names = PackedStringArray(["Noto Sans SC", "PingFang SC", "Microsoft YaHei", "sans-serif"])
 		font.allow_system_fallback = true
-		font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		# Chinese glyphs stay crisp without smoothing at this size; Latin letters turn to mush without it.
+		font.antialiasing = TextServer.FONT_ANTIALIASING_NONE if locale == "zh" else TextServer.FONT_ANTIALIASING_GRAY
 		font.hinting = TextServer.HINTING_NORMAL
 		font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 		font.font_weight = 600

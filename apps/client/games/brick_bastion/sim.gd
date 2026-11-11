@@ -107,7 +107,7 @@ var tally_bonus := 0
 var outcome := ""
 ## Which tune should be playing: "", "stage", "dusk", "boss". main.gd follows it.
 var music := ""
-## Test knob: a positive value cuts every roster to this many raiders. Not a manifest option, so players never see it.
+## Test knob: a positive value cuts every roster to this many raiders, a negative one to none at all. Not a manifest option, so players never see it; neither is "start_stage", which opens the run on a later sector.
 var quota := 0
 var steps := 0
 var _next_id := 1
@@ -118,7 +118,7 @@ func setup(game_rng: GameRng, game_audio: GameAudio, config: Dictionary) -> void
 	audio = game_audio
 	var options: Dictionary = config.get("options", {})
 	difficulty = clampi(int(options.get("difficulty", 1)), 0, 2)
-	quota = maxi(0, int(options.get("quota", 0)))
+	quota = int(options.get("quota", 0))
 	first_stage = clampi(int(options.get("start_stage", 1)) - 1, 0, Stages.count() - 1)
 	core_max = CORE[difficulty]
 	core = core_max
@@ -166,8 +166,8 @@ func start_stage(index: int) -> void:
 	stage = index
 	tiles = Stages.grid(index)
 	roster = Stages.roster(index, active_count())
-	if quota > 0 and roster.size() > quota:
-		roster = roster.slice(0, quota)
+	if quota != 0 and roster.size() > maxi(0, quota):
+		roster = roster.slice(0, maxi(0, quota))
 	next_raider = 0
 	destroyed = 0
 	raiders.clear()

@@ -109,11 +109,16 @@ static func draw(ci: CanvasItem, g: Node) -> void:
 			if int(time * 6.0) % 5 == 0:
 				ci.draw_rect(Rect2(_px(chip.x) - 6, _px(chip.y) - 7 + bob, 2, 1), PAPER)
 	for raider: Dictionary in sim.raiders:
-		_raider(ci, sim, tex, time, raider)
+		if not raider.boss:
+			_raider(ci, sim, tex, time, raider)
 	for rover: Dictionary in sim.rovers:
 		if rover.alive and sim.active[rover.slot]:
 			_rover(ci, tex, time, rover)
 	_tiles(ci, sim, tex, time, true)
+	# A boss stands taller than a thicket, so nothing hides it.
+	for raider: Dictionary in sim.raiders:
+		if raider.boss:
+			_raider(ci, sim, tex, time, raider)
 	for shot: Dictionary in sim.shots:
 		_shot(ci, shot)
 	_effects(ci, g, fx, time)
@@ -177,8 +182,20 @@ static func _vehicle_at(vehicle: Dictionary, size: int) -> Vector2:
 		at -= HEADINGS[vehicle.dir]
 	return at
 
+## The gun going off: a small star of light at the muzzle for the first frames of the recoil.
+static func _muzzle_flash(ci: CanvasItem, vehicle: Dictionary, reach: float, side: float) -> void:
+	if vehicle.recoil_t <= 3:
+		return
+	var along: Vector2 = HEADINGS[vehicle.dir]
+	var across := Vector2(absf(along.y), absf(along.x))
+	var tip := Vector2(_px(vehicle.x), _px(vehicle.y)) + along * reach + across * side - Vector2(0.5, 0.5)
+	ci.draw_rect(Rect2((tip - across * 2.0).floor(), Vector2(1, 1) + across * 4.0), GOLD)
+	ci.draw_rect(Rect2((tip - along.abs() * 2.0 + along).floor(), Vector2(1, 1) + along.abs() * 4.0), GOLD)
+	ci.draw_rect(Rect2((tip - across - along.abs() + along).floor(), Vector2(3, 3)), PAPER)
+
 static func _rover(ci: CanvasItem, tex: Dictionary, time: float, rover: Dictionary) -> void:
 	var at := _vehicle_at(rover, 16)
+	_muzzle_flash(ci, rover, 9.0, 0.0)
 	var prefix := "rover%d" % int(rover.slot)
 	if rover.spawn_t > 0 and int(time * 20.0) % 2 == 0:
 		ci.draw_texture(tex["%s_%d_w" % [prefix, int(rover.dir)]], at, CYAN)
@@ -221,6 +238,11 @@ static func _raider(ci: CanvasItem, sim: RefCounted, tex: Dictionary, time: floa
 	elif raider.boss and raider.enraged and int(time * 10.0) % 3 == 0:
 		tint = Color(1.0, 0.6, 0.5)
 	ci.draw_texture(tex["%s_%d_%s" % [kind, int(raider.dir), frame]], at, tint)
+	if raider.boss:
+		_muzzle_flash(ci, raider, 17.0, -6.0)
+		_muzzle_flash(ci, raider, 17.0, 6.0)
+	else:
+		_muzzle_flash(ci, raider, 9.0, 0.0)
 	if raider.carrier:
 		ci.draw_rect(Rect2(centre + Vector2(5, -8), Vector2(2, 2)), GOLD)
 		ci.draw_rect(Rect2(centre + Vector2(6, -9), Vector2(1, 4)), Color(GOLD, 0.6))
@@ -297,7 +319,7 @@ static func _panels(ci: CanvasItem, g: Node, sim: RefCounted, fx: RefCounted, te
 		_text(ci, g, left + Vector2(0, 31), name.substr(cut + 1), body, PAPER)
 	ci.draw_rect(Rect2(left + Vector2(0, 36), Vector2(74, 1)), Color("2b3348"))
 	_text(ci, g, left + Vector2(0, 49), Texts.of("reserve", locale), body, DIM)
-	_text(ci, g, left + Vector2(0, 168), Texts.of("crews", locale) % sim.crews, body if zh else 7, CYAN if sim.crews > 0 else DIM)
+	_text(ci, g, left + Vector2(0, 170), Texts.of("crews", locale) % sim.crews, body if zh else 7, CYAN if sim.crews > 0 else DIM)
 	# One pip per raider still to arrive, in arrival order, coloured by kind; a gold dot marks a supply carrier.
 	var shown := 0
 	for position in range(sim.next_raider, sim.roster.size()):
@@ -313,11 +335,11 @@ static func _panels(ci: CanvasItem, g: Node, sim: RefCounted, fx: RefCounted, te
 		ci.draw_rect(Rect2(at, Vector2(16, 7)), INK)
 		ci.draw_rect(Rect2(at + Vector2(1, 1), Vector2(14, 5)), RED if int(time * 4.0) % 2 == 0 else GOLD)
 	# What each supply chip does, as a standing legend.
-	ci.draw_rect(Rect2(left + Vector2(0, 92), Vector2(74, 1)), Color("2b3348"))
-	_text(ci, g, left + Vector2(0, 105), Texts.of("supplies", locale), body, DIM)
+	ci.draw_rect(Rect2(left + Vector2(0, 91), Vector2(74, 1)), Color("2b3348"))
+	_text(ci, g, left + Vector2(0, 103), Texts.of("supplies", locale), body, DIM)
 	var legend: Array[String] = ["coil", "aegis", "stasis", "mason", "surge", "spare"]
 	for index in legend.size():
-		var at := left + Vector2((index % 2) * 39, 110 + (index / 2) * 19)
+		var at := left + Vector2(-4 + (index % 2) * 41, 107 + (index / 2) * 17)
 		ci.draw_texture(tex["chip_" + legend[index]], at)
 		_text(ci, g, at + Vector2(17, 12), Texts.of("legend_" + legend[index], locale), body, PAPER)
 	# Right well: each crew's firepower and bricks as pictures, then the effects that are running, each with a bar that drains.
