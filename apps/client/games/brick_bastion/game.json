@@ -1,0 +1,61 @@
+{
+	"schema": 1,
+	"id": "brick_bastion",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "砖垒信标", "en": "BRICK BASTION"},
+	"initials": "zlxb",
+	"genre": {"zh": "坦克防御", "en": "TANK DEFENSE"},
+	"tagline": {"zh": "驾驶哨车守住信标，把一波波掠夺车队挡在砖墙之外。", "en": "Drive a sentinel rover, hold the beacon, and keep the raider columns outside the bricks."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "F2FBFF", "shadow": "1B4F8A", "glow": "5EF2FF"},
+	"art": {"top": "0E1420", "bottom": "3A2230", "primary": "4AA8F0", "secondary": "F0802A", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_watch", "icon": "bolt", "name": {"zh": "第一班岗", "en": "First Watch"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "crusher_down", "icon": "star", "name": {"zh": "拆掉碾城者", "en": "Crusher Scrapped"}, "desc": {"zh": "击毁第三防区的首领「碾城者」。", "en": "Destroy the Rampart Crusher, the boss of sector three."}, "when": {"min": {"bosses_down": 1}}},
+		{"id": "beacon_stands", "icon": "cup", "name": {"zh": "信标长明", "en": "The Beacon Stands"}, "desc": {"zh": "守住全部六个防区。", "en": "Hold all six sectors."}, "when": {"cleared": true}},
+		{"id": "unscratched", "icon": "shield", "name": {"zh": "滴水不漏", "en": "Not a Scratch"}, "desc": {"zh": "通关，且信标一次都没有被击中。", "en": "Clear the game without the beacon taking a single hit."}, "when": {"cleared": true, "max": {"core_hits": 0}}},
+		{"id": "single_shift", "icon": "cup", "name": {"zh": "一班到底", "en": "Single Shift"}, "desc": {"zh": "通关，且没有动用后备车组。", "en": "Clear the game without calling on a reserve crew."}, "when": {"cleared": true, "max": {"crews_used": 0}}},
+		{"id": "bricklayer", "icon": "star", "name": {"zh": "泥瓦匠", "en": "Bricklayer"}, "desc": {"zh": "一局里亲手砌下 12 块砖。", "en": "Lay 12 bricks yourself in one run."}, "when": {"min": {"bricks_laid": 12}}},
+		{"id": "side_by_side", "icon": "bolt", "name": {"zh": "并肩守望", "en": "Side by Side"}, "desc": {"zh": "两位玩家一起通关。", "en": "Clear the game with two players."}, "when": {"cleared": true, "players": 2}},
+		{"id": "iron_watch", "icon": "shield", "name": {"zh": "铁壁值守", "en": "Iron Watch"}, "desc": {"zh": "在「困难」难度下通关。", "en": "Clear the game on Hard."}, "when": {"cleared": true, "min": {"difficulty": 2}}}
+	],
+	"how": {
+		"zh": "掠夺车队从战场上方的三个闸口一波波开进来，目标是场地底部的信标。击毁本防区的全部敌车即可过关，第三和第六防区最后还有首领。砖墙两炮打碎，钢板要升到三级火力才打得穿，水面车辆过不去，树丛只遮挡视线；你也可以在车头前砌一块砖。闪金光的敌车被击毁后会留下补给芯片。信标每被击中一次损失一点完整度，同时放出脉冲，清掉空中的敌弹并摧毁贴在墙边的敌车。哨车耗尽或信标熄灭时，后备车组会接手，从本防区开头重来（首领已经出场的话，直接从首领战重来）；后备车组也用完，本局失败。守住六个防区即通关。",
+		"en": "Raider columns roll in through three gates at the top of the field and head for the beacon at the bottom. Destroy every raider of a sector to clear it; sectors three and six end with a boss. Brick breaks in two shells, plate only gives way to level-three firepower, vehicles cannot cross water, and thickets only hide what is under them; you can also lay a brick in front of your rover. A raider that glints gold leaves a supply chip when destroyed. Each hit costs the beacon a point of integrity and sets off a pulse that clears raider shells and destroys raiders right at its wall. When the rovers run out or the beacon goes dark, a reserve crew takes the sector over from its opening, or straight from the boss if the boss had already been called; with no crew left the run is lost. Hold all six sectors to clear the game."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "行驶", "en": "Drive"}, "inputs": ["move"]},
+		{"id": "fire", "name": {"zh": "开炮（可按住）", "en": "Fire (can be held)"}, "inputs": ["a"]},
+		{"id": "brick", "name": {"zh": "在车头前砌砖", "en": "Lay a brick ahead"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "elapsed"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "哨车", "en": "LIFE"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [
+			{"label": {"zh": "防区", "en": "Sector"}, "fields": ["stage", "stages"]},
+			{"label": {"zh": "信标", "en": "Beacon"}, "fields": ["core", "core_max"]},
+			{"label": {"zh": "剩余敌车", "en": "Raiders left"}, "fields": ["foes_left"]}
+		],
+		"player_stats": [
+			{"label": {"zh": "火力 / 砖", "en": "Power / Bricks"}, "fields": ["power", "bricks"]}
+		]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "决定哨车数量、信标完整度、后备车组数量，以及敌车开炮的频率。", "en": "Sets how many rovers and reserve crews you have, the beacon's integrity, and how often raiders fire."},
+			"values": [0, 1, 2],
+			"default": 1,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "困难", "en": "Hard"}]
+		}
+	],
+	"site": {
+		"screenshot": "site_screenshot.png",
+		"screenshot_alt": {"zh": "《砖垒信标》局内画面：两辆哨车在砖墙、钢板和树丛之间守着场地底部的信标，敌车正从上方开来。", "en": "Brick Bastion in play: two sentinel rovers guard the beacon at the bottom of the field among brick walls, plate and thickets while raiders close in from the top."},
+		"art_alt": {"zh": "《砖垒信标》主视觉：一辆蓝色小哨车守在砖墙环绕的发光信标前，远处的雾里是成列逼近的掠夺车。", "en": "Brick Bastion key art: a small blue sentinel rover stands guard before a glowing beacon ringed by a brick wall, with a column of raiders advancing through the mist beyond."}
+	}
+}
