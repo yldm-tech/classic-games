@@ -9,6 +9,7 @@ const Levels := preload("res://games/crate_crew/levels.gd")
 const Sprites := preload("res://games/crate_crew/sprites.gd")
 const Backdrops := preload("res://games/crate_crew/backdrops.gd")
 const Sounds := preload("res://games/crate_crew/sounds.gd")
+const Texts := preload("res://games/crate_crew/texts.gd")
 
 const STEP := GameModule.STEP
 const INTRO := 1.7
@@ -86,7 +87,7 @@ func _test_start() -> void:
 	var game := _start(1, 3, {}, false)
 	var first := game.snapshot()
 	_check("a run starts on stage 1 of 4 with the intro card up", first["stage"] == 1 and first["stages"] == 4 and first["phase"] == World.P_INTRO)
-	_check("player one starts with 3 energy and 3 lives on normal, player two is not playing", first["players"][0]["energy"] == 3 and first["players"][0]["max_energy"] == 3 and first["players"][0]["lives"] == 3 and first["players"][1]["lives"] == 0)
+	_check("player one starts with 3 energy and 4 lives on normal, player two is not playing", first["players"][0]["energy"] == 3 and first["players"][0]["max_energy"] == 3 and first["players"][0]["lives"] == 4 and first["players"][1]["lives"] == 0)
 	_check("the stage tune is playing", game.audio.music_playing)
 	var x := float(first["players"][0]["x"])
 	_hold(game, 0, &"right", 1.0)
@@ -94,7 +95,7 @@ func _test_start() -> void:
 	game.free()
 	var easy := _start(1, 3, {"difficulty": 1})
 	var hard := _start(1, 3, {"difficulty": 3})
-	_check("easy gives more energy, lives and continues than hard", easy.snapshot()["players"][0]["max_energy"] == 4 and easy.snapshot()["players"][0]["lives"] == 5 and easy.snapshot()["continues_left"] == 3 and hard.snapshot()["players"][0]["lives"] == 2 and hard.snapshot()["continues_left"] == 1 and hard.snapshot()["difficulty"] == 3)
+	_check("easy gives more energy, lives and continues than hard", easy.snapshot()["players"][0]["max_energy"] == 4 and easy.snapshot()["players"][0]["lives"] == 5 and easy.snapshot()["continues_left"] == 3 and hard.snapshot()["players"][0]["lives"] == 3 and hard.snapshot()["continues_left"] == 1 and hard.snapshot()["difficulty"] == 3)
 	easy.free()
 	hard.free()
 
@@ -209,7 +210,7 @@ func _test_hiding() -> void:
 func _test_losing() -> void:
 	var game := _start(1, 5, {"difficulty": 3})
 	var results := _results(game)
-	# Keep walking into the first pit until nothing is left: 3 energy x 2 lives, one continue, then the same again.
+	# Keep walking into the first pit until nothing is left: 3 energy x 3 lives, one continue, then the same again.
 	game.feed(0, &"right", 1.0)
 	var seen_continue := false
 	for second in 240:
@@ -221,14 +222,14 @@ func _test_losing() -> void:
 	_check("running out of lives uses the continue and restarts the stage", seen_continue and int(game.audio.played.get("continue", 0)) == 1)
 	_check("running out again with no continue left is a defeat", results.size() == 1 and results[0]["defeated"] == true and results[0]["cleared"] == false)
 	if results.size() == 1:
-		_check("the result counts the deaths and the continue", results[0]["deaths"] == 4 and results[0]["continues_used"] == 1 and results[0]["continues_left"] == 0 and results[0]["bosses_beaten"] == 0 and results[0]["stage"] == 1)
+		_check("the result counts the deaths and the continue", results[0]["deaths"] == 6 and results[0]["continues_used"] == 1 and results[0]["continues_left"] == 0 and results[0]["bosses_beaten"] == 0 and results[0]["stage"] == 1)
 	_check("the music stops with the run", not game.audio.music_playing)
 	game.free()
 
 func _test_two_players() -> void:
 	var game := _start(2, 9)
 	var first := game.snapshot()
-	_check("both robots start with lives", first["players"][0]["lives"] == 3 and first["players"][1]["lives"] == 3 and first["player_count"] == 2)
+	_check("both robots start with lives", first["players"][0]["lives"] == 4 and first["players"][1]["lives"] == 4 and first["player_count"] == 2)
 	game.feed(0, &"left", 1.0)
 	game.feed(1, &"right", 1.0)
 	game.advance(0.4)
@@ -269,7 +270,7 @@ func _test_join_and_leave() -> void:
 	_hold(game, 0, &"right", 0.5)
 	_check("player two joins a run in progress", game.join(1))
 	var joined := game.snapshot()
-	_check("the newcomer appears beside the partner with full lives", joined["players"][1]["lives"] == 3 and joined["players"][1]["energy"] == 3 and absf(float(joined["players"][1]["x"]) - float(joined["players"][0]["x"])) < 1.0 and joined["player_count"] == 2)
+	_check("the newcomer appears beside the partner with full lives", joined["players"][1]["lives"] == 4 and joined["players"][1]["energy"] == 3 and absf(float(joined["players"][1]["x"]) - float(joined["players"][0]["x"])) < 1.0 and joined["player_count"] == 2)
 	_hold(game, 1, &"left", 0.4)
 	_check("and is driven by the second player's controls", float(game.snapshot()["players"][1]["x"]) < float(joined["players"][1]["x"]) - 20.0)
 	# Leaving while carrying: the crate is let go, the robot disappears.
@@ -282,10 +283,24 @@ func _test_join_and_leave() -> void:
 	_hold(game, 0, &"right", 0.3)
 	_check("the run goes on with one player", game.is_running() and int(game.snapshot()["phase"]) == World.P_PLAY)
 	game.free()
+	# Leaving and joining again must not refill lives: lose one first, leave, come back.
+	game = _start(2, 4)
+	game.feed(1, &"right", 1.0)
+	for index in 60 * 30:
+		game.advance(STEP)
+		if int(game.snapshot()["players"][1]["lives"]) < 4 and int(_hero(game, 1)["state"]) == World.H_NORMAL:
+			break
+	game.feed(1, &"right", 0.0)
+	var worn := int(game.snapshot()["players"][1]["lives"])
+	_check("player two lost a life in the first pit", worn == 3)
+	game.leave(1)
+	game.join(1)
+	_check("a robot that left and came back keeps the lives it left with", int(game.snapshot()["players"][1]["lives"]) == worn and int(game.snapshot()["players"][1]["energy"]) == 3 and int(_hero(game, 1)["state"]) == World.H_NORMAL)
+	game.free()
 
 func _test_lift_belt_and_door() -> void:
-	# The pipe shaft's first flag stands by a lift that climbs twelve tiles. Run and jump onto it while it is still low.
-	var game := _start(1, 8, {"stage": 2, "flag": 1, "difficulty": 1})
+	# The pipe shaft's second flag stands by a lift that climbs twelve tiles. Run and jump onto it while it is still low.
+	var game := _start(1, 8, {"stage": 2, "flag": 2, "difficulty": 1})
 	var lift: Dictionary = game.world.lifts[0]
 	var bottom := float(lift["y"])
 	for index in 60 * 12:
@@ -322,7 +337,7 @@ func _test_lift_belt_and_door() -> void:
 	_check("a belt carries a robot that stands still on it", float(_hero(game, 0)["x"]) > before + 4.0 and float(_hero(game, 0)["x"]) < before + 6.0)
 	game.free()
 	# From the foundry's last flag, run to the exit door.
-	game = _start(1, 8, {"stage": 3, "flag": 2, "difficulty": 1})
+	game = _start(1, 8, {"stage": 3, "flag": 4, "difficulty": 1})
 	var score_before := int(game.snapshot()["score"])
 	game.feed(0, &"right", 1.0)
 	for index in 60 * 90:
@@ -411,7 +426,7 @@ func _fight_step(game: GameModule, upwards: bool) -> void:
 
 func _test_first_boss() -> void:
 	# Start at the last flag of the pipe shaft, just under the boss room, and climb in.
-	var game := _start(1, 21, {"stage": 2, "flag": 3, "difficulty": 1})
+	var game := _start(1, 21, {"stage": 2, "flag": 4, "difficulty": 1})
 	_check("the test start option puts the robot at the stage's last flag", game.snapshot()["stage"] == 2 and float(game.snapshot()["players"][0]["y"]) < 300.0 and not game.snapshot().has("boss_hp"))
 	_walk_to(game, 0, 40.0)
 	for jump in 2:
@@ -432,7 +447,7 @@ func _test_first_boss() -> void:
 	game.free()
 
 func _test_last_boss_clears_the_game() -> void:
-	var game := _start(1, 33, {"stage": 4, "flag": 3, "difficulty": 1})
+	var game := _start(1, 33, {"stage": 4, "flag": 4, "difficulty": 1})
 	var results := _results(game)
 	# From the flag the shelves go straight up into the room.
 	for jump in 3:
@@ -465,7 +480,7 @@ func _test_determinism() -> void:
 	_check("the same seed and inputs give the same run", states[0] == states[1] and is_equal_approx(float(states[0]["elapsed"]), 20.0 + INTRO))
 	var fights: Array = []
 	for attempt in 2:
-		var game := _start(1, 41, {"stage": 2, "flag": 3})
+		var game := _start(1, 41, {"stage": 2, "flag": 4})
 		_walk_to(game, 0, 40.0)
 		for jump in 2:
 			_hold(game, 0, &"a", 0.5)
@@ -476,7 +491,7 @@ func _test_determinism() -> void:
 		fights.append(game.snapshot())
 		game.free()
 	_check("a boss fight replays exactly too, random scrap included", fights[0] == fights[1] and fights[0].has("boss_hp"))
-	var other := _start(1, 42, {"stage": 2, "flag": 3})
+	var other := _start(1, 42, {"stage": 2, "flag": 4})
 	_walk_to(other, 0, 40.0)
 	for jump in 2:
 		_hold(other, 0, &"a", 0.5)
@@ -573,6 +588,11 @@ func _test_stages_can_be_walked() -> void:
 				cogs += 1
 				grounded = grounded and seen.has(Vector2i(int(at.x / 16.0), int(at.y / 16.0) - 1))
 		_check("stage %d: every crate stands on something and exactly one, within reach, hides a golden cog" % (stage + 1), grounded and cogs == 1)
+	var sizes: Array = []
+	for stage in Levels.COUNT:
+		var built: Dictionary = Levels.new().build(stage)
+		sizes.append(maxi(int(built["w"]), int(built["h"])))
+	_check("every stage is long enough for a few minutes of play: at least 120 tiles along its way", sizes.all(func(size: int) -> bool: return size >= 96) and sizes[0] >= 230 and sizes[1] >= 120 and sizes[2] >= 250 and (Levels.new().build(3)["flags"] as Array).size() >= 4)
 	_check("two stages end in a boss room and two at a door", not (Levels.new().build(1)["boss"] as Dictionary).is_empty() and not (Levels.new().build(3)["boss"] as Dictionary).is_empty() and Levels.new().build(0)["door"] is Vector2 and Levels.new().build(2)["door"] is Vector2)
 
 func _test_art_and_sound() -> void:
@@ -585,6 +605,7 @@ func _test_art_and_sound() -> void:
 	_check("each stage has a far and a near backdrop that tile", (layers["far_image"] as Image).get_size() == Vector2i(256, 256) and (layers["near_image"] as Image).get_pixel(200, 120).a < 0.5)
 	var game := _start(1, 1)
 	_check("every event the game can make a sound for has an effect defined", Main.HEARD.all(func(name: String) -> bool: return game.audio.has_sound(name)))
+	_check("stage text exists in both languages and the English is in capitals", Texts.TEXT.values().all(func(entry: Dictionary) -> bool: return str(entry["zh"]) != "" and str(entry["en"]) != "" and str(entry["en"]).replace("%d", "") == str(entry["en"]).replace("%d", "").to_upper()))
 	_check("there are two stage tunes and a boss tune", Sounds.stage_music(0) != Sounds.stage_music(1) and Sounds.boss_music() != Sounds.stage_music(0))
 	game.free()
 

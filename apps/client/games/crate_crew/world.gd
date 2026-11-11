@@ -50,8 +50,8 @@ const P_LOST := 6
 ## What each difficulty changes: energy per life, lives, continues, enemy speed, boss health.
 const DIFFICULTY := {
 	1: {"energy": 4, "lives": 5, "continues": 3, "speed": 0.85, "boss": 0.75},
-	2: {"energy": 3, "lives": 3, "continues": 2, "speed": 1.0, "boss": 1.0},
-	3: {"energy": 3, "lives": 2, "continues": 1, "speed": 1.2, "boss": 1.3},
+	2: {"energy": 3, "lives": 4, "continues": 2, "speed": 1.0, "boss": 1.0},
+	3: {"energy": 3, "lives": 3, "continues": 1, "speed": 1.2, "boss": 1.3},
 }
 
 var rng: GameRng
@@ -109,7 +109,7 @@ func _new_hero(slot: int) -> Dictionary:
 		"slot": slot, "active": false, "state": H_OUT, "x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "face": 1, "ground": false,
 		"energy": int(rules["energy"]), "lives": int(rules["lives"]), "score": 0, "carry": null, "lifting": -1, "rider_of": -1,
 		"inv": 0.0, "stun": 0.0, "lift_time": 0.0, "coyote": 0.0, "buffer": 0.0, "drop": 0.0, "hide": false, "safe": Vector2.ZERO,
-		"dead_time": 0.0, "off_time": 0.0, "stand": null, "anim": 0.0, "air_time": 0.0, "throw_time": 0.0, "by": -1,
+		"dead_time": 0.0, "off_time": 0.0, "stand": null, "anim": 0.0, "air_time": 0.0, "throw_time": 0.0, "by": -1, "left": false,
 	}
 
 func emit(name: String, x: float, y: float, extra: Dictionary = {}) -> void:
@@ -188,7 +188,8 @@ func _place_hero(hero: Dictionary, x: float, y: float) -> void:
 func add_hero(slot: int) -> void:
 	var hero := heroes[slot]
 	hero["active"] = true
-	hero["lives"] = int(rules["lives"])
+	# A robot that left and comes back keeps the lives it left with (at least one), so leaving and joining again is not a refill.
+	hero["lives"] = maxi(1, int(hero["lives"])) if bool(hero["left"]) else int(rules["lives"])
 	hero["energy"] = int(rules["energy"])
 	var at: Vector2 = level.get("spawn", Vector2.ZERO)
 	var partner := heroes[1 - slot]
@@ -209,6 +210,7 @@ func remove_hero(slot: int) -> void:
 		hero["rider_of"] = -1
 	hero["active"] = false
 	hero["state"] = H_OUT
+	hero["left"] = true
 
 func add_object(kind: String, x: float, y: float, inside: String = "") -> Dictionary:
 	var small := kind == "scrap" or kind == "hexnut"
@@ -544,7 +546,7 @@ func _press_grab(hero: Dictionary, pad: GameInput, hiding: bool) -> void:
 			object["g"] = GRAVITY
 			emit("throw_up", x, y - HERO_TALL)
 		else:
-			# A sideways throw leaves at waist height, so it also meets the low gadgets on the floor.
+			# A sideways throw leaves at waist height, so it also meets the low machines on the floor.
 			object["x"] = x + float(facing) * 4.0
 			object["y"] = y - 4.0
 			object["vx"] = float(facing) * THROW_SPEED
