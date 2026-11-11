@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_test_two_players()
 	_test_join_and_leave()
 	_test_lift_belt_and_door()
+	_test_golden_cog_counts_once()
 	_test_first_boss()
 	_test_last_boss_clears_the_game()
 	_test_determinism()
@@ -353,6 +354,56 @@ func _test_lift_belt_and_door() -> void:
 	var after := game.snapshot()
 	_check("reaching the exit door clears the stage and the next one begins", after["stage"] == 4 and int(game.audio.played.get("stage_clear", 0)) == 1 and int(after["score"]) >= score_before + 500 and after["bosses_beaten"] == 0)
 	_check("the next stage starts with full energy and its own tune", after["players"][0]["energy"] == after["players"][0]["max_energy"] and game.audio.music_playing and int(game.audio.played.get("stage_start", 0)) == 2)
+	game.free()
+
+## Jump holding a direction until the robot has passed `until_x`, then let it come down.
+func _hop(game: GameModule, slot: int, control: StringName, until_x: float) -> void:
+	var hero := _hero(game, slot)
+	game.feed(slot, &"a", 1.0)
+	game.feed(slot, control, 1.0)
+	for index in 120:
+		game.advance(STEP)
+		if (control == &"right" and float(hero["x"]) >= until_x) or (control == &"left" and float(hero["x"]) <= until_x):
+			game.feed(slot, control, 0.0)
+		if index > 10 and bool(hero["ground"]):
+			break
+	game.feed(slot, &"a", 0.0)
+	game.feed(slot, control, 0.0)
+	game.advance(STEP)
+
+## From the control loft's second flag: up two shelves to the crate with the golden cog, throw it at the wall and walk into what falls out.
+func _fetch_loft_cog(game: GameModule) -> void:
+	_walk_to(game, 0, 1326.0)
+	_hop(game, 0, &"right", 1368.0)
+	_walk_to(game, 0, 1400.0)
+	_hop(game, 0, &"right", 1452.0)
+	_walk_to(game, 0, 1464.0)
+	_tap(game, 0, &"b")
+	game.advance(0.3)
+	_tap(game, 0, &"b")
+	game.advance(1.2)
+	_walk_to(game, 0, 1512.0)
+	game.advance(0.5)
+
+func _test_golden_cog_counts_once() -> void:
+	var game := _start(1, 6, {"stage": 4, "flag": 2, "difficulty": 3})
+	_fetch_loft_cog(game)
+	var found := game.snapshot()
+	_check("the crate on the loft's high shelf hides the stage's golden cog", found["golden_cogs"] == 1 and int(found["score"]) >= 1000 and int(game.audio.played.get("cog", 0)) == 1)
+	# Stand in the tacks until every life is gone and the continue puts the stage back.
+	for index in 60 * 120:
+		var x := float(_hero(game, 0)["x"])
+		game.feed(0, &"left", 1.0 if x > 1030.0 else 0.0)
+		game.feed(0, &"right", 1.0 if x < 1016.0 else 0.0)
+		game.advance(STEP)
+		if game.world.continues_used > 0 and game.world.phase == World.P_PLAY:
+			break
+	game.release_inputs()
+	game.advance(STEP)
+	_check("tacks wear a robot down to a continue, which restarts at the last flag", game.snapshot()["continues_used"] == 1 and game.snapshot()["deaths"] == 3 and absf(float(_hero(game, 0)["x"]) - 1284.0) < 1.0)
+	_fetch_loft_cog(game)
+	var again := game.snapshot()
+	_check("after a continue the same crate holds plain gears: a stage's golden cog counts once", again["golden_cogs"] == 1 and again["gears"] == 3 and int(game.audio.played.get("cog", 0)) == 1)
 	game.free()
 
 # ---- bosses, fought through the controls ----

@@ -85,6 +85,8 @@ var camera := Vector2.ZERO
 
 var gears := 0
 var golden_cogs := 0
+## Stages whose golden cog has been found in this run: after a continue the same crate holds plain gears, so one stage cannot count twice.
+var cog_stages: Dictionary = {}
 var continues_left := 2
 var continues_used := 0
 var bosses_beaten := 0
@@ -139,7 +141,10 @@ func load_stage(index: int, from_flag: int = -1) -> void:
 	checkpoint = from_flag if from_flag < flags.size() else -1
 	stage_time = 0.0
 	for spec: Dictionary in level["objects"]:
-		add_object(str(spec["kind"]), (spec["at"] as Vector2).x, (spec["at"] as Vector2).y, str(spec["inside"]))
+		var inside := str(spec["inside"])
+		if inside == "cog" and cog_stages.has(index):
+			inside = "gears"
+		add_object(str(spec["kind"]), (spec["at"] as Vector2).x, (spec["at"] as Vector2).y, inside)
 	for spec: Dictionary in level["foes"]:
 		foes.append(Foes.create(spec))
 	for spec: Dictionary in level["pickups"]:
@@ -916,6 +921,7 @@ func _collect(hero: Dictionary, pickup: Dictionary) -> void:
 			emit("core", x, y)
 		"cog":
 			golden_cogs += 1
+			cog_stages[stage] = true
 			_award(slot, 1000, x, y)
 			emit("cog", x, y)
 
