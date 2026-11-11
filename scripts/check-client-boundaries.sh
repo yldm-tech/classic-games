@@ -9,6 +9,8 @@
 #   i18n          -> nothing outside i18n/
 #
 # The launcher is local-only: no network classes, no endpoints, no URLs. A game module (games/<id>/, and the test fixtures under testing/games/) also keeps its hands off what the host owns: global input, the window, the audio buses, user:// and global class names. See docs/16-client-architecture.md and docs/20-adding-a-game.md.
+#
+# The direction rules read res:// paths, so a path written any other way would walk around them. No tree may therefore name a resource by uid://, through a parent directory ("../") or as a res:// prefix glued to the rest at run time.
 set -euo pipefail
 
 ROOT="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -65,7 +67,23 @@ report_foreign_paths() {
 	done <<< "$hits"
 }
 
+# report_indirect_paths <tree name> <dir>: ways of naming a resource that the res:// rules above cannot see.
+report_indirect_paths() {
+	local name="$1" dir="$2"
+	report_matches \
+		"$name must name resources by a full res:// path, not by uid:// (a uid reaches any file, whatever directory it is in):" \
+		scan_lines 'uid://' "$dir" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
+	report_matches \
+		"$name must name resources by a full res:// path, not through a parent directory:" \
+		scan_lines "\\b(load|preload|load_threaded_request|path=)\\(?[\"'][^\"']*\\.\\./" "$dir" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
+	report_matches \
+		"$name must write res:// paths whole, not build them from a bare prefix:" \
+		scan_lines "res:/{0,2}[\"']" "$dir" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
+}
+
 # ---- launcher ----
+
+report_indirect_paths "the launcher" "$LAUNCHER"
 
 report_foreign_paths \
 	"the launcher may import only res://launcher/, res://i18n/ and res://runtime/game_session.gd:" \
@@ -88,6 +106,8 @@ report_matches \
 
 # ---- runtime ----
 
+report_indirect_paths "the runtime" "$RUNTIME"
+
 report_foreign_paths \
 	"the runtime may import only res://runtime/ and res://games/shared/:" \
 	"$RUNTIME" 'res://runtime/' 'res://games/shared/'
@@ -104,10 +124,12 @@ report_matches \
 
 # ---- games ----
 
-NETWORK='\b(HTTPRequest|HTTPClient|WebSocketPeer|WebSocketMultiplayerPeer|StreamPeerTCP|StreamPeerTLS|PacketPeerUDP|TCPServer|UDPServer|ENetConnection|ENetMultiplayerPeer|WebRTCPeerConnection)\b|/api/|(https?|wss?)://'
+NETWORK='\b(HTTPRequest|HTTPClient|WebSocket[A-Za-z]*|StreamPeer[A-Za-z]*|PacketPeer[A-Za-z]*|TCPServer|UDPServer|DTLSServer|ENet[A-Za-z]*|WebRTC[A-Za-z]*|MultiplayerPeer[A-Za-z]*|MultiplayerAPI[A-Za-z]*|SceneMultiplayer|UPNP[A-Za-z]*|JavaScriptBridge)\b|\bIP\.|/api/|(https?|wss?)://'
 HOST_CLASSES='\b(Launcher[A-Z][A-Za-z]*|GameSession|RuntimeLoader|DslMigrations|JsonPatch|NetworkMatch[A-Za-z]*|Shooter[A-Z][A-Za-z]*|Survivor[A-Z][A-Za-z]*|TowerDefense[A-Z][A-Za-z]*|WeaponController|BossSkillController|DropItem|ProceduralBGM)\b'
 # What belongs to the host. A game reads its players through GameModule.input(), draws on its own stage and plays sound through GameModule.audio; it never polls or handles input itself, never touches the window, the buses, the tree or the player's files.
-HOST_APIS='\bInput\.|\bInputMap\b|\bInputEvent[A-Za-z]*\b|\b_(unhandled_)?(key_)?input\(|user://|\bOS\.|\bProjectSettings\b|\bAudioServer\b|\bDisplayServer\b|\bEngine\.time_scale\b|\bget_tree\(\)\.(root|paused|quit|change_scene|reload_current_scene)|\bget_window\(|\bDirAccess\b'
+HOST_APIS='\bInput\.|\bInputMap\b|\bInputEvent[A-Za-z]*\b|\b_(unhandled_)?(key_)?input\(|\b_shortcut_input\(|\b_gui_input\(|user://|\bOS\.|\bProjectSettings\b|\bAudioServer\b|\bDisplayServer\b|\bEngine\.(time_scale|max_fps|physics_ticks_per_second|get_singleton|get_main_loop)\b|\bget_tree\(\)\.(root|paused|quit|change_scene|reload_current_scene|current_scene|unload_current_scene)|\bget_window\(|\bget_viewport\(|\bDirAccess\b|\bFileAccess\.(WRITE|READ_WRITE|WRITE_READ)\b|\bResourceSaver\b|\bClassDB\b|["\x27]/root'
+
+report_indirect_paths "the shared game library" "$SHARED"
 
 # The shared library names the games root itself ("res://games", closing quote included) to discover what is under it; it imports nothing from there.
 report_foreign_paths \
@@ -125,6 +147,7 @@ report_matches \
 # check_game_dir <dir> <res-prefix>: one game module's directory. <res-prefix> is where it lives (res://games/<id>/ or res://testing/games/<id>/).
 check_game_dir() {
 	local dir="$1" prefix="$2"
+	report_indirect_paths "a game" "$dir"
 	report_foreign_paths \
 		"a game may import only its own directory and res://games/shared/:" \
 		"$dir" "$prefix" 'res://games/shared/'
@@ -135,7 +158,7 @@ check_game_dir() {
 		"a game must not open network connections or own URLs:" \
 		scan_lines "$NETWORK" "$dir" "${SCAN_GD_SCENES[@]}" "${SCAN_PRUNE[@]}"
 	report_matches \
-		"a game reads input, sound and the stage through GameModule only (no Input, InputMap, _input, user://, OS, AudioServer, DisplayServer, window or tree access):" \
+		"a game reads input, sound and the stage through GameModule only (no Input, InputMap, _input, user://, OS, AudioServer, DisplayServer, window, viewport or tree access, no writing files, no ClassDB):" \
 		scan_lines "$HOST_APIS" "$dir" "${SCAN_GD[@]}" "${SCAN_PRUNE[@]}"
 	# A class_name is global: two games declaring the same one would break each other, and any game could then reach another by name.
 	report_matches \
@@ -155,6 +178,8 @@ if [[ -d "$FIXTURE_GAMES" ]]; then
 fi
 
 # ---- i18n ----
+
+report_indirect_paths "i18n" "$I18N"
 
 report_foreign_paths \
 	"i18n may import only res://i18n/:" \

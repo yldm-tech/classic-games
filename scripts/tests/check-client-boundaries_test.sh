@@ -50,6 +50,9 @@ GAME_HOST="a game must not depend on the launcher, the runtime or GameSession:"
 GAME_NETWORK="a game must not open network connections or own URLs:"
 GAME_APIS="a game reads input, sound and the stage through GameModule only"
 GAME_CLASS_NAME="a game must not declare global class names (use preload):"
+GAME_UP="a game must name resources by a full res:// path, not through a parent directory:"
+GAME_UID="a game must name resources by a full res:// path, not by uid://"
+GAME_GLUED="a game must write res:// paths whole, not build them from a bare prefix:"
 RUNTIME_LAUNCHER="the runtime must not depend on the launcher:"
 RUNTIME_NETWORK="the runtime must not open network connections or own URLs:"
 I18N_PATHS="i18n may import only res://i18n/:"
@@ -270,6 +273,83 @@ expect_fail "game reads the operating system" "$case_dir" "$GAME_APIS"
 
 game_case 'class_name MazePlayer' 'extends Node2D'
 expect_fail "game declares a global class name" "$case_dir" "$GAME_CLASS_NAME"
+
+# Ways around the res:// rules: a path that is not written as a whole res:// path.
+game_case 'const Tank := preload("../tank/main.gd")'
+expect_fail "game imports another game through a parent directory" "$case_dir" "$GAME_UP"
+
+game_case 'const Store := preload("../../launcher/launcher_store.gd")'
+expect_fail "game imports launcher code through a parent directory" "$case_dir" "$GAME_UP"
+
+game_case 'func tank() -> Resource:' '	return load("levels/../../tank/main.gd")'
+expect_fail "game climbs out of its directory in the middle of a path" "$case_dir" "$GAME_UP"
+
+game_case 'const Tank := preload("uid://b8x2k4tank01")'
+expect_fail "game imports by uid" "$case_dir" "$GAME_UID"
+
+game_case 'func tank() -> Resource:' '	return load("res://" + "games/tank/main.gd")'
+expect_fail "game glues a path onto a bare res:// prefix" "$case_dir" "$GAME_PATHS"
+
+game_case 'func store() -> Resource:' '	return load("res:" + "//launcher/launcher_store.gd")'
+expect_fail "game splits the res:// prefix itself" "$case_dir" "$GAME_GLUED"
+
+game_case 'const Level := preload("levels/one.gd")' 'const DATA := "res://games/maze/levels/%d.json"' '# see ../README.md'
+expect_pass "a path below the game's own directory, a formatted own path and a comment are fine" "$case_dir"
+
+game_case 'var peer := ENetMultiplayerPeer.new()'
+expect_fail "game hosts a multiplayer peer" "$case_dir" "$GAME_NETWORK"
+
+game_case 'var peer := WebRTCMultiplayerPeer.new()'
+expect_fail "game opens a WebRTC peer" "$case_dir" "$GAME_NETWORK"
+
+game_case 'var stream := StreamPeerTCP.new()'
+expect_fail "game opens a TCP stream" "$case_dir" "$GAME_NETWORK"
+
+game_case 'func where() -> String:' '	return IP.resolve_hostname("example.org")'
+expect_fail "game resolves a host name" "$case_dir" "$GAME_NETWORK"
+
+game_case 'func fetch() -> void:' '	JavaScriptBridge.eval("fetch(1)")'
+expect_fail "game runs script in the browser" "$case_dir" "$GAME_NETWORK"
+
+game_case 'func size() -> Vector2:' '	return get_viewport().get_visible_rect().size'
+expect_fail "game reads the viewport" "$case_dir" "$GAME_APIS"
+
+game_case 'func save() -> void:' '	FileAccess.open("/tmp/maze.save", FileAccess.WRITE)'
+expect_fail "game writes a file" "$case_dir" "$GAME_APIS"
+
+game_case 'func save(level: Resource) -> void:' '	ResourceSaver.save(level, "res://games/maze/level.tres")'
+expect_fail "game saves a resource" "$case_dir" "$GAME_APIS"
+
+game_case 'func peer() -> Object:' '	return ClassDB.instantiate("HTTP" + "Request")'
+expect_fail "game instantiates a class by a built name" "$case_dir" "$GAME_APIS"
+
+game_case 'func shell() -> Node:' '	return get_node("/root/LauncherRoot")'
+expect_fail "game reaches for the root of the tree by path" "$case_dir" "$GAME_APIS"
+
+game_case 'func loop() -> MainLoop:' '	return Engine.get_main_loop()'
+expect_fail "game reaches for the main loop" "$case_dir" "$GAME_APIS"
+
+game_case 'func _gui_input(event: Variant) -> void:' '	pass'
+expect_fail "game handles pointer input on a control" "$case_dir" "$GAME_APIS"
+
+game_case 'func load_level(index: int) -> String:' '	return FileAccess.get_file_as_string("res://games/maze/levels/%d.json" % index)' 'func tiles() -> PackedByteArray:' '	return FileAccess.open("res://games/maze/tiles.bin", FileAccess.READ).get_buffer(64)'
+expect_pass "a game may read its own data files" "$case_dir"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const Maze := preload("../games/maze/main.gd")' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher reaches into a game through a parent directory" "$case_dir" "the launcher must name resources by a full res:// path, not through a parent directory:"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const Maze := preload("uid://c1maze")' > "$case_dir/apps/client/launcher/launcher_game_host.gd"
+expect_fail "launcher reaches into a game by uid" "$case_dir" "the launcher must name resources by a full res:// path, not by uid://"
+
+case_dir="$(fixture)"
+printf '%s\n' '[ext_resource type="Script" path="../games/maze/main.gd" id="1"]' > "$case_dir/apps/client/launcher/launcher.tscn"
+expect_fail "launcher scene reaches into a game through a parent directory" "$case_dir" "the launcher must name resources by a full res:// path, not through a parent directory:"
+
+case_dir="$(fixture)"
+printf '%s\n' 'const Store := preload("../launcher/launcher_store.gd")' > "$case_dir/apps/client/games/shared/game_module.gd"
+expect_fail "shared library reaches the launcher through a parent directory" "$case_dir" "the shared game library must name resources by a full res:// path, not through a parent directory:"
 
 case_dir="$(fixture)"
 mkdir -p "$case_dir/apps/client/testing/games/fixture"

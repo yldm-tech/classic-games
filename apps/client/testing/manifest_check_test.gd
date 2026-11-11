@@ -13,9 +13,11 @@ func _initialize() -> void:
 	var unfit := _run_check(UNFIT)
 	var output: String = unfit["output"]
 	_check("the check fails on unfit directories", int(unfit["code"]) != 0)
-	_check("it still reaches its summary line", output.contains("manifest_check: 8 games, "))
+	_check("it still reaches its summary line", output.contains("manifest_check: 9 games, "))
 	var expected := {
 		"untested: tests: a game module needs at least one *_test.gd": "a module without a test",
+		"nested_test: tests: tests/nested_test.gd is in a sub-directory and would never run": "a test the runner would not find",
+		"nested_test: tests: a game module needs at least one *_test.gd at the top of its directory": "that such a module has no test that runs",
 		"no_assets_file: ASSETS.md: missing": "a directory without ASSETS.md",
 		"unlisted_asset: ASSETS.md: does not list `level.bin`": "an asset ASSETS.md does not list",
 		"own_process: entry: main.gd defines _process(), which belongs to GameModule": "an entry script with its own _process",

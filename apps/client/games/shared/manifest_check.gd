@@ -4,7 +4,7 @@ extends SceneTree
 ##   - the manifest is valid (games/shared/game_manifest.gd);
 ##   - a module's entry script loads and extends GameModule, and does not redefine a method that belongs to the base class;
 ##   - a module started with its default options and its largest player count reports every snapshot field its HUD names;
-##   - a module has at least one *_test.gd of its own;
+##   - a module has at least one *_test.gd of its own, at the top of its directory where the test runner looks;
 ##   - the website screenshot a manifest names (site.screenshot) is there;
 ##   - the directory has an ASSETS.md, and every file in it that is not source is named there.
 ## Prints one line per problem and ends with "manifest_check: <n> games, <m> problems".
@@ -63,11 +63,17 @@ func _directory_problems(game: Dictionary) -> PackedStringArray:
 				out.append_array(_hud_problems(game, node))
 			if node is Node:
 				(node as Node).free()
+		# The test runner (scripts/run-game-tests.sh) runs the *_test.gd files at the top of a game's directory and no others, so a test further down would count for nothing while looking like coverage.
 		var tested := false
 		for file in files:
-			tested = tested or file.ends_with("_test.gd")
+			if not file.ends_with("_test.gd"):
+				continue
+			if file.contains("/"):
+				out.append("tests: %s is in a sub-directory and would never run; test files go at the top of the game's directory" % file)
+			else:
+				tested = true
 		if not tested:
-			out.append("tests: a game module needs at least one *_test.gd in its directory")
+			out.append("tests: a game module needs at least one *_test.gd at the top of its directory")
 	# The website's screenshot is not shipped with the game, so the manifest schema does not require it to exist; in the source tree it must.
 	var site: Dictionary = game.get("site", {})
 	if site.has("screenshot") and not files.has(str(site["screenshot"])):
