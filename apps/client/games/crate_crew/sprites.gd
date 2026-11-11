@@ -200,7 +200,7 @@ const BATTERY := [
 	".kEEEEk.",
 	".kkkkkk.",
 ]
-const CHIP := [
+const CORE := [
 	"..k.kk.k..",
 	".kkkkkkkk.",
 	"kTttttttTk",
@@ -648,7 +648,7 @@ func build() -> Dictionary:
 	_add(out, "gear0", GEAR_A)
 	_add(out, "gear1", GEAR_B)
 	_add(out, "battery", BATTERY)
-	_add(out, "chip", CHIP)
+	_add(out, "core", CORE)
 	_add(out, "cog", COG_GOLD)
 	_add(out, "bug0", BUG_A)
 	_add(out, "bug1", BUG_B)

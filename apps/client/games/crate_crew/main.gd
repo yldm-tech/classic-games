@@ -8,7 +8,7 @@ const Render := preload("res://games/crate_crew/render.gd")
 const Sounds := preload("res://games/crate_crew/sounds.gd")
 
 ## Events that are heard under their own name.
-const HEARD := ["jump", "land", "lift", "put_down", "throw", "throw_up", "break", "clang", "poof", "thud", "foe_hit", "foe_out", "hop", "shot", "drop", "rev", "hurt", "die", "respawn", "gear", "battery", "chip", "cog", "flag", "chute", "stage_start", "stage_clear", "boss_start", "boss_spit", "boss_inhale", "boss_charge", "boss_slam", "boss_hit", "boss_angry", "boss_burst", "boss_down", "continue", "game_over"]
+const HEARD := ["jump", "land", "lift", "put_down", "throw", "throw_up", "break", "clang", "poof", "thud", "foe_hit", "foe_out", "hop", "shot", "drop", "rev", "hurt", "die", "respawn", "gear", "battery", "core", "cog", "flag", "chute", "stage_start", "stage_clear", "boss_start", "boss_spit", "boss_inhale", "boss_charge", "boss_slam", "boss_hit", "boss_angry", "boss_burst", "boss_down", "continue", "game_over"]
 
 var world: World
 var _view: Render

@@ -137,7 +137,7 @@ func _react(event: Dictionary) -> void:
 			_burst(at, 10, 60.0, -40.0, 0.5, [Color("bff3ff"), Color("f4f1e8")], 1.0)
 		"gear":
 			_burst(at, 4, 40.0, 0.0, 0.25, [Color("ffd75e")], 1.0)
-		"battery", "chip", "flag":
+		"battery", "core", "flag":
 			_burst(at, 10, 60.0, -30.0, 0.5, [Color("b8ff9a"), Color("f4f1e8"), Color("5fd4c4")], 1.0)
 		"cog":
 			_burst(at, 18, 90.0, 60.0, 0.8, [Color("ffd75e"), Color("f4f1e8"), Color("c9952c")], 2.0)

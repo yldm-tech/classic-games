@@ -824,8 +824,8 @@ func _break(object: Dictionary) -> void:
 				add_pickup("gear", x, y, float(index - 1) * 42.0, -170.0 + absf(float(index - 1)) * 30.0)
 		"battery":
 			add_pickup("battery", x, y, 0.0, -150.0)
-		"chip":
-			add_pickup("chip", x, y, 0.0, -170.0)
+		"core":
+			add_pickup("core", x, y, 0.0, -170.0)
 		"cog":
 			add_pickup("cog", x, y, 0.0, -190.0)
 
@@ -909,9 +909,9 @@ func _collect(hero: Dictionary, pickup: Dictionary) -> void:
 			else:
 				_award(slot, 200, x, y)
 			emit("battery", x, y)
-		"chip":
+		"core":
 			hero["lives"] = int(hero["lives"]) + 1
-			emit("chip", x, y)
+			emit("core", x, y)
 		"cog":
 			golden_cogs += 1
 			_award(slot, 1000, x, y)

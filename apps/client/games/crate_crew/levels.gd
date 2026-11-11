@@ -72,7 +72,7 @@ func _spawn(x: int, y: int) -> void:
 func _feet(x: int, y: int) -> Vector2:
 	return Vector2(float(x * TILE) + 8.0, float((y + 1) * TILE))
 
-## A crate standing in a cell. `inside` is what a wooden one drops when it breaks: "" (nothing), "gear", "gears" (three), "battery", "chip" (a spare life) or "cog" (the stage's golden cog).
+## A crate standing in a cell. `inside` is what a wooden one drops when it breaks: "" (nothing), "gear", "gears" (three), "battery", "core" (a spare life) or "cog" (the stage's golden cog).
 func _crate(x: int, y: int, inside: String = "", kind: String = "wood") -> void:
 	(_out["objects"] as Array).append({"kind": kind, "at": _feet(x, y), "inside": inside})
 
@@ -176,7 +176,7 @@ func _workbench() -> void:
 	_lift(153, 16, 160, 16, 2, 5.0)
 	_foe("drone", 158, 11, -1, 3)
 	_ground(163, 179, 16)
-	_crate(165, 15, "chip")
+	_crate(165, 15, "core")
 	_crate(168, 15)
 	_foe("bug", 170, 15)
 	_door(175, 15)
@@ -259,7 +259,7 @@ func _pipe_shaft() -> void:
 	_foe("drone", 17, 15, -1, 4)
 	_fill(8, 18, 6, 1)
 	_shelf(14, 18, 3)
-	_crate(10, 17, "chip")
+	_crate(10, 17, "core")
 	_foe("hopper", 13, 17)
 	_shelf(3, 16, 4)
 	_flag(4, 15)
@@ -335,7 +335,7 @@ func _foundry() -> void:
 	_lift(156, 16, 156, 10, 2, 5.0)
 	_ground(160, 199, 10)
 	_flag(163, 9)
-	_crate(164, 9, "chip")
+	_crate(164, 9, "core")
 	_belt(167, 10, 10, 1)
 	_foe("drone", 172, 5, -1, 4)
 	_foe("roller", 181, 9)
@@ -400,7 +400,7 @@ func _control_loft() -> void:
 	_crate(42, 27, "", "steel")
 	_foe("turret", 38, 27, 1)
 	_foe("drone", 34, 22, 1, 4)
-	_crate(30, 27, "chip")
+	_crate(30, 27, "core")
 	_crate(29, 27)
 	# The climb on the left to the boss room.
 	_shelf(20, 26, 4)

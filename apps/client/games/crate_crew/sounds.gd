@@ -24,7 +24,7 @@ const EFFECTS := {
 	"respawn": {"wave": "sine", "freq": 400, "freq_end": 1000, "duration": 0.25, "volume": 0.35},
 	"gear": {"wave": "square", "freq": 1320, "freq_end": 1760, "duration": 0.07, "volume": 0.22},
 	"battery": {"wave": "triangle", "freq": 520, "freq_end": 1040, "duration": 0.22, "volume": 0.5},
-	"chip": {"wave": "square", "freq": 660, "freq_end": 1980, "duration": 0.4, "volume": 0.32},
+	"core": {"wave": "square", "freq": 660, "freq_end": 1980, "duration": 0.4, "volume": 0.32},
 	"cog": {"wave": "pulse", "freq": 880, "freq_end": 2640, "duration": 0.5, "volume": 0.32, "duty": 0.4},
 	"flag": {"wave": "triangle", "freq": 660, "freq_end": 990, "duration": 0.3, "volume": 0.5},
 	"chute": {"wave": "noise", "freq": 500, "freq_end": 1500, "duration": 0.15, "volume": 0.2},

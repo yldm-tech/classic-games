@@ -22,8 +22,8 @@
 		{"id": "night_shift", "icon": "shield", "name": {"zh": "夜班高手", "en": "Night Shift Pro"}, "desc": {"zh": "在困难难度下通关。", "en": "Clear the game on hard."}, "when": {"cleared": true, "min": {"difficulty": 3}}}
 	],
 	"how": {
-		"zh": "小机器人没有武器：按「举起 / 投掷」搬起面前的箱子，再按一次水平扔出，按住上再按则向上扔。举着箱子时按住下可以躲在箱子下面，敌人碰不到你；躲着时再按一次把箱子轻轻放下。木箱砸碎后会掉出齿轮、电池或备用芯片，铁箱可以反复使用。双人时也可以举起队友扔向敌人。首领吐出或丢下的东西要捡起来，趁它张嘴或睁眼出爪时扔回去。四个关卡全部通过即通关；所有玩家用完生命且没有续关次数则失败。",
-		"en": "The bots carry no weapon. Press Lift / Throw to pick up the crate in front of you and again to throw it sideways; hold Up while pressing to throw it upwards. While carrying, hold Down to hide under the crate so enemies cannot touch you, and press the button again while hiding to set the crate down. Wooden crates break and drop gears, batteries or spare chips; steel crates can be used again and again. With two players you can lift your partner and throw them at enemies too. Whatever a boss spits or drops, pick it up and throw it back while its mouth or its eye is open. Clear all four stages to win; the run is lost when every player is out of lives and no continue is left."
+		"zh": "小机器人没有武器：按「举起 / 投掷」搬起面前的箱子，再按一次水平扔出，按住上再按则向上扔。举着箱子时按住下可以躲在箱子下面，敌人碰不到你；躲着时再按一次把箱子轻轻放下。木箱砸碎后会掉出齿轮、电池或备用核心，铁箱可以反复使用。双人时也可以举起队友扔向敌人。首领吐出或丢下的东西要捡起来，趁它张嘴或睁眼出爪时扔回去。四个关卡全部通过即通关；所有玩家用完生命且没有续关次数则失败。",
+		"en": "The bots carry no weapon. Press Lift / Throw to pick up the crate in front of you and again to throw it sideways; hold Up while pressing to throw it upwards. While carrying, hold Down to hide under the crate so enemies cannot touch you, and press the button again while hiding to set the crate down. Wooden crates break and drop gears, batteries or spare cores; steel crates can be used again and again. With two players you can lift your partner and throw them at enemies too. Whatever a boss spits or drops, pick it up and throw it back while its mouth or its eye is open. Clear all four stages to win; the run is lost when every player is out of lives and no continue is left."
 	},
 	"controls": [
 		{"id": "move", "name": {"zh": "移动 / 上扔 / 躲藏", "en": "Move / aim up / hide"}, "inputs": ["move"]},
