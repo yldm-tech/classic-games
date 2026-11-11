@@ -10,10 +10,11 @@ var _passed := 0
 var _failed := 0
 
 func _initialize() -> void:
-	var unfit := _run_check(UNFIT)
+	# The media limits are lowered to a few kilobytes for this run, so the rule can be tried without committing megabytes of test data.
+	var unfit := _run_check(UNFIT, "2", "3")
 	var output: String = unfit["output"]
 	_check("the check fails on unfit directories", int(unfit["code"]) != 0)
-	_check("it still reaches its summary line", output.contains("manifest_check: 9 games, "))
+	_check("it still reaches its summary line", output.contains("manifest_check: 12 games, "))
 	var expected := {
 		"untested: tests: a game module needs at least one *_test.gd": "a module without a test",
 		"nested_test: tests: tests/nested_test.gd is in a sub-directory and would never run": "a test the runner would not find",
@@ -27,10 +28,14 @@ func _initialize() -> void:
 		"hud_typo: hud.player_stats[0]: players[0] in the snapshot has no \"keys\"": "a per-player counter the snapshot lacks",
 		"one_seat_reported: snapshot: players must be a list with one dictionary per seat (2)": "a two-seat game that reports one player",
 		"no_site_screenshot: site.screenshot: \"site_screenshot.png\" does not exist": "a website screenshot that is not there",
+		"heavy_media: media: `big.bin` is 3.0 KB; one asset file may be at most 2.0 KB": "an asset file over the per-file limit",
+		"heavy_media: media: the assets weigh 4.0 KB in all; a game's budget is 3.0 KB": "a game over its media budget",
+		"wrong_audio: media: `tune.mp3`: games ship audio as Ogg Vorbis (.ogg)": "audio in a format that cannot loop cleanly",
+		"flat_texture: media: `art.png` is imported without mipmaps": "an image without mipmaps on a stage that is not pixel art",
 	}
 	for line: String in expected:
 		_check("it reports %s" % expected[line], output.contains("manifest_check: " + line))
-	for clean: String in ["hud_typo: hud.vital", "unlisted_asset: tests", "own_process: ASSETS.md", "no_site_screenshot: entry"]:
+	for clean: String in ["hud_typo: hud.vital", "unlisted_asset: tests", "own_process: ASSETS.md", "no_site_screenshot: entry", "heavy_media: media: `more.bin`", "heavy_media: ASSETS.md", "wrong_audio: ASSETS.md", "unlisted_asset: media", "flat_texture: ASSETS.md"]:
 		_check("it reports nothing that is not wrong (%s)" % clean, not output.contains("manifest_check: " + clean))
 
 	var fit := _run_check(FIT)
@@ -42,8 +47,10 @@ func _initialize() -> void:
 	quit.call_deferred(0 if _failed == 0 else 1)
 
 ## Run the check on one games root in a child process: { code, output }.
-func _run_check(games_root: String) -> Dictionary:
+func _run_check(games_root: String, media_file_kb: String = "", media_budget_kb: String = "") -> Dictionary:
 	OS.set_environment("GAME_CHECK_ROOTS", games_root)
+	OS.set_environment("GAME_CHECK_MEDIA_FILE_KB", media_file_kb)
+	OS.set_environment("GAME_CHECK_MEDIA_BUDGET_KB", media_budget_kb)
 	OS.set_environment("GAME_CHECK_MANIFESTS_ONLY", "")
 	var lines: Array = []
 	var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--script", CHECK], lines, true)
