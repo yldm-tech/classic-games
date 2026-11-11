@@ -85,6 +85,33 @@ class Icon:
 				draw_line(Vector2(7, 10), Vector2(7, 12.6), color, stroke)
 				draw_line(Vector2(5.7, 11.3), Vector2(8.3, 11.3), color, stroke)
 				draw_circle(Vector2(17, 11.3), 1.0, color)
+			# Achievement icons (the catalog's `icon` field) and the lock, as 1.8-unit outlines.
+			"star":
+				draw_polyline(PackedVector2Array([Vector2(12, 3), Vector2(14.6, 8.6), Vector2(20.7, 9.3), Vector2(16.2, 13.5), Vector2(17.4, 19.5), Vector2(12, 16.8), Vector2(6.6, 19.5), Vector2(7.8, 13.5), Vector2(3.3, 9.3), Vector2(9.4, 8.6), Vector2(12, 3)]), color, 1.8, true)
+			"bolt":
+				draw_polyline(PackedVector2Array([Vector2(13, 2), Vector2(4, 14), Vector2(11, 14), Vector2(10, 22), Vector2(19, 10), Vector2(12, 10), Vector2(13, 2)]), color, 1.8, true)
+			"cup":
+				draw_polyline(PackedVector2Array([Vector2(7, 8), Vector2(7, 4), Vector2(17, 4), Vector2(17, 8)]), color, 1.8, true)
+				draw_arc(Vector2(12, 8), 5.0, 0.0, PI, 24, color, 1.8, true)
+				draw_line(Vector2(7, 6), Vector2(4, 6), color, 1.8, true)
+				draw_arc(Vector2(7, 6), 3.0, PI / 2.0, PI, 12, color, 1.8, true)
+				draw_line(Vector2(17, 6), Vector2(20, 6), color, 1.8, true)
+				draw_arc(Vector2(17, 6), 3.0, 0.0, PI / 2.0, 12, color, 1.8, true)
+				draw_line(Vector2(12, 13), Vector2(12, 17), color, 1.8, true)
+				draw_line(Vector2(8, 20), Vector2(16, 20), color, 1.8, true)
+			"shield":
+				var outline := PackedVector2Array([Vector2(12, 3), Vector2(20, 6), Vector2(20, 12)])
+				for i in range(1, 9):
+					outline.append(Vector2(20, 12).bezier_interpolate(Vector2(20, 17), Vector2(16.5, 20), Vector2(12, 21), i / 8.0))
+				for i in range(1, 9):
+					outline.append(Vector2(12, 21).bezier_interpolate(Vector2(7.5, 20), Vector2(4, 17), Vector2(4, 12), i / 8.0))
+				outline.append_array(PackedVector2Array([Vector2(4, 6), Vector2(12, 3)]))
+				draw_polyline(outline, color, 1.8, true)
+			"lock":
+				draw_polyline(PackedVector2Array([Vector2(6, 11), Vector2(18, 11), Vector2(18, 20), Vector2(6, 20), Vector2(6, 11)]), color, 1.8, true)
+				draw_line(Vector2(8, 11), Vector2(8, 8), color, 1.8, true)
+				draw_arc(Vector2(12, 8), 4.0, PI, TAU, 16, color, 1.8, true)
+				draw_line(Vector2(16, 8), Vector2(16, 11), color, 1.8, true)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---- pressable base ----
@@ -251,6 +278,24 @@ class Tab:
 
 	func set_title(title: String) -> void:
 		_label.text = title
+
+	var _count: Label
+
+	## Show a small number after the title (how many items the tab holds).
+	func set_count(count: int) -> void:
+		if _count == null:
+			var row := W.hbox(8)
+			remove_child(_label)
+			add_child(row)
+			row.add_child(_label)
+			_count = W.text("", T.SIZE_SUB, 400, T.fg(T.A_MUTED), 0, true)
+			_count.name = "Count"
+			_count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			row.add_child(_count)
+		_count.text = str(count)
+
+	func count_text() -> String:
+		return _count.text if _count != null else ""
 
 	func set_selected(on: bool) -> void:
 		selected = on

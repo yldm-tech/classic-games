@@ -19,6 +19,8 @@ const HOME_SCREEN := "res://launcher/home_screen.gd"
 const GAME_SCREEN := "res://launcher/game_screen.gd"
 const SETTINGS_SCREEN := "res://launcher/settings_screen.gd"
 const UNAVAILABLE_SCREEN := "res://launcher/unavailable_screen.gd"
+const LIBRARY_SCREEN := "res://launcher/library_screen.gd"
+const ACHIEVEMENTS_SCREEN := "res://launcher/achievements_screen.gd"
 
 const HOME := &"home"
 const LIBRARY := &"library"
@@ -31,9 +33,9 @@ const PAUSE := &"pause"
 ## Screen id -> script path. A screen that is not built yet is served by the unavailable screen, which says so; point its entry at the real script when that screen lands. Paths rather than preloads, because every screen script refers back to LauncherRoot.
 const SCREENS := {
 	HOME: HOME_SCREEN,
-	LIBRARY: UNAVAILABLE_SCREEN,
-	ACHIEVEMENTS: UNAVAILABLE_SCREEN,
 	SETTINGS: SETTINGS_SCREEN,
+	LIBRARY: LIBRARY_SCREEN,
+	ACHIEVEMENTS: ACHIEVEMENTS_SCREEN,
 	MENU: UNAVAILABLE_SCREEN,
 	GAME: GAME_SCREEN,
 	PAUSE: UNAVAILABLE_SCREEN,
