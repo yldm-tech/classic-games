@@ -108,8 +108,7 @@ static func paint(game: Node2D) -> void:
 		var at: Vector2 = (note["pos"] as Vector2).round()
 		var text := str(note["text"])
 		var size := 10 if text.is_valid_int() else 12
-		game.draw_string_outline(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, size, 3, Pal.of("0"))
-		game.draw_string(font, at + Vector2(-60.0, 0.0), text, HORIZONTAL_ALIGNMENT_CENTER, 120.0, size, Pal.of(str(note["key"])))
+		_edged(game, font, at + Vector2(-60.0, 0.0), text, 120.0, size, Pal.of(str(note["key"])))
 
 	_overlays(game, origin, font)
 
@@ -244,8 +243,7 @@ static func _overlays(game: Node2D, origin: Vector2, font: SystemFont) -> void:
 			if has_sub:
 				game.draw_string(font, origin + Vector2(0.0, 134.0), str(banner["sub"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, Pal.of("8"))
 			if banner.has("hint"):
-				game.draw_string_outline(font, origin + Vector2(0.0, 162.0), str(banner["hint"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, 2, Pal.of("0"))
-				game.draw_string(font, origin + Vector2(0.0, 162.0), str(banner["hint"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 12, Pal.of("8"))
+				_edged(game, font, origin + Vector2(0.0, 162.0), str(banner["hint"]), VIEW.x, 12, Pal.of("8"))
 	var dark := 0.0
 	match str(game.phase):
 		"intro":
@@ -263,6 +261,12 @@ static func _overlays(game: Node2D, origin: Vector2, font: SystemFont) -> void:
 		game.draw_rect(Rect2(origin - Vector2(8.0, 8.0), VIEW + Vector2(16.0, 16.0)), Color(Pal.of("0"), ceilf(clampf(dark, 0.0, 1.0) * 4.0) / 4.0))
 		if str(game.phase) == "game_over" and not banner.is_empty():
 			game.draw_string(font, origin + Vector2(0.0, 124.0), str(banner["title"]), HORIZONTAL_ALIGNMENT_CENTER, VIEW.x, 16, Pal.of("7"))
+
+## Centred text with a one-pixel dark edge, drawn as four shifted copies under the text itself: the font's own outline smears small unsmoothed letters into each other.
+static func _edged(game: Node2D, font: SystemFont, at: Vector2, text: String, width: float, size: int, colour: Color) -> void:
+	for shift: Vector2 in [Vector2(1.0, 0.0), Vector2(-1.0, 0.0), Vector2(0.0, 1.0), Vector2(0.0, -1.0)]:
+		game.draw_string(font, at + shift, text, HORIZONTAL_ALIGNMENT_CENTER, width, size, Pal.of("0"))
+	game.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_CENTER, width, size, colour)
 
 ## Draw a texture standing on `feet` (the middle of its bottom edge), mirrored when `flip`.
 static func _standing(game: Node2D, texture: Texture2D, feet: Vector2, flip: bool) -> void:
