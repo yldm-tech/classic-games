@@ -14,13 +14,13 @@ const CONTROLS: Array[StringName] = [&"up", &"right", &"down", &"left", &"a", &"
 const MARGIN := 0.4
 const FAR := 99.0
 
-## The bot is not a strong player, and which run it survives depends on the seed. These seeds were picked with SCAN for the tuning of the day; when the creatures, the levels or the bot change, set SCAN to true, run the test once and pick again.
+## The bot is not a strong player, and which run it survives depends on the seed. These seeds were picked with SCAN for the tuning of the day. At that time every one of twelve seeds passed the solo, duo and boss checks, and one in twelve got through the whole game (DEEP_SEED). When the creatures, the levels or the bot change, set SCAN to true, run the test once and pick again.
 const SCAN := false
-const SOLO_SEED := 1
-const DUO_SEED := 1
-const DEEP_SEED := 1
-const CLAW_SEED := 1
-const LAST_SEED := 1
+const SOLO_SEED := 7
+const DUO_SEED := 2
+const DEEP_SEED := 12
+const CLAW_SEED := 3
+const LAST_SEED := 5
 
 var _passed := 0
 var _failed := 0
@@ -35,8 +35,8 @@ func _initialize() -> void:
 	_check("the same seed and the same bot replay the same run to the step", solo == again)
 	var duo := _run(2, DUO_SEED, 1, 2, 600.0)
 	_check("two diggers clear a level together, each scoring with their own kegs", int(duo["stage"]) >= 2 and int(duo["players"][0]["score"]) > 0 and int(duo["players"][1]["score"]) > 0)
-	var deep := _run(1, DEEP_SEED, 1, 6, 3000.0, {}, 0)
-	_check("a long run on the easy setting gets down to the first boss, continues included", int(deep["stage"]) >= 6 and int(deep["stages_cleared"]) >= 5)
+	var deep := _run(1, DEEP_SEED, 1, 10, 3000.0, {}, 0)
+	_check("a whole run, level 1 to level 9, is cleared through inputs alone on the easy setting, continues included", deep.get("cleared") == true and int(deep["stages_cleared"]) == 9 and int(deep["bosses_beaten"]) == 2 and int(deep["gems"]) >= 1)
 	var claw := _run(1, CLAW_SEED, 6, 7, 600.0, {"cap": 3, "blast": 4})
 	_check("the Geode Claw can be beaten through inputs alone", int(claw["stage"]) >= 7 and int(claw["bosses_beaten"]) == 1)
 	var last := _run(1, LAST_SEED, 9, 10, 900.0, {"cap": 4, "blast": 5, "boots": 1}, 0)
