@@ -405,7 +405,7 @@ func _test_achievements_fresh() -> void:
 	var icons_known := true
 	for entry in Catalog.all():
 		for definition: Dictionary in entry["achievements"]:
-			icons_known = icons_known and str(definition["icon"]) in ["bolt", "cup", "star", "shield"]
+			icons_known = icons_known and str(definition["icon"]) in LauncherControls.Icon.BADGES
 	_check("every catalog icon is one the launcher draws", icons_known)
 
 	shell.dispatch(In.RIGHT)

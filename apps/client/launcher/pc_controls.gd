@@ -65,7 +65,7 @@ class Paint:
 
 # ---- icons ----
 
-## Line icons drawn in a 24-unit box: "search", "close", "play", "dots", "sliders", "grid", "list", "heart", "heart_line", "check", "chevron", "pad", "star", "bolt", "cup", "shield".
+## Line icons drawn in a 24-unit box: "search", "close", "play", "dots", "sliders", "grid", "list", "heart", "heart_line", "check", "chevron", "pad", and the achievement icons ("star", "bolt", "cup", "shield", "lock"), which LauncherControls.Icon.draw_badge draws for both modes.
 class Symbol:
 	extends Control
 
@@ -133,18 +133,9 @@ class Symbol:
 				_line([Vector2(7, 10), Vector2(12, 15), Vector2(17, 10)])
 			"pad":
 				draw_colored_polygon(PackedVector2Array([Vector2(6, 8), Vector2(18, 8), Vector2(21.5, 10.5), Vector2(22.5, 14.5), Vector2(20.5, 17), Vector2(17.5, 16.5), Vector2(15, 13.5), Vector2(9, 13.5), Vector2(6.5, 16.5), Vector2(3.5, 17), Vector2(1.5, 14.5), Vector2(2.5, 10.5)]), color)
-			"star":
-				_line([Vector2(12, 3), Vector2(14.6, 8.6), Vector2(20.7, 9.3), Vector2(16.2, 13.5), Vector2(17.4, 19.5), Vector2(12, 16.8), Vector2(6.6, 19.5), Vector2(7.8, 13.5), Vector2(3.3, 9.3), Vector2(9.4, 8.6)], true)
-			"bolt":
-				_line([Vector2(13.5, 3), Vector2(6, 13.5), Vector2(11.5, 13.5), Vector2(10.5, 21), Vector2(18, 10.5), Vector2(12.5, 10.5)], true)
-			"cup":
-				_line([Vector2(7.5, 4), Vector2(16.5, 4), Vector2(16.5, 9.5), Vector2(15, 12.5), Vector2(12, 14), Vector2(9, 12.5), Vector2(7.5, 9.5)], true)
-				_line([Vector2(7.5, 6), Vector2(4.5, 6), Vector2(4.5, 8.5), Vector2(7.5, 10.5)])
-				_line([Vector2(16.5, 6), Vector2(19.5, 6), Vector2(19.5, 8.5), Vector2(16.5, 10.5)])
-				_line([Vector2(12, 14), Vector2(12, 18.5)])
-				_line([Vector2(8, 20), Vector2(16, 20)])
-			"shield":
-				_line([Vector2(12, 3), Vector2(19, 6), Vector2(19, 12), Vector2(16.5, 17), Vector2(12, 20.5), Vector2(7.5, 17), Vector2(5, 12), Vector2(5, 6)], true)
+			_:
+				# The achievement icons have one implementation, shared with the console screens.
+				LauncherControls.Icon.draw_badge(self, kind, color, stroke)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---- clickable base ----
@@ -788,8 +779,9 @@ class AchievementCard:
 
 	var _name: Label
 	var _state: Label
+	var _icon: Symbol
 
-	func _init(icon_kind: String, title: String, description: String, state: String, p_unlocked: bool) -> void:
+	func _init(p_icon_kind: String, title: String, description: String, state: String, p_unlocked: bool) -> void:
 		unlocked = p_unlocked
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		custom_minimum_size = Vector2(0, P.ACHIEVEMENT_HEIGHT)
@@ -805,10 +797,10 @@ class AchievementCard:
 		disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		disc.draw.connect(func() -> void: disc.draw_circle(disc.size / 2.0, 18.0, T.FG if unlocked else P.LOCKED_BG, true, -1.0, true))
 		row.add_child(disc)
-		var icon := Symbol.new(icon_kind, 18.0, T.BG if unlocked else P.TEXT_MUTED)
-		icon.position = Vector2(9, 9)
-		icon.size = Vector2(18, 18)
-		disc.add_child(icon)
+		_icon = Symbol.new(p_icon_kind, 18.0, T.BG if unlocked else P.TEXT_MUTED)
+		_icon.position = Vector2(9, 9)
+		_icon.size = Vector2(18, 18)
+		disc.add_child(_icon)
 		var column := W.vbox(2)
 		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -820,6 +812,9 @@ class AchievementCard:
 		_state = Paint.clipped(W.text(state, P.SIZE_LABEL, 400, P.TEXT_MUTED))
 		_state.name = "State"
 		column.add_child(_state)
+
+	func icon_kind() -> String:
+		return _icon.kind
 
 	func height_for(_width: float) -> float:
 		return P.ACHIEVEMENT_HEIGHT

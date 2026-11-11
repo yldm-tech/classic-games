@@ -81,9 +81,6 @@ func build() -> void:
 	var host := shell.game_host
 	host.run_started.connect(_on_run_started)
 	host.run_finished.connect(_on_run_finished)
-	shell.mode_changed.connect(func(mode: StringName) -> void:
-		if mode == LauncherRoot.MODE_PC:
-			open_pause())
 
 func _build_hud() -> void:
 	_hud = Control.new()

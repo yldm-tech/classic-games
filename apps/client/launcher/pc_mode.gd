@@ -5,7 +5,7 @@ extends Control
 ##
 ## Layout: a title strip with the way back to console mode, a sidebar (search, categories, the library entry, the game list, the settings entry), the main area showing either the selected game's page (LauncherPcDetailView) or the library (LauncherPcLibraryView), and a status line. The application runs in a real OS window, so the strip draws no minimise / maximise / close buttons of its own.
 ##
-## It is a second view of the same data as the console screens: games come from LauncherCatalog, everything about the player from shell.store, and a game is started exactly as Home starts one, by showing LauncherRoot.GAME. Because the console layers are hidden while PC mode is on, anything that needs a console screen (a running game, the game menu, the full achievements screen, Settings) is an excursion: PC mode switches to console mode, opens that screen, and comes back when the shell returns to Home.
+## It is a second view of the same data as the console screens: games come from LauncherCatalog, everything about the player from shell.store, and a game is started exactly as Home starts one, by showing LauncherRoot.GAME. Because the console layers are hidden while PC mode is on, anything that needs a console screen (a running game, the game menu, the full achievements screen, Settings) is an excursion: PC mode switches to console mode, opens that screen, and comes back when the excursion is over (see _on_screen_changed for the one rule that decides that).
 ##
 ## Pointer: hover and pressed states live in the widgets; a click selects, a double click starts a game, a right click opens the game's menu, the wheel scrolls. Keyboard and gamepad: focus is a zone (search, sidebar, main) plus a position in that zone's rows of widgets. Tab / Shift+Tab change zone, the arrows move inside it and across its edges, Enter activates (on a game: starts it), Ctrl+F or "/" jump to the search field, Esc clears the search, Y toggles the favourite, M opens the game's menu, Q / E switch between the game page and the library, PageUp / PageDown scroll.
 
@@ -511,7 +511,7 @@ func remove_recent(game_id: String) -> void:
 
 # ---- leaving for a console screen ----
 
-## Start a game the way Home does: through the GAME screen, which runs it on the shell's game host. PC mode steps aside for the run and returns when the shell is back on Home.
+## Start a game the way Home does: through the GAME screen, which runs it on the shell's game host. PC mode steps aside for the run and returns when the player leaves it.
 func play(game_id: String) -> void:
 	if entry(game_id).is_empty():
 		return
@@ -521,9 +521,12 @@ func play(game_id: String) -> void:
 		return
 	open_console(LauncherRoot.GAME, {"game": game_id})
 
-## Show a console screen from PC mode: switch to console mode, open the screen, and remember to come back. The excursion ends when the shell arrives at Home again (the game ended, or the player backed out of the screen) or when the player toggles the mode himself.
+## Show a console screen from PC mode: switch to console mode, open the screen, and remember to come back. _on_screen_changed decides when the excursion is over.
 func open_console(screen_id: StringName, args: Dictionary = {}) -> void:
 	close_menu()
+	# Every excursion starts from Home, whatever console screen PC mode was entered from, so backing out of the borrowed screen always arrives at Home.
+	if shell.current_id() != LauncherRoot.HOME:
+		shell.go(LauncherRoot.HOME)
 	_excursion = screen_id
 	shell.toggle_pc_mode()
 	shell.go(screen_id, args)
@@ -532,19 +535,27 @@ func open_console(screen_id: StringName, args: Dictionary = {}) -> void:
 func excursion() -> StringName:
 	return _excursion
 
+## The one rule for coming back from an excursion: it is over when the console shell arrives at Home, and PC mode takes the canvas back at that moment. Backing out of the borrowed screen, "home" on a result and a launch that failed all arrive there by themselves.
+## An excursion that went straight into a game has one more exit. The game flow leaves a run that is over for that game's menu (quit confirmed on the pause screen, "game menu" or B on the result); the player never opened that menu, so the shell is sent on to Home, which ends the excursion. Opened from the menu excursion instead, the same exits stay on the menu the player came from.
+## The player toggling the mode himself also ends the excursion (see _on_mode_changed).
 func _on_screen_changed(id: StringName) -> void:
-	if _excursion == &"" or shell.mode == LauncherRoot.MODE_PC or id != LauncherRoot.HOME:
+	if _excursion == &"" or shell.mode == LauncherRoot.MODE_PC:
 		return
-	shell.toggle_pc_mode()
+	if id == LauncherRoot.HOME:
+		shell.toggle_pc_mode()
+	elif id == LauncherRoot.MENU and _excursion == LauncherRoot.GAME:
+		shell.go(LauncherRoot.HOME)
 
 func _on_mode_changed(mode: StringName) -> void:
 	var home := shell.screen(LauncherRoot.HOME)
 	if mode == LauncherRoot.MODE_PC:
+		# Coming back from an excursion keeps the game PC mode had selected: the borrowed screens were about that game. Only when the player was in console mode on his own does the selection follow what he looked at there.
+		var returning := _excursion != &""
 		_excursion = &""
 		var from_console := str(home.get("hero_id"))
 		if shell.current_id() == LauncherRoot.GAME and not entry(shell.game_host.game_id()).is_empty():
 			from_console = shell.game_host.game_id()
-		if not entry(from_console).is_empty():
+		if not returning and not entry(from_console).is_empty():
 			selected = from_console
 		if _built_locale != shell.locale:
 			_build()

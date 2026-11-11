@@ -18,7 +18,6 @@ const Strings := preload("res://i18n/strings.gd")
 const HOME_SCREEN := "res://launcher/home_screen.gd"
 const GAME_SCREEN := "res://launcher/game_screen.gd"
 const SETTINGS_SCREEN := "res://launcher/settings_screen.gd"
-const UNAVAILABLE_SCREEN := "res://launcher/unavailable_screen.gd"
 const LIBRARY_SCREEN := "res://launcher/library_screen.gd"
 const ACHIEVEMENTS_SCREEN := "res://launcher/achievements_screen.gd"
 ## The PC-mode root registered by default. A path for the same reason as the screens.
@@ -36,7 +35,7 @@ const MENU := &"menu"
 const GAME := &"game"
 const PAUSE := &"pause"
 
-## Screen id -> script path. A screen that is not built yet is served by the unavailable screen, which says so; point its entry at the real script when that screen lands. Paths rather than preloads, because every screen script refers back to LauncherRoot.
+## Screen id -> script path. Paths rather than preloads, because every screen script refers back to LauncherRoot.
 const SCREENS := {
 	HOME: HOME_SCREEN,
 	LIBRARY: LIBRARY_SCREEN,
@@ -319,7 +318,7 @@ func register_pc_mode(script: GDScript) -> void:
 		_pc_node = null
 
 ## Switch between console and PC mode (F11, or holding View). Until a PC mode is registered this only says that it is not available.
-## PC mode has no view of a running game, so console mode cannot be left while a run is live; the toast says so.
+## PC mode has no view of a game, so console mode cannot be left while a run is live, whether it is being played or sits paused under the pause screen; the toast says so and nothing else changes. Once the run is over (its result is on screen) switching is allowed again.
 func toggle_pc_mode() -> void:
 	if _pc_script == null:
 		toast(t("launcher.pc_mode.unavailable"))

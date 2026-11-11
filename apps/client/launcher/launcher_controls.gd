@@ -44,9 +44,12 @@ class GradientRect:
 
 # ---- icons ----
 
-## Line icons drawn in a 24-unit box: "heart", "grid", "menu", "view", "monitor", "gamepad".
+## Line icons drawn in a 24-unit box: "heart", "grid", "menu", "view", "monitor", "gamepad", and the achievement icons of draw_badge.
 class Icon:
 	extends Control
+
+	## The kinds draw_badge knows.
+	const BADGES: Array[String] = ["star", "bolt", "cup", "shield", "lock"]
 
 	var kind := ""
 	var color := T.FG
@@ -85,20 +88,26 @@ class Icon:
 				draw_line(Vector2(7, 10), Vector2(7, 12.6), color, stroke)
 				draw_line(Vector2(5.7, 11.3), Vector2(8.3, 11.3), color, stroke)
 				draw_circle(Vector2(17, 11.3), 1.0, color)
-			# Achievement icons (the catalog's `icon` field) and the lock, as 1.8-unit outlines.
+			_:
+				draw_badge(self, kind, color, 1.8)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	## The achievement icons (the catalog's `icon` field: "star", "bolt", "cup", "shield") and the "lock", as outlines in the 24-unit box. This is their only implementation: Icon draws them through it and so does PC mode's Symbol, each with its own stroke width. `canvas` must already be transformed to the 24-unit box. An unknown kind draws nothing.
+	static func draw_badge(canvas: CanvasItem, p_kind: String, p_color: Color, stroke: float) -> void:
+		match p_kind:
 			"star":
-				draw_polyline(PackedVector2Array([Vector2(12, 3), Vector2(14.6, 8.6), Vector2(20.7, 9.3), Vector2(16.2, 13.5), Vector2(17.4, 19.5), Vector2(12, 16.8), Vector2(6.6, 19.5), Vector2(7.8, 13.5), Vector2(3.3, 9.3), Vector2(9.4, 8.6), Vector2(12, 3)]), color, 1.8, true)
+				canvas.draw_polyline(PackedVector2Array([Vector2(12, 3), Vector2(14.6, 8.6), Vector2(20.7, 9.3), Vector2(16.2, 13.5), Vector2(17.4, 19.5), Vector2(12, 16.8), Vector2(6.6, 19.5), Vector2(7.8, 13.5), Vector2(3.3, 9.3), Vector2(9.4, 8.6), Vector2(12, 3)]), p_color, stroke, true)
 			"bolt":
-				draw_polyline(PackedVector2Array([Vector2(13, 2), Vector2(4, 14), Vector2(11, 14), Vector2(10, 22), Vector2(19, 10), Vector2(12, 10), Vector2(13, 2)]), color, 1.8, true)
+				canvas.draw_polyline(PackedVector2Array([Vector2(13, 2), Vector2(4, 14), Vector2(11, 14), Vector2(10, 22), Vector2(19, 10), Vector2(12, 10), Vector2(13, 2)]), p_color, stroke, true)
 			"cup":
-				draw_polyline(PackedVector2Array([Vector2(7, 8), Vector2(7, 4), Vector2(17, 4), Vector2(17, 8)]), color, 1.8, true)
-				draw_arc(Vector2(12, 8), 5.0, 0.0, PI, 24, color, 1.8, true)
-				draw_line(Vector2(7, 6), Vector2(4, 6), color, 1.8, true)
-				draw_arc(Vector2(7, 6), 3.0, PI / 2.0, PI, 12, color, 1.8, true)
-				draw_line(Vector2(17, 6), Vector2(20, 6), color, 1.8, true)
-				draw_arc(Vector2(17, 6), 3.0, 0.0, PI / 2.0, 12, color, 1.8, true)
-				draw_line(Vector2(12, 13), Vector2(12, 17), color, 1.8, true)
-				draw_line(Vector2(8, 20), Vector2(16, 20), color, 1.8, true)
+				canvas.draw_polyline(PackedVector2Array([Vector2(7, 8), Vector2(7, 4), Vector2(17, 4), Vector2(17, 8)]), p_color, stroke, true)
+				canvas.draw_arc(Vector2(12, 8), 5.0, 0.0, PI, 24, p_color, stroke, true)
+				canvas.draw_line(Vector2(7, 6), Vector2(4, 6), p_color, stroke, true)
+				canvas.draw_arc(Vector2(7, 6), 3.0, PI / 2.0, PI, 12, p_color, stroke, true)
+				canvas.draw_line(Vector2(17, 6), Vector2(20, 6), p_color, stroke, true)
+				canvas.draw_arc(Vector2(17, 6), 3.0, 0.0, PI / 2.0, 12, p_color, stroke, true)
+				canvas.draw_line(Vector2(12, 13), Vector2(12, 17), p_color, stroke, true)
+				canvas.draw_line(Vector2(8, 20), Vector2(16, 20), p_color, stroke, true)
 			"shield":
 				var outline := PackedVector2Array([Vector2(12, 3), Vector2(20, 6), Vector2(20, 12)])
 				for i in range(1, 9):
@@ -106,13 +115,12 @@ class Icon:
 				for i in range(1, 9):
 					outline.append(Vector2(12, 21).bezier_interpolate(Vector2(7.5, 20), Vector2(4, 17), Vector2(4, 12), i / 8.0))
 				outline.append_array(PackedVector2Array([Vector2(4, 6), Vector2(12, 3)]))
-				draw_polyline(outline, color, 1.8, true)
+				canvas.draw_polyline(outline, p_color, stroke, true)
 			"lock":
-				draw_polyline(PackedVector2Array([Vector2(6, 11), Vector2(18, 11), Vector2(18, 20), Vector2(6, 20), Vector2(6, 11)]), color, 1.8, true)
-				draw_line(Vector2(8, 11), Vector2(8, 8), color, 1.8, true)
-				draw_arc(Vector2(12, 8), 4.0, PI, TAU, 16, color, 1.8, true)
-				draw_line(Vector2(16, 8), Vector2(16, 11), color, 1.8, true)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				canvas.draw_polyline(PackedVector2Array([Vector2(6, 11), Vector2(18, 11), Vector2(18, 20), Vector2(6, 20), Vector2(6, 11)]), p_color, stroke, true)
+				canvas.draw_line(Vector2(8, 11), Vector2(8, 8), p_color, stroke, true)
+				canvas.draw_arc(Vector2(12, 8), 4.0, PI, TAU, 16, p_color, stroke, true)
+				canvas.draw_line(Vector2(16, 8), Vector2(16, 11), p_color, stroke, true)
 
 # ---- pressable base ----
 
