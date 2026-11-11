@@ -136,6 +136,27 @@ launcher → i18n
 - 屏幕上关于玩家的一切（游玩时长、上次游玩、最高分、收藏、最近游玩、成就）都读自 `LauncherStore`，只有真实游玩和真实操作会写入；没有记录时如实显示空状态。
 - 游戏只经 `LauncherGameHost` 启动。它是外壳的一层而不是屏幕，游戏屏与暂停屏在它上面切换时舞台保持挂载。
 
+### 8.1 游戏流程：游戏菜单、局内、暂停
+
+```text
+apps/client/launcher/
+├── menu_screen.gd            # 单款游戏的菜单：开始、玩法与操作、游玩记录、成就、开局选项、收藏
+├── game_screen.gd            # 局内：HUD、输入到游戏指令的翻译、结算
+├── pause_screen.gd           # 暂停：继续、重新开始、主音量、退出到游戏菜单，右侧是这款游戏的操作表
+├── launcher_game_guide.gd    # 每款游戏的玩法说明、操作表、HUD 取数、塔的显示名、开局选项（纯数据）
+├── launcher_game_widgets.gd  # 这三屏共用的控件：键帽、进度条、HUD 按钮、滑块行、确认对话框等
+└── game_flow_test.gd         # make game-flow-test
+```
+
+- **一局的生命周期。** `LauncherGameHost` 只在一局结束时写存档，别处都不写；`GameSession.end_run` 对已经结束的一局什么也不做。所以无论怎么结束（打完、暂停里退出、暂停里重新开始、从别的入口离开游戏屏或暂停屏、关窗口、启动器被销毁），每局都恰好记录一次。游戏屏打开暂停屏时这一局保持挂载并冻结；从暂停屏「继续」或「重新开始」回到游戏屏时舞台上仍有一局，其余任何离开方式都会结束它。窗口失去焦点、切到 PC 模式都会自动暂停。
+- **局内输入。** 按下的动作照常经 `handle_action` 到达游戏屏。有两件事「按下」表达不了，由游戏屏每帧从同一批启动器动作轮询：按住（射击游戏的加速）和带力度的方向（塔防准星）。飞机和主角的移动由运行时自己读 Godot 内置的 `ui_*` 动作，启动器不转发。
+- **HUD 只读 `game_host.snapshot()`。** 显示哪些字段由 `LauncherGameGuide` 的 `clock` / `vital` / `stats` 决定。运行时放在节点上而没进摘要的数据由 `GameSession.snapshot()` 补出：`max_hp`、`base_hp_max`、`shield_hits`、`boost`、`boss_hp` / `boss_max_hp`、塔的目录 `towers`。
+- **舞台分辨率。** 舞台视口与画布同为 1920×1080，用 `size_2d_override` 把运行时的 960×540 逻辑坐标映射上去：运行时仍按 `STAGE_SIZE` 作画，图形按满分辨率栅格化。`to_stage` / `to_canvas` 的换算不变。
+- **开局选项。** 只有运行时的 DSL 真正支持的参数才出现在菜单里（目前只有射击游戏的 `stage.difficulty`）。选项值存在设置里（键 `game_option.<游戏 id>.<选项 id>`），开局时变成基线 DSL 上的一条 JSON Patch `replace`。
+- **护盾冷却在启动器一侧。** 运行时对每次 `shield` 指令都会加一层护盾，不设上限；游戏屏规定已有护盾时不能再开，护盾被打掉后要等 `LauncherGameGuide.SHIELD_COOLDOWN` 秒。
+- **主音量。** 设置键 `master_volume`（整数 0 到 10，默认 8），暂停屏调整时和每次开局时应用到 Master 音频总线。
+- **`LauncherRoot.close_to(id, args, closing)`** 用来离开一段嵌套流程：先把 `closing` 里的屏幕从返回历史里去掉再显示目标屏，这样从结算或暂停退到游戏菜单后，按返回是回到进入这段流程之前的地方，而不是回到已经结束的那一局。
+
 ## 9. 完成态不变量
 
 - Godot 4.6.3 精确版本门禁和 fail-closed test runner；

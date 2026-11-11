@@ -9,6 +9,9 @@ extends SceneTree
 ##   LAUNCHER_SHOT_ACTIONS  comma-separated LauncherInput action names without the "launcher_" prefix, dispatched in order before the capture (e.g. "down,menu")
 ##   LAUNCHER_SHOT_LOCALE   "zh" (default) or "en"
 ##   LAUNCHER_SHOT_NAME     file name without extension, default "<screen>-<state>"
+##   LAUNCHER_SHOT_GAME     catalog game id passed to the screen as { "game": id }, default "shooter"
+##
+## Besides action names, LAUNCHER_SHOT_ACTIONS accepts steps that let a live game reach a state worth capturing: "wait=SECONDS" (real seconds), "scale=N" (Engine.time_scale), "press=ACTION" / "release=ACTION" (hold or let go of a launcher action, for what the game screen polls) and "cursor=X:Y" (put the game screen's tower cursor at a stage position).
 ##
 ## The launcher is mounted in a SubViewport of the canvas size, so the PNG does not depend on the size of the window or the display. The profile lives in its own file and never touches the player's real one.
 
@@ -51,10 +54,15 @@ func _initialize() -> void:
 	viewport.add_child(shell)
 	await process_frame
 	if screen_id != "home":
-		shell.go(StringName(screen_id), {"game": "shooter"})
+		shell.go(StringName(screen_id), {"game": _env("LAUNCHER_SHOT_GAME", "shooter")})
 	for action in _env("LAUNCHER_SHOT_ACTIONS", "").split(",", false):
-		shell.dispatch(StringName("launcher_" + action.strip_edges()))
+		var step := action.strip_edges()
+		if step.contains("="):
+			await _run_step(shell, step.get_slice("=", 0), step.get_slice("=", 1))
+			continue
+		shell.dispatch(StringName("launcher_" + step))
 		await process_frame
+	Engine.time_scale = 1.0
 	# Let the screen fade, the backdrop cross-fade and the card resize finish.
 	await create_timer(1.2).timeout
 	await RenderingServer.frame_post_draw
@@ -71,6 +79,22 @@ func _initialize() -> void:
 		return
 	print("launcher_shot: wrote %s (%dx%d)" % [path, image.get_width(), image.get_height()])
 	quit(0)
+
+func _run_step(shell: LauncherRoot, kind: String, value: String) -> void:
+	match kind:
+		"wait":
+			await create_timer(value.to_float(), true, false, true).timeout
+		"scale":
+			Engine.time_scale = value.to_float()
+		"press":
+			Input.action_press(StringName("launcher_" + value))
+		"release":
+			Input.action_release(StringName("launcher_" + value))
+		"cursor":
+			var game := shell.current_screen() as LauncherGameScreen
+			if game != null:
+				game.cursor_at = Vector2(value.get_slice(":", 0).to_float(), value.get_slice(":", 1).to_float())
+	await process_frame
 
 func _env(name: String, fallback: String) -> String:
 	var value := OS.get_environment(name)
