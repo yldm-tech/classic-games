@@ -169,6 +169,7 @@ const SIZE_STAT_LABEL := 13
 
 ## Tag colour of the player's HUD block.
 const PLAYER_ONE := Color("5AB4FF")
+const PLAYER_TWO := Color("FFB454")
 const HUD_CHIP_BG := Color(5.0 / 255.0, 7.0 / 255.0, 13.0 / 255.0, 0.55)
 ## Scrim over the frozen game on the pause screen and under a dialog.
 const A_SCRIM_PAUSE := 0.62
@@ -190,6 +191,8 @@ const PAUSE_COLUMN_WIDTH := 560.0
 const PAUSE_PANE_WIDTH := 760.0
 const PAUSE_ROW_HEIGHT := 58.0
 const PANE_ROW_HEIGHT := 62.0
+## Row height of a controls table when two of them share the pane (one per player).
+const PANE_ROW_COMPACT := 46.0
 const KEYCAP_HEIGHT := 34.0
 const METER_HEIGHT := 8.0
 const SLIDER_SEGMENT := Vector2(20, 8)

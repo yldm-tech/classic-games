@@ -1,93 +1,75 @@
 class_name LauncherCatalog
 extends RefCounted
 
-## The games the launcher offers. Pure data: adding a game is adding one entry to GAMES (and, when its art is ready, one texture for LauncherKeyArt). Nothing here reads local state; play time, scores and unlocked achievements live in LauncherStore.
+## The games the launcher offers, read from the manifests under games/ (one directory per game, see docs/20-adding-a-game.md). This file holds no per-game data: adding a game is adding a directory, and nothing here changes. Nothing here reads local state either; play time, scores and unlocked achievements live in LauncherStore.
 ##
-## Entry fields:
-##   id            stable key used by the store, key art and i18n-free lookups
-##   runtime       runtime reference handed to GameSession ("name@version"); the game runs that runtime's baseline DSL
+## The manifests are found and validated by the game side and reach the launcher through GameSession.catalog(), the launcher's one door to the games. They are read once, the first time anything asks. A game whose manifest is invalid is not offered; problems() lists what is wrong with it so the launcher can say so.
+##
+## Entry fields the launcher's screens use (the full manifest is documented in games/shared/game_manifest.gd):
+##   id            stable key used by the store, key art and lookups
+##   kind          "dsl" (runs a built-in runtime's baseline DSL, `runtime` is its reference) or "module" (a game module)
 ##   name          { zh, en }; the en name is also the Latin subtitle shown under the title in every locale
 ##   initials      lowercase pinyin initials of the zh name, for search
 ##   genre         { zh, en }
-##   players       { min, max } local players the runtime really supports
+##   players       { min, max, join_in_progress? } local players the game really supports
 ##   tagline       { zh, en }, one line
 ##   colors        { title, shadow, glow } for the hero title
-##   art           { motif, top, bottom, primary, secondary } for the procedural key art placeholder
+##   art           { motif, top, bottom, primary, secondary } for the procedural key art placeholder, and image_path when the game ships a picture
 ##   achievements  [{ id, icon, name { zh, en }, desc { zh, en }, when }]
 ##
-## An achievement's `when` is checked against the result GameSession emits with game_ended: `cleared` (optional bool) must match, and every `min` field must be at least the given number. A run the player quit (aborted) never awards anything.
+## An achievement's `when` is checked against the result GameSession emits with game_ended: `cleared` (optional bool) must match, `players` (optional) is the least number of players the run must have ended with, every `min` field must be at least the given number and every `max` field at most. A run the player quit (aborted) never awards anything.
 
-const GAMES: Array[Dictionary] = [
-	{
-		"id": "shooter",
-		"runtime": "shooter@1.0.0",
-		"name": {"zh": "星环巡航", "en": "ORBIT PATROL"},
-		"initials": "xhxh",
-		"genre": {"zh": "飞行射击", "en": "ARENA SHOOTER"},
-		"players": {"min": 1, "max": 1},
-		"tagline": {"zh": "清空这片星域，再击落守在尽头的机甲。", "en": "Clear the sector, then bring down the mech that guards it."},
-		"colors": {"title": "EAF4FF", "shadow": "2456C8", "glow": "5AA0FF"},
-		"art": {"motif": "orbit", "top": "020413", "bottom": "0C1F4A", "primary": "5AA0FF", "secondary": "FFC857"},
-		"achievements": [
-			{"id": "first_sortie", "icon": "bolt", "name": {"zh": "首次出击", "en": "First Sortie"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
-			{"id": "sector_clear", "icon": "cup", "name": {"zh": "星域肃清", "en": "Sector Clear"}, "desc": {"zh": "击落全部敌机与首领。", "en": "Destroy every enemy and the boss."}, "when": {"cleared": true}},
-			{"id": "high_score", "icon": "star", "name": {"zh": "两千分", "en": "Two Thousand"}, "desc": {"zh": "单局得分达到 2,000。", "en": "Score 2,000 in a single run."}, "when": {"min": {"score": 2000}}},
-		],
-	},
-	{
-		"id": "survivor",
-		"runtime": "survivor@1.0.0",
-		"name": {"zh": "长夜草原", "en": "MEADOW VIGIL"},
-		"initials": "cycy",
-		"genre": {"zh": "生存动作", "en": "SURVIVAL ACTION"},
-		"players": {"min": 1, "max": 1},
-		"tagline": {"zh": "只管走位，武器自己开火。撑过三分钟。", "en": "You move, the weapon fires itself. Last three minutes."},
-		"colors": {"title": "F1FFE4", "shadow": "2F7D3A", "glow": "8CE678"},
-		"art": {"motif": "swarm", "top": "04110A", "bottom": "14532D", "primary": "8CE678", "secondary": "FDE047"},
-		"achievements": [
-			{"id": "first_watch", "icon": "bolt", "name": {"zh": "第一夜", "en": "First Watch"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
-			{"id": "until_dawn", "icon": "cup", "name": {"zh": "守到天亮", "en": "Until Dawn"}, "desc": {"zh": "存活到计时结束。", "en": "Survive until the timer runs out."}, "when": {"cleared": true}},
-			{"id": "level_three", "icon": "star", "name": {"zh": "渐入佳境", "en": "Warmed Up"}, "desc": {"zh": "单局升到 3 级。", "en": "Reach level 3 in a single run."}, "when": {"min": {"level": 3}}},
-			{"id": "thirty_down", "icon": "shield", "name": {"zh": "三十个", "en": "Thirty Down"}, "desc": {"zh": "单局击倒 30 个敌人。", "en": "Defeat 30 enemies in a single run."}, "when": {"min": {"kills": 30}}},
-		],
-	},
-	{
-		"id": "tower_defense",
-		"runtime": "tower_defense@1.0.0",
-		"name": {"zh": "隘口守卫", "en": "GATEWATCH"},
-		"initials": "aksw",
-		"genre": {"zh": "塔防", "en": "TOWER DEFENSE"},
-		"players": {"min": 1, "max": 1},
-		"tagline": {"zh": "沿路布下箭塔与炮台，别让一个敌人走到终点。", "en": "Line the road with towers and let nothing reach the end."},
-		"colors": {"title": "FFE9C2", "shadow": "B4561E", "glow": "FFAA50"},
-		"art": {"motif": "road", "top": "140B1E", "bottom": "5A2B1C", "primary": "FFAA50", "secondary": "67E8F9"},
-		"achievements": [
-			{"id": "first_defense", "icon": "bolt", "name": {"zh": "初次布防", "en": "First Defense"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
-			{"id": "gate_held", "icon": "cup", "name": {"zh": "守住隘口", "en": "Gate Held"}, "desc": {"zh": "挡下全部波次。", "en": "Stop every wave."}, "when": {"cleared": true}},
-			{"id": "untouched", "icon": "shield", "name": {"zh": "滴水不漏", "en": "Watertight"}, "desc": {"zh": "通关时基地未失一点生命。", "en": "Clear with the base at full health."}, "when": {"cleared": true, "min": {"base_hp": 20}}},
-			{"id": "full_sweep", "icon": "star", "name": {"zh": "一个不留", "en": "Full Sweep"}, "desc": {"zh": "单局击倒 27 个敌人。", "en": "Defeat 27 enemies in a single run."}, "when": {"min": {"kills": 27}}},
-		],
-	},
-]
+static var _root := GameSession.GAMES_ROOT
+static var _games: Array[Dictionary] = []
+static var _problems: Array[Dictionary] = []
+static var _loaded := false
+## Counts reloads, so a cache built from the catalog (LauncherGameGuide) knows when it is stale.
+static var generation := 0
+
+## Read the manifests again, optionally from another games directory (tests use a fixture directory).
+static func reload(root: String = GameSession.GAMES_ROOT) -> void:
+	_root = root
+	GameSession.forget_catalog()
+	_loaded = false
+	_load()
+
+static func _load() -> void:
+	if _loaded:
+		return
+	var found := GameSession.catalog(_root)
+	_games.assign(found["games"])
+	_problems.assign(found["problems"])
+	_loaded = true
+	generation += 1
 
 static func all() -> Array[Dictionary]:
-	return GAMES
+	_load()
+	return _games
+
+## Games that were found but cannot be offered: [{ id, path, errors: [text] }].
+static func problems() -> Array[Dictionary]:
+	_load()
+	return _problems
 
 static func ids() -> Array[String]:
 	var out: Array[String] = []
-	for game in GAMES:
+	for game in all():
 		out.append(str(game["id"]))
 	return out
 
 ## The entry for an id, or {} when the catalog has no such game (a stale id in the store, for example).
 static func by_id(id: String) -> Dictionary:
-	for game in GAMES:
+	for game in all():
 		if game["id"] == id:
 			return game
 	return {}
 
 static func has(id: String) -> bool:
 	return not by_id(id).is_empty()
+
+## The first game, for a screen that must show something before the player picked one. "" when no game could be loaded.
+static func first_id() -> String:
+	return str(all()[0]["id"]) if not all().is_empty() else ""
 
 ## Localised text of a { zh, en } field, falling back to zh.
 static func text(entry: Dictionary, field: String, locale: String) -> String:
@@ -115,9 +97,13 @@ static func matches(entry: Dictionary, query: String) -> bool:
 
 static func achievement_total() -> int:
 	var total := 0
-	for game in GAMES:
+	for game in all():
 		total += (game["achievements"] as Array).size()
 	return total
+
+## Whether the game can be played by two local players.
+static func supports_two(entry: Dictionary) -> bool:
+	return int((entry.get("players", {}) as Dictionary).get("max", 1)) >= 2
 
 ## Ids of the game's achievements that this result satisfies. `result` is the dictionary GameSession emits with game_ended.
 static func earned(game_id: String, result: Dictionary) -> Array[String]:
@@ -132,8 +118,15 @@ static func earned(game_id: String, result: Dictionary) -> Array[String]:
 static func _satisfied(when: Dictionary, result: Dictionary) -> bool:
 	if when.has("cleared") and bool(result.get("cleared", false)) != bool(when["cleared"]):
 		return false
+	if when.has("players") and int(result.get("player_count", 1)) < int(when["players"]):
+		return false
 	var minimums: Dictionary = when.get("min", {})
 	for field in minimums:
 		if float(result.get(field, 0)) < float(minimums[field]):
+			return false
+	var maximums: Dictionary = when.get("max", {})
+	for field in maximums:
+		# A field the result does not carry cannot satisfy an upper bound: "at most 0 deaths" must not be awarded by a game that never reported deaths.
+		if not result.has(field) or float(result[field]) > float(maximums[field]):
 			return false
 	return true

@@ -12,6 +12,7 @@ extends RefCounted
 ##   max_fps       0 | 30 | 60 | 120 | 144                  0 means no cap
 ##   volume_master 0..10                                    step of the Master bus, 10 = full
 ##   volume_music  0..10                                    step of the Music bus
+##   volume_sfx    0..10                                    step of the SFX bus (the sound effects of game modules)
 ##   audio_mute    bool                                     mutes the Master bus
 ##
 ## Values read from the store are untrusted (the file can be edited by hand): value() returns the default for anything that is not an allowed value.
@@ -26,11 +27,13 @@ const VSYNC := "vsync"
 const MAX_FPS := "max_fps"
 const VOLUME_MASTER := "volume_master"
 const VOLUME_MUSIC := "volume_music"
+const VOLUME_SFX := "volume_sfx"
 const AUDIO_MUTE := "audio_mute"
 
 const VOLUME_STEPS := 10
 const BUS_MASTER := &"Master"
 const BUS_MUSIC := &"Music"
+const BUS_SFX := &"SFX"
 
 ## The defaults reproduce what the project does with no settings stored.
 const DEFAULTS := {
@@ -42,6 +45,7 @@ const DEFAULTS := {
 	MAX_FPS: 0,
 	VOLUME_MASTER: 10,
 	VOLUME_MUSIC: 10,
+	VOLUME_SFX: 10,
 	AUDIO_MUTE: false,
 }
 
@@ -75,7 +79,7 @@ static func drives_window(node: Node) -> bool:
 
 ## Apply every engine-facing setting. `window` says whether the window itself may be changed (see drives_window).
 static func apply_all(store: LauncherStore, window: bool) -> void:
-	for key in [WINDOW_MODE, VSYNC, MAX_FPS, VOLUME_MASTER, VOLUME_MUSIC, AUDIO_MUTE]:
+	for key in [WINDOW_MODE, VSYNC, MAX_FPS, VOLUME_MASTER, VOLUME_MUSIC, VOLUME_SFX, AUDIO_MUTE]:
 		apply(store, key, window)
 
 ## Apply one setting to the engine. Language and clock are the shell's (LauncherRoot.set_locale, refresh_clock) and default_mode is only read at start, so those keys do nothing here.
@@ -95,6 +99,8 @@ static func apply(store: LauncherStore, key: String, window: bool) -> void:
 			_set_bus_volume(BUS_MASTER, int(value(store, VOLUME_MASTER)))
 		VOLUME_MUSIC:
 			_set_bus_volume(BUS_MUSIC, int(value(store, VOLUME_MUSIC)))
+		VOLUME_SFX:
+			_set_bus_volume(BUS_SFX, int(value(store, VOLUME_SFX)))
 		AUDIO_MUTE:
 			var bus := AudioServer.get_bus_index(BUS_MASTER)
 			if bus >= 0:

@@ -5,6 +5,8 @@ extends LauncherScreen
 ##
 ## Everything it knows about the run comes from shell.game_host: snapshot() every frame for the HUD, perform() for commands, run_started / run_finished for the life cycle. What each game shows and which button does what is data in LauncherGameGuide, not code here.
 ##
+## Two kinds of game run here. A DSL game is driven by this screen: it turns launcher actions into the runtime's commands. A game module is driven by its players directly (LauncherGameHost.feed_event passes every input event to the player it belongs to), so for a module this screen only draws the HUD and opens the pause: Menu from anyone, Esc from the keyboard. A module's HUD has a corner for each player; the second one is top right, above the shared counters.
+##
 ## Input. Presses arrive through handle_action like on every screen. Two things a press cannot express are polled from the same launcher actions instead: a held button (the shooter's boost) and a direction held at an analogue strength (the tower-defense cursor). Movement of the ship and the hero is read by the runtimes themselves from Godot's ui_* actions.
 ##
 ## Life cycle of a run. Opening the pause screen keeps the run alive and paused; leaving this screen by any other route ends it. The host records a run when it ends and at no other time, so quit, restart, finish and closing the window each record it exactly once.
@@ -35,10 +37,9 @@ var cursor_at := Vector2(GameSession.STAGE_SIZE) / 2.0
 
 var _hud: Control
 var _hud_off: Control
-var _score: Label
-var _vital_label: Label
-var _vital_meter: LauncherGameWidgets.Meter
-var _vital_value: Label
+var _hide_chip: LauncherGameWidgets.HudChip
+## One HUD corner per player slot: { root, tag, score, vital, vital_label, vital_meter, vital_value, stats, stat_values, hint }.
+var _blocks: Array[Dictionary] = []
 var _title: Label
 var _clock: Label
 var _stats: HBoxContainer
@@ -56,6 +57,7 @@ var _result: Control
 var _result_rows: Array[LauncherControls.FocusRow] = []
 
 var _guide: Dictionary = {}
+var _module := false
 var _prepared_for := ""
 var _pausing := false
 var _boost_sent := false
@@ -81,6 +83,7 @@ func build() -> void:
 	var host := shell.game_host
 	host.run_started.connect(_on_run_started)
 	host.run_finished.connect(_on_run_finished)
+	host.player_device_lost.connect(_on_device_lost)
 
 func _build_hud() -> void:
 	_hud = Control.new()
@@ -91,33 +94,10 @@ func _build_hud() -> void:
 	top.size = Vector2(T.CANVAS.x, 160)
 	_hud.add_child(top)
 
-	var left := W.vbox(8)
-	left.name = "Player"
+	_blocks.clear()
+	var left := _build_player_block(0)
 	left.position = Vector2(T.HUD_MARGIN, T.HUD_TOP)
 	_hud.add_child(left)
-	var tag := W.hbox(12)
-	var square := W.rule(T.PLAYER_ONE)
-	square.custom_minimum_size = Vector2(10, 10)
-	square.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tag.add_child(square)
-	tag.add_child(W.text(t("launcher.game.score"), T.SIZE_SUB, 800, T.PLAYER_ONE, 3))
-	left.add_child(tag)
-	_score = W.text("0", T.SIZE_HUD_SCORE, 900, T.FG, 2, true)
-	_score.name = "Score"
-	_shadow(_score)
-	left.add_child(_score)
-	var vital := W.hbox(12)
-	vital.name = "Vital"
-	left.add_child(vital)
-	_vital_label = W.text("", T.SIZE_SUB, 700, T.FAVORITE, 2)
-	_vital_label.name = "VitalLabel"
-	vital.add_child(_vital_label)
-	_vital_meter = G.Meter.new(VITAL_WIDTH, T.FAVORITE)
-	_vital_meter.name = "VitalMeter"
-	vital.add_child(_vital_meter)
-	_vital_value = W.text("", T.SIZE_SUB, 700, T.FG, 1, true)
-	_vital_value.name = "VitalValue"
-	vital.add_child(_vital_value)
 
 	var centre := W.vbox(6)
 	centre.name = "Centre"
@@ -143,6 +123,10 @@ func _build_hud() -> void:
 	right.offset_top = T.HUD_TOP
 	right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_hud.add_child(right)
+	var second := _build_player_block(1)
+	second.size_flags_horizontal = Control.SIZE_SHRINK_END
+	second.visible = false
+	right.add_child(second)
 	_stats = W.hbox(36)
 	_stats.name = "Stats"
 	_stats.alignment = BoxContainer.ALIGNMENT_END
@@ -151,6 +135,7 @@ func _build_hud() -> void:
 	boss.name = "Boss"
 	boss.alignment = BoxContainer.ALIGNMENT_END
 	var boss_label := W.text(t("launcher.game.boss"), T.SIZE_SUB, 700, T.FAVORITE, 2)
+	boss_label.name = "BossLabel"
 	_shadow(boss_label)
 	boss.add_child(boss_label)
 	_boss_meter = G.Meter.new(BOSS_WIDTH, T.FAVORITE)
@@ -180,6 +165,7 @@ func _build_hud() -> void:
 	_hud.add_child(_bottom_right(corner))
 	var hide := G.HudChip.new(t("launcher.game.hide_hud"), "", In.Y)
 	hide.name = "HideHud"
+	_hide_chip = hide
 	hide.activated.connect(func() -> void: shell.dispatch(In.Y))
 	corner.add_child(hide)
 	var pause := G.HudChip.new(t("launcher.game.hint_pause"), "ESC", In.MENU)
@@ -196,6 +182,55 @@ func _build_hud() -> void:
 	_hud_off.name = "HudOff"
 	_hud_off.visible = false
 	add_child(_hud_off)
+
+## The HUD corner of one player: a coloured tag, the score, the game's vital bar and the game's per-player counters. Player two's is right-aligned and carries a line for when the seat is empty.
+func _build_player_block(slot: int) -> VBoxContainer:
+	var suffix := "" if slot == 0 else str(slot + 1)
+	var color := T.PLAYER_ONE if slot == 0 else T.PLAYER_TWO
+	var end := slot == 1
+	var box := W.vbox(8)
+	box.name = "Player" + suffix
+	var tag := W.hbox(12)
+	tag.alignment = BoxContainer.ALIGNMENT_END if end else BoxContainer.ALIGNMENT_BEGIN
+	var square := W.rule(color)
+	square.custom_minimum_size = Vector2(10, 10)
+	square.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tag.add_child(square)
+	var tag_label := W.text(t("launcher.game.score"), T.SIZE_SUB, 800, color, 3)
+	tag_label.name = "Tag" + suffix
+	_shadow(tag_label)
+	tag.add_child(tag_label)
+	box.add_child(tag)
+	var score := W.text("0", T.SIZE_HUD_SCORE, 900, T.FG, 2, true)
+	score.name = "Score" + suffix
+	score.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if end else HORIZONTAL_ALIGNMENT_LEFT
+	_shadow(score)
+	box.add_child(score)
+	var vital := W.hbox(12)
+	vital.name = "Vital" + suffix
+	vital.alignment = BoxContainer.ALIGNMENT_END if end else BoxContainer.ALIGNMENT_BEGIN
+	box.add_child(vital)
+	var vital_label := W.text("", T.SIZE_SUB, 700, T.FAVORITE, 2)
+	vital_label.name = "VitalLabel" + suffix
+	vital.add_child(vital_label)
+	var vital_meter := G.Meter.new(VITAL_WIDTH, T.FAVORITE)
+	vital_meter.name = "VitalMeter" + suffix
+	vital.add_child(vital_meter)
+	var vital_value := W.text("", T.SIZE_SUB, 700, T.FG, 1, true)
+	vital_value.name = "VitalValue" + suffix
+	vital.add_child(vital_value)
+	var stats := W.hbox(28)
+	stats.name = "PlayerStats" + suffix
+	stats.alignment = BoxContainer.ALIGNMENT_END if end else BoxContainer.ALIGNMENT_BEGIN
+	box.add_child(stats)
+	var hint := W.text("", T.SIZE_SUB, 400, T.fg(T.A_BODY), 2)
+	hint.name = "Hint" + suffix
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if end else HORIZONTAL_ALIGNMENT_LEFT
+	hint.visible = false
+	_shadow(hint)
+	box.add_child(hint)
+	_blocks.append({"root": box, "tag": tag_label, "score": score, "vital": vital, "vital_label": vital_label, "vital_meter": vital_meter, "vital_value": vital_value, "stats": stats, "stat_values": [], "hint": hint})
+	return box
 
 func _bottom_right(box: Control) -> Control:
 	box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -225,7 +260,7 @@ func on_enter(args: Dictionary) -> void:
 	_pausing = false
 	var host := shell.game_host
 	if args.has("game") or not host.is_running():
-		_start(str(args.get("game", game_id)))
+		_start(str(args.get("game", game_id)), int(args.get("players", 0)))
 		return
 	# Back from the pause screen: the same run resumed, or a new one it started with "restart".
 	if _prepared_for != host.game_id():
@@ -245,11 +280,12 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and shell != null and pause_on_focus_loss:
 		open_pause.call_deferred()
 
-func _start(id: String) -> void:
+## Start a run of a game. `players` is the player count; 0 means the one last chosen in the game's menu.
+func _start(id: String, players: int = 0) -> void:
 	game_id = id
 	var entry := LauncherCatalog.by_id(id)
 	var title := LauncherCatalog.text(entry, "name", shell.locale)
-	if not shell.game_host.launch(id, Guide.stored_options(id, shell.store)):
+	if not shell.game_host.launch(id, Guide.stored_options(id, shell.store), players if players > 0 else Guide.stored_players(id, shell.store)):
 		shell.toast(tf("launcher.game.error_fmt", [title if title != "" else id]))
 		shell.go_back.call_deferred()
 		return
@@ -263,6 +299,7 @@ func _prepare(id: String) -> void:
 	game_id = id
 	_prepared_for = id
 	_guide = Guide.of(id)
+	_module = Guide.is_module(id)
 	phase = PHASE_PLAYING
 	_close_result()
 	cursor_at = Vector2(GameSession.STAGE_SIZE) / 2.0
@@ -274,13 +311,27 @@ func _prepare(id: String) -> void:
 	set_footer([])
 	_set_hud_visible(hud_visible)
 
+	# A module's buttons all belong to its players, so the HUD cannot be hidden from a button there.
+	_hide_chip.visible = not _module
 	var vital: Dictionary = _guide.get("vital", {})
-	_vital_label.text = t(str(vital["label"])) if vital.has("label") else ""
-	_vital_label.get_parent().visible = not vital.is_empty()
+	for block in _blocks:
+		(block["vital_label"] as Label).text = Guide.text(vital, "label", shell.locale)
+		(block["vital"] as Control).visible = not vital.is_empty()
+		W.clear(block["stats"])
+		var values: Array = []
+		for stat: Dictionary in _guide.get("player_stats", []):
+			var cell := G.stat_cell(Guide.text(stat, "label", shell.locale), "0", true)
+			cell.name = "PlayerStat_%s" % str(stat["fields"][0])
+			_shadow(cell.get_node("Value"))
+			(block["stats"] as Control).add_child(cell)
+			values.append(cell.get_node("Value"))
+		block["stat_values"] = values
+	var boss: Dictionary = _guide.get("boss", {})
+	(_boss.get_node("BossLabel") as Label).text = Guide.text(boss, "label", shell.locale) if boss.has("label") else t("launcher.game.boss")
 	W.clear(_stats)
 	_stat_values.clear()
 	for stat: Dictionary in _guide.get("stats", []):
-		var cell := G.stat_cell(t(str(stat["label"])), "0", true)
+		var cell := G.stat_cell(Guide.text(stat, "label", shell.locale), "0", true)
 		cell.name = "Stat_%s" % str(stat["fields"][0])
 		_shadow(cell.get_node("Value"))
 		_stats.add_child(cell)
@@ -333,22 +384,21 @@ func _selected_tower(state: Dictionary) -> Dictionary:
 func _sync_hud() -> void:
 	var state := shell.game_host.snapshot()
 	var entry := LauncherCatalog.by_id(game_id)
-	_title.text = "%s · %s" % [LauncherCatalog.text(entry, "name", shell.locale), t("launcher.game.time_left" if Guide.is_countdown(game_id) else "launcher.game.time")]
-	_score.text = LauncherFormat.score(int(state.get("score", 0)))
+	var timed := Guide.has_clock(game_id)
+	_title.text = "%s · %s" % [LauncherCatalog.text(entry, "name", shell.locale), t("launcher.game.time_left" if Guide.is_countdown(game_id) else "launcher.game.time")] if timed else LauncherCatalog.text(entry, "name", shell.locale)
+	_clock.visible = timed
 	_clock.text = Guide.clock_text(game_id, state)
+	for slot in _blocks.size():
+		_sync_block(slot, state)
 
-	var vital: Dictionary = _guide.get("vital", {})
-	if not vital.is_empty():
-		var now := int(state.get(str(vital["field"]), 0))
-		var full := maxi(1, int(state.get(str(vital["max"]), now)))
-		_vital_meter.ratio = float(now) / float(full)
-		_vital_value.text = "%d / %d" % [now, full]
 	var stats: Array = _guide.get("stats", [])
 	for index in mini(stats.size(), _stat_values.size()):
 		_stat_values[index].text = Guide.stat_text(stats[index], state)
-	_boss.visible = state.has("boss_hp")
+	# A game names its boss fields in its manifest; one that does not still gets the bar from the conventional pair.
+	var boss: Dictionary = _guide.get("boss", {"field": "boss_hp", "max": "boss_max_hp"})
+	_boss.visible = state.has(str(boss["field"]))
 	if _boss.visible:
-		_boss_meter.ratio = float(state["boss_hp"]) / maxf(1.0, float(state.get("boss_max_hp", 1)))
+		_boss_meter.ratio = float(state[str(boss["field"])]) / maxf(1.0, float(state.get(str(boss["max"]), 1)))
 
 	var towers := _towers(state)
 	var gold := int(state.get("gold", 0))
@@ -367,12 +417,58 @@ func _sync_hud() -> void:
 	if _shield_chip != null:
 		_sync_shield(state)
 
+## The fields that belong to one player: the snapshot's `players` entry for that slot when the game reports per-player state, nothing otherwise.
+func _player_state(state: Dictionary, slot: int) -> Dictionary:
+	var players: Variant = state.get("players")
+	if players is Array and slot < (players as Array).size() and players[slot] is Dictionary:
+		return players[slot]
+	return {}
+
+## Whether the game on the stage can seat a second player, which is what makes the second HUD corner exist at all.
+func _seats_two() -> bool:
+	return _module and Guide.player_range(game_id).y >= 2
+
+func _sync_block(slot: int, state: Dictionary) -> void:
+	var block := _blocks[slot]
+	var active: Array = state.get("active_players", [0]) if state.get("active_players") is Array else [0]
+	var playing := slot in active
+	var two := _seats_two()
+	var hint: Label = block["hint"]
+	if slot > 0:
+		(block["root"] as Control).visible = two
+		if not two:
+			return
+		hint.visible = not playing
+		hint.text = t("launcher.game.p2_join_hint" if Guide.joins_in_progress(game_id) else "launcher.game.p2_empty")
+	(block["tag"] as Label).text = tf("launcher.game.player_score_fmt", [slot + 1]) if two else t("launcher.game.score")
+	var mine := _player_state(state, slot)
+	# Player one's corner falls back to the run's shared fields, which is all a single-player game reports.
+	var shared := state if slot == 0 else {}
+	var score: Label = block["score"]
+	score.visible = playing and (mine.has("score") or slot == 0)
+	score.text = LauncherFormat.score(int(mine.get("score", shared.get("score", 0))))
+	var vital: Dictionary = _guide.get("vital", {})
+	var vital_row: Control = block["vital"]
+	var has_vital := playing and not vital.is_empty() and (mine.has(str(vital["field"])) or shared.has(str(vital["field"])))
+	vital_row.visible = has_vital
+	if has_vital:
+		var now := int(mine.get(str(vital["field"]), shared.get(str(vital["field"]), 0)))
+		var full := maxi(1, int(mine.get(str(vital["max"]), shared.get(str(vital["max"]), now))))
+		(block["vital_meter"] as LauncherGameWidgets.Meter).ratio = float(now) / float(full)
+		(block["vital_value"] as Label).text = "%d / %d" % [now, full]
+	(block["stats"] as Control).visible = playing
+	var cells: Array = _guide.get("player_stats", [])
+	var values: Array = block["stat_values"]
+	var source := mine if not mine.is_empty() else shared
+	for index in mini(cells.size(), values.size()):
+		(values[index] as Label).text = Guide.stat_text(cells[index], source)
+
 func _sync_shield(state: Dictionary) -> void:
 	var up := int(state.get("shield_hits", 0)) > 0
 	var played := float(state.get("play_seconds", 0.0))
 	# The recharge starts when the shield is spent, not when it is raised.
 	if _shield_was_up and not up:
-		_shield_ready_at = played + Guide.SHIELD_COOLDOWN
+		_shield_ready_at = played + Guide.tuning(game_id, "shield_cooldown", 0.0)
 	_shield_was_up = up
 	var wait := _shield_ready_at - played
 	if up:
@@ -393,6 +489,12 @@ func _set_hud_visible(on: bool) -> void:
 func handle_action(action: StringName) -> bool:
 	if phase == PHASE_RESULT:
 		return _result_action(action)
+	if _module:
+		# Every button but pause belongs to the players. B and Y on a gamepad are game buttons, so only the keyboard's Back (Esc) pauses.
+		var source := shell.action_source()
+		if action == In.MENU or (action == In.BACK and source == LauncherPlayers.SOURCE_KEYBOARD):
+			open_pause(shell.game_host.players.slot_of_source(source))
+		return true
 	match action:
 		In.MENU, In.BACK:
 			open_pause()
@@ -449,8 +551,8 @@ func _use_shield() -> void:
 		return
 	shell.game_host.perform("shield")
 
-## Freeze the run and open the pause screen over it. Does nothing unless a run is being played on this screen.
-func open_pause() -> void:
+## Freeze the run and open the pause screen over it. Does nothing unless a run is being played on this screen. `owner_slot` is the player who paused; with two players only that player's device drives the pause screen. -1 leaves it to anyone.
+func open_pause(owner_slot: int = -1) -> void:
 	var host := shell.game_host
 	if shell.current_screen() != self or phase != PHASE_PLAYING or not host.is_running() or _pausing:
 		return
@@ -458,8 +560,16 @@ func open_pause() -> void:
 		host.perform("boost", {"on": false})
 		_boost_sent = false
 	host.set_paused(true)
+	host.pause_owner = owner_slot
 	_pausing = true
 	shell.go(LauncherRoot.PAUSE)
+
+## A playing slot's gamepad was unplugged: freeze the run and say why. The pause belongs to nobody, so whoever is still connected can pick another device there or carry on.
+func _on_device_lost(slot: int) -> void:
+	if shell.current_screen() != self or phase != PHASE_PLAYING:
+		return
+	open_pause.call_deferred(-1)
+	shell.toast(tf("launcher.game.device_lost_fmt", [slot + 1]))
 
 # ---- result ----
 
@@ -529,7 +639,16 @@ func _show_result(result: Dictionary, record: Dictionary) -> void:
 	column.add_child(cells)
 	cells.add_child(G.stat_cell(t("launcher.game.play_time"), LauncherFormat.clock(float(result.get("play_seconds", 0.0)))))
 	for stat: Dictionary in _guide.get("stats", []):
-		cells.add_child(G.stat_cell(t(str(stat["label"])), Guide.stat_text(stat, result)))
+		cells.add_child(G.stat_cell(Guide.text(stat, "label", shell.locale), Guide.stat_text(stat, result)))
+	# A two-player run that kept a score for each player shows both next to the total.
+	var finishers: Array = result.get("active_players", []) if result.get("active_players") is Array else []
+	if finishers.size() >= 2:
+		for slot: int in finishers:
+			var mine := _player_state(result, slot)
+			if mine.has("score"):
+				var cell := G.stat_cell(tf("launcher.game.player_score_fmt", [slot + 1]), LauncherFormat.score(int(mine["score"])))
+				cell.name = "PlayerScore%d" % (slot + 1)
+				cells.add_child(cell)
 	column.add_child(G.gap(36))
 
 	_result_rows.clear()

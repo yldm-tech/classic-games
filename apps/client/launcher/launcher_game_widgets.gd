@@ -47,12 +47,12 @@ static func gap(height: float) -> Control:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return spacer
 
-## The controls of a game as rows of "what it does · keyboard keys · gamepad buttons", read from LauncherGameGuide and the live InputMap.
-static func controls_table(game_id: String, locale: String, row_height: float = T.PANE_ROW_HEIGHT) -> VBoxContainer:
+## The controls of a game as rows of "what it does · keyboard keys · gamepad buttons", read from LauncherGameGuide and the live InputMap. `scheme` picks the keyboard scheme (1 or 2) whose keys are shown for a game module; a DSL game ignores it.
+static func controls_table(game_id: String, locale: String, row_height: float = T.PANE_ROW_HEIGHT, scheme: int = 1) -> VBoxContainer:
 	var table := W.vbox(0)
 	table.name = "Controls"
 	table.add_child(W.rule(T.fg(0.14)))
-	for control: Dictionary in Guide.controls(game_id):
+	for control: Dictionary in Guide.controls(game_id, scheme):
 		var row := W.hbox(16)
 		row.name = "Control_%s" % control["id"]
 		row.custom_minimum_size = Vector2(0, row_height)

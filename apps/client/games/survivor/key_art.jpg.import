@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://vrjnkauh1dpe"
-path="res://.godot/imported/survivor.jpg-c628e4c1e0ef1c7c1048d079066a0e7e.ctex"
+path="res://.godot/imported/key_art.jpg-79690dd90aca277f9d8c7e616936d224.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://launcher/art/survivor.jpg"
-dest_files=["res://.godot/imported/survivor.jpg-c628e4c1e0ef1c7c1048d079066a0e7e.ctex"]
+source_file="res://games/survivor/key_art.jpg"
+dest_files=["res://.godot/imported/key_art.jpg-79690dd90aca277f9d8c7e616936d224.ctex"]
 
 [params]
 

@@ -3,6 +3,8 @@ extends LauncherScreen
 
 ## The menu of one game, over its key art: start, how to play and controls, records, achievements, the start options its runtime really has, favourite, back. The focused row decides what the pane on the right shows.
 ##
+## A game two can play has a players row right under start (Left / Right or A changes the count, which is remembered per game) and, while two is chosen, one row per player for the device that player uses. The devices live in shell.game_host.players; nothing about them is stored, because gamepad ids do not survive a restart.
+##
 ## Opened with { "game": id }. Records come from LauncherStore.stats, achievements from the catalog and the store, the how-to text, the controls and the options from LauncherGameGuide. A game that was never played says so instead of showing zeros dressed up as records.
 
 const G := preload("res://launcher/launcher_game_widgets.gd")
@@ -14,6 +16,9 @@ const ROW_RECORDS := &"records"
 const ROW_ACHIEVEMENTS := &"achievements"
 const ROW_FAVORITE := &"favorite"
 const ROW_BACK := &"back"
+const ROW_PLAYERS := &"players"
+## A player's device row id is this prefix plus the slot.
+const ROW_DEVICE := "device:"
 ## A start option's row id is this prefix plus the option id.
 const ROW_OPTION := "option:"
 
@@ -104,19 +109,35 @@ func on_enter(args: Dictionary) -> void:
 	if args.has("game") and LauncherCatalog.has(str(args["game"])):
 		game_id = str(args["game"])
 	if not LauncherCatalog.has(game_id):
-		game_id = LauncherCatalog.ids()[0]
+		game_id = LauncherCatalog.first_id()
 	row = 0
+	shell.game_host.players.set_count(player_count())
 	_build_rows()
 	_refresh(false)
+
+## The player count the next run starts with.
+func player_count() -> int:
+	return Guide.stored_players(game_id, shell.store)
+
+func _wanted_rows() -> Array[StringName]:
+	var out: Array[StringName] = [ROW_START]
+	var limits := Guide.player_range(game_id)
+	if limits.y > limits.x:
+		out.append(ROW_PLAYERS)
+	if player_count() >= 2:
+		for slot in player_count():
+			out.append(StringName(ROW_DEVICE + str(slot)))
+	out.append_array([ROW_HOW, ROW_RECORDS, ROW_ACHIEVEMENTS])
+	for option: Dictionary in Guide.options(game_id):
+		out.append(StringName(ROW_OPTION + str(option["id"])))
+	out.append(ROW_FAVORITE)
+	out.append(ROW_BACK)
+	return out
 
 func _build_rows() -> void:
 	W.clear(_menu)
 	_rows.clear()
-	_row_ids = [ROW_START, ROW_HOW, ROW_RECORDS, ROW_ACHIEVEMENTS]
-	for option: Dictionary in Guide.options(game_id):
-		_row_ids.append(StringName(ROW_OPTION + str(option["id"])))
-	_row_ids.append(ROW_FAVORITE)
-	_row_ids.append(ROW_BACK)
+	_row_ids = _wanted_rows()
 	for index in _row_ids.size():
 		var item := C.FocusRow.new("")
 		item.name = "Row_%s" % String(_row_ids[index]).replace(":", "_")
@@ -141,6 +162,10 @@ func _option(id: StringName) -> Dictionary:
 			return option
 	return {}
 
+## The slot of a device row id, -1 for any other row.
+func _device_slot(id: StringName) -> int:
+	return String(id).trim_prefix(ROW_DEVICE).to_int() if String(id).begins_with(ROW_DEVICE) else -1
+
 func _unlocked_count() -> int:
 	var unlocked := shell.store.achievements(game_id)
 	var count := 0
@@ -161,6 +186,12 @@ func _record_line() -> String:
 # ---- rendering ----
 
 func _refresh(animate: bool = true) -> void:
+	# The player count decides which rows exist; when it changed, rebuild them and keep the focus on the row it was on.
+	if _wanted_rows() != _row_ids:
+		var focused := row_id()
+		_build_rows()
+		row = maxi(0, _row_ids.find(focused))
+		animate = false
 	var entry := LauncherCatalog.by_id(game_id)
 	var favorite := shell.store.is_favorite(game_id)
 	_crumb.text = LauncherCatalog.text(entry, "name", shell.locale)
@@ -189,9 +220,15 @@ func _refresh(animate: bool = true) -> void:
 				item.set_text(t("launcher.menu.remove_favorite" if favorite else "launcher.menu.add_favorite"))
 			ROW_BACK:
 				item.set_text(t("launcher.common.back"))
+			ROW_PLAYERS:
+				item.set_text(t("launcher.menu.players"), tf("launcher.menu.players_value_fmt", [player_count()]))
 			_:
-				var option := _option(id)
-				item.set_text(Guide.text(option, "name", shell.locale), tf("launcher.menu.option_value_fmt", [int(options[option["id"]]), (option["values"] as Array).size()]))
+				if _device_slot(id) >= 0:
+					item.set_text(tf("launcher.menu.player_device_fmt", [_device_slot(id) + 1]), Guide.device_label(shell.game_host.players.device(_device_slot(id)), shell.game_host.players, shell.locale))
+				else:
+					var option := _option(id)
+					var value := int(options[option["id"]])
+					item.set_text(Guide.text(option, "name", shell.locale), Guide.option_label(option, value, shell.locale) if option.has("labels") else tf("launcher.menu.option_value_fmt", [value, (option["values"] as Array).size()]))
 		item.set_focused(index == row, animate)
 	_build_pane()
 	_sync_footer()
@@ -224,6 +261,13 @@ func _build_pane() -> void:
 			_pane.add_child(_paragraph(Guide.text(Guide.of(game_id), "how", shell.locale)))
 			_pane.add_child(G.gap(22))
 			_pane.add_child(G.controls_table(game_id, shell.locale, 52.0))
+			if Guide.is_module(game_id):
+				var note := W.text(t("launcher.menu.controls_note_two" if player_count() >= 2 else "launcher.menu.controls_note_solo"), T.SIZE_SUB, 400, T.fg(T.A_MUTED), 1)
+				note.name = "ControlsNote"
+				note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				note.custom_minimum_size = Vector2(PANE_WIDTH, 0)
+				_pane.add_child(G.gap(14))
+				_pane.add_child(note)
 		ROW_RECORDS:
 			_pane_header(t("launcher.menu.records"))
 			_build_records()
@@ -252,7 +296,12 @@ func _build_pane() -> void:
 				["time", t("launcher.menu.play_time"), LauncherFormat.play_time(float(stats["play_seconds"]), shell.locale) if played else t("launcher.menu.none")],
 				["achievements", t("launcher.menu.achievements"), "%d / %d" % [_unlocked_count(), _achievement_total()]],
 			]))
+		ROW_PLAYERS:
+			_build_players_pane()
 		_:
+			if _device_slot(_pane_for) >= 0:
+				_build_device_pane(_device_slot(_pane_for))
+				return
 			var option := _option(_pane_for)
 			_pane_header(Guide.text(option, "name", shell.locale))
 			_pane.add_child(_paragraph(Guide.text(option, "note", shell.locale)))
@@ -262,12 +311,83 @@ func _build_pane() -> void:
 			var chips := W.hbox(10)
 			chips.name = "OptionValues"
 			for value: int in values:
-				var chip := G.HudChip.new(str(value), t("launcher.menu.default") if value == int(option["default"]) else "")
+				var chip := G.HudChip.new(Guide.option_label(option, value, shell.locale), t("launcher.menu.default") if value == int(option["default"]) else "")
 				chip.name = "Value_%d" % value
 				chip.set_state(value == current)
 				chip.activated.connect(func() -> void: _set_option(option, value))
 				chips.add_child(chip)
 			_pane.add_child(chips)
+
+## The players pane: the count as chips, then who plays on what.
+func _build_players_pane() -> void:
+	_pane_header(t("launcher.menu.players"))
+	_pane.add_child(_paragraph(t("launcher.menu.players_note_join" if Guide.joins_in_progress(game_id) else "launcher.menu.players_note")))
+	_pane.add_child(G.gap(22))
+	var limits := Guide.player_range(game_id)
+	var chips := W.hbox(10)
+	chips.name = "PlayerCounts"
+	for count in range(limits.x, limits.y + 1):
+		var chip := G.HudChip.new(tf("launcher.menu.players_value_fmt", [count]), "")
+		chip.name = "Players_%d" % count
+		chip.set_state(count == player_count())
+		chip.activated.connect(func() -> void: _set_players(count))
+		chips.add_child(chip)
+	_pane.add_child(chips)
+	_pane.add_child(G.gap(26))
+	var players := shell.game_host.players
+	if player_count() < 2:
+		var solo := _paragraph(t("launcher.menu.players_solo"))
+		solo.name = "SoloDevices"
+		_pane.add_child(solo)
+		return
+	for slot in player_count():
+		var line := W.hbox(14)
+		line.name = "Seat%d" % slot
+		line.custom_minimum_size = Vector2(0, 44)
+		var square := W.rule(T.PLAYER_ONE if slot == 0 else T.PLAYER_TWO)
+		square.custom_minimum_size = Vector2(10, 10)
+		square.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(square)
+		var who := W.text("P%d" % (slot + 1), T.SIZE_PANE_ROW, 800, T.FG, 2, true)
+		who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(who)
+		var what := W.text(Guide.device_label(players.device(slot), players, shell.locale), T.SIZE_PANE_ROW, 400, T.fg(T.A_STRONG), 1)
+		what.name = "Device"
+		what.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		line.add_child(what)
+		_pane.add_child(line)
+		_pane.add_child(W.rule(T.fg(T.A_HAIRLINE)))
+
+## The pane of one player's device row: every device that player could use, the current one marked, and that scheme's keys.
+func _build_device_pane(slot: int) -> void:
+	var players := shell.game_host.players
+	_pane_header(tf("launcher.menu.player_device_fmt", [slot + 1]))
+	_pane.add_child(_paragraph(t("launcher.menu.device_note")))
+	_pane.add_child(G.gap(22))
+	var chips := W.hbox(10)
+	chips.name = "Devices"
+	for device in players.available_devices():
+		var chip := G.HudChip.new(Guide.device_label(device, players, shell.locale), "")
+		chip.name = "Device_%s" % device.replace(":", "_")
+		chip.set_state(device == players.device(slot))
+		chip.activated.connect(func() -> void:
+			players.set_device(slot, device)
+			_refresh())
+		chips.add_child(chip)
+	_pane.add_child(chips)
+	if players.device(slot).begins_with(LauncherPlayers.PAD_PREFIX):
+		return
+	_pane.add_child(G.gap(22))
+	_pane.add_child(G.controls_table(game_id, shell.locale, T.PANE_ROW_COMPACT, 2 if players.device(slot) == LauncherPlayers.KEYBOARD_2 else 1))
+
+func _set_players(count: int) -> void:
+	var limits := Guide.player_range(game_id)
+	var wanted := clampi(count, limits.x, limits.y)
+	shell.game_host.players.set_count(wanted)
+	if wanted == player_count():
+		return
+	# The store announces the change and the screen refreshes from that.
+	shell.store.set_setting(Guide.players_key(game_id), wanted)
 
 func _build_records() -> void:
 	var stats := shell.store.stats(game_id)
@@ -353,7 +473,14 @@ func _activate() -> void:
 			shell.go_back()
 		ROW_HOW, ROW_RECORDS:
 			pass
+		ROW_PLAYERS:
+			var limits := Guide.player_range(game_id)
+			_set_players(limits.x if player_count() >= limits.y else player_count() + 1)
 		_:
+			if _device_slot(row_id()) >= 0:
+				shell.game_host.players.cycle_device(_device_slot(row_id()), 1)
+				_refresh()
+				return
 			# Accept walks through the values and wraps, so the option is fully usable with one button.
 			var option := _option(row_id())
 			var values: Array = option["values"]
@@ -361,6 +488,13 @@ func _activate() -> void:
 			_set_option(option, int(values[(values.find(current) + 1) % values.size()]))
 
 func _step_option(step: int) -> void:
+	if row_id() == ROW_PLAYERS:
+		_set_players(player_count() + step)
+		return
+	if _device_slot(row_id()) >= 0:
+		shell.game_host.players.cycle_device(_device_slot(row_id()), step)
+		_refresh()
+		return
 	var option := _option(row_id())
 	if option.is_empty():
 		return

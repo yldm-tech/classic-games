@@ -98,7 +98,7 @@ func _test_focus() -> void:
 	shell.go(&"settings")
 	var screen := shell.current_screen() as LauncherSettingsScreen
 	_check("the settings tab opens the settings screen with the navigation", screen != null and shell.find_child("Nav", false, false).visible and shell.find_child("Tab_settings", true, false).selected and shell.backdrop_layer() == &"blur")
-	_check("it lists the six categories in order", _category_labels(screen) == PackedStringArray(["常规", "画面", "声音", "控制", "存档", "关于"]))
+	_check("it lists the seven categories in order", _category_labels(screen) == PackedStringArray(["常规", "画面", "声音", "控制", "玩家按键", "存档", "关于"]))
 	_check("focus starts on the first category with no row focused", screen.zone == &"categories" and screen.category == 0 and screen.find_child("Category_general", true, false).focused and not _row(screen, "lang").focused and screen.find_child("Title", true, false).text == "常规")
 	_check("the help panel describes the category", screen.find_child("HelpTitle", true, false).text == "常规" and screen.help_text() == "语言、时钟和启动时进入的模式。")
 	_check("the footer offers select, restore and back", screen.footer_captions() == PackedStringArray(["选择", "恢复本页默认", "返回"]))
@@ -111,10 +111,10 @@ func _test_focus() -> void:
 	_check("the category list stops at its ends", screen.category == 0)
 	for i in 8:
 		shell.dispatch(In.DOWN)
-	_check("and at the last one", screen.category == 5 and _row_ids(screen) == ["version", "engine", "license", "art", "repo"])
+	_check("and at the last one", screen.category == 6 and _row_ids(screen) == ["version", "engine", "license", "art", "repo", "games"])
 	_check("a page with nothing to restore has no restore hint", screen.footer_captions() == PackedStringArray(["选择", "返回"]))
 	screen.find_child("Category_audio", true, false).hovered.emit()
-	_check("hovering a category selects it", screen.category == 2 and _row_ids(screen) == ["volume_master", "volume_music", "audio_mute"])
+	_check("hovering a category selects it", screen.category == 2 and _row_ids(screen) == ["volume_master", "volume_music", "volume_sfx", "audio_mute"])
 	screen.find_child("Category_general", true, false).activated.emit()
 	_check("clicking a category selects it", screen.category == 0 and screen.zone == &"categories")
 
@@ -225,6 +225,7 @@ func _test_toggle_rows() -> void:
 
 	shell.go(&"settings", {"category": "audio"})
 	shell.dispatch(In.RIGHT)
+	shell.dispatch(In.DOWN)
 	shell.dispatch(In.DOWN)
 	shell.dispatch(In.DOWN)
 	shell.dispatch(In.ACCEPT)
@@ -425,7 +426,7 @@ func _test_binding_persistence_and_reset() -> void:
 	shell.go(&"settings", {"category": "controls"})
 	var screen := shell.current_screen() as LauncherSettingsScreen
 	screen.begin_capture(In.MENU)
-	screen.capture_key(KEY_O)
+	screen.capture_key(KEY_N)
 	screen.begin_capture(In.DOWN)
 	screen.capture_key(KEY_S)
 	shell.free()
@@ -434,10 +435,10 @@ func _test_binding_persistence_and_reset() -> void:
 
 	shell = _boot(_reload())
 	await _frames(2)
-	_check("rebound keys are applied again at the next start", In.keycodes(In.MENU) == [KEY_O] and In.keycodes(In.DOWN) == [KEY_S] and In.pressed_action(_key(KEY_S)) == In.DOWN)
+	_check("rebound keys are applied again at the next start", In.keycodes(In.MENU) == [KEY_N] and In.keycodes(In.DOWN) == [KEY_S] and In.pressed_action(_key(KEY_S)) == In.DOWN)
 	shell.go(&"settings", {"category": "controls"})
 	screen = shell.current_screen() as LauncherSettingsScreen
-	_check("and shown", _row(screen, "bind_menu").value_text() == "O" and _row(screen, "bind_down").value_text() == "S")
+	_check("and shown", _row(screen, "bind_menu").value_text() == "N" and _row(screen, "bind_down").value_text() == "S")
 	shell.dispatch(In.RIGHT)
 	for i in 12:
 		shell.dispatch(In.DOWN)
@@ -461,7 +462,7 @@ func _test_binding_persistence_and_reset() -> void:
 	_check("X restores the default keys and says so", shell.store.bindings().is_empty() and In.keycodes(In.MENU) == [KEY_M] and In.keycodes(In.DOWN) == [KEY_DOWN] and _row(screen, "bind_menu").value_text() == "M" and shell.toast_text() == "已恢复默认按键" and shell.can_undo())
 	_check("the defaults are on disk", _reload().bindings().is_empty())
 	shell.undo()
-	_check("undo brings the custom keys back", In.keycodes(In.MENU) == [KEY_O] and In.keycodes(In.DOWN) == [KEY_S] and shell.store.bindings() == {"launcher_menu": [KEY_O], "launcher_down": [KEY_S]} and _row(screen, "bind_menu").value_text() == "O")
+	_check("undo brings the custom keys back", In.keycodes(In.MENU) == [KEY_N] and In.keycodes(In.DOWN) == [KEY_S] and shell.store.bindings() == {"launcher_menu": [KEY_N], "launcher_down": [KEY_S]} and _row(screen, "bind_menu").value_text() == "N")
 	shell.free()
 	_reset_engine()
 
@@ -563,7 +564,7 @@ func _test_about_and_english() -> void:
 	await _frames(2)
 	shell.go(&"settings", {"category": "about"})
 	var screen := shell.current_screen() as LauncherSettingsScreen
-	_check("the categories are in English", _category_labels(screen) == PackedStringArray(["General", "Display", "Audio", "Controls", "Saves", "About"]))
+	_check("the categories are in English", _category_labels(screen) == PackedStringArray(["General", "Display", "Audio", "Controls", "Player keys", "Saves", "About"]))
 	_check("about shows the project version from the project settings", _row(screen, "version").value_text() == str(ProjectSettings.get_setting("application/config/version")) and _row(screen, "version").value_text() != "")
 	_check("about shows the running engine version", _row(screen, "engine").value_text() == "Godot " + str(Engine.get_version_info()["string"]))
 	_check("about names the licence, the key art's origin and the repository", _row(screen, "license").value_text() == "Apache-2.0" and _row(screen, "art").value_text() == "AI-generated" and _row(screen, "repo").value_text() == "github.com/yldm-tech/classic-games")

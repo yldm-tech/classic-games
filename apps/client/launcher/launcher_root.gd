@@ -93,6 +93,9 @@ var _view_held := -1.0
 ## The direction a gamepad is holding (&"" for none) and the seconds until it fires again.
 var _repeat_action := &""
 var _repeat_wait := 0.0
+## Where the action being dispatched came from (LauncherPlayers.SOURCE_KEYBOARD or "pad:<device id>"), and where the repeating direction came from.
+var _source := LauncherPlayers.SOURCE_KEYBOARD
+var _repeat_source := LauncherPlayers.SOURCE_KEYBOARD
 
 func _ready() -> void:
 	name = "LauncherRoot"
@@ -107,6 +110,7 @@ func _ready() -> void:
 	_build_layers()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	go(HOME)
+	_report_catalog_problems()
 	if _pc_script == null:
 		_pc_script = load(PC_MODE_SCRIPT)
 	if str(store.setting(SETTING_DEFAULT_MODE, MODE_CONSOLE)) == MODE_PC:
@@ -128,11 +132,25 @@ func tf(key: String, args: Array) -> String:
 func now() -> int:
 	return now_provider.call()
 
+## Where the action a screen is handling right now came from: LauncherPlayers.SOURCE_KEYBOARD (keys, the mouse, a dispatch from code) or "pad:<device id>". Only meaningful inside handle_action.
+func action_source() -> String:
+	return _source
+
+## A game whose manifest is invalid is left out of the catalog; say so once at start instead of failing silently. Settings > About lists the details.
+func _report_catalog_problems() -> void:
+	var problems := LauncherCatalog.problems()
+	if problems.is_empty():
+		return
+	for problem in problems:
+		push_warning("launcher: game \"%s\" is not offered: %s" % [problem["id"], "; ".join(problem["errors"] as PackedStringArray)])
+	toast(tf("launcher.catalog.problems_fmt", [problems.size(), str(problems[0]["id"]), str((problems[0]["errors"] as PackedStringArray)[0])]))
+
 ## Change the interface language ("zh" or "en"), remember it, and rebuild every screen in it.
 func set_locale(value: String) -> void:
 	if value == locale or not value in Strings.LOCALES:
 		return
 	locale = value
+	game_host.locale = value
 	store.set_setting("lang", value)
 	var shown := current_id()
 	if _current != null:
@@ -345,8 +363,13 @@ func toggle_pc_mode() -> void:
 # ---- input ----
 
 func _unhandled_input(event: InputEvent) -> void:
+	# A live game module reads its players from the same events, before they are looked at as launcher actions. Nothing is consumed here, so pause still works.
+	if mode == MODE_CONSOLE and current_id() == GAME:
+		game_host.feed_event(event)
+	_source = LauncherPlayers.source_of(event)
 	if event is InputEventJoypadMotion:
 		_route_axis(event)
+		_source = LauncherPlayers.SOURCE_KEYBOARD
 		return
 	var action := In.pressed_action(event)
 	if action != &"":
@@ -362,6 +385,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_view_held = -1.0
 		if event is InputEventJoypadButton:
 			_stop_repeat(released)
+	_source = LauncherPlayers.SOURCE_KEYBOARD
 
 ## A stick or trigger counts as one press when it crosses the deadzone, not once per motion event.
 func _route_axis(event: InputEventJoypadMotion) -> void:
@@ -381,6 +405,7 @@ func _route_axis(event: InputEventJoypadMotion) -> void:
 ## A direction pressed on the d-pad or a stick starts repeating after In.REPEAT_DELAY; _process fires it every In.REPEAT_INTERVAL until it is released. Keyboard keys repeat through the OS's own echo events instead.
 func _start_repeat(action: StringName) -> void:
 	if action in In.REPEATING:
+		_repeat_source = _source
 		_repeat_action = action
 		_repeat_wait = In.REPEAT_DELAY
 
@@ -392,6 +417,8 @@ func _notification(what: int) -> void:
 	# A release that happens while the window is not focused never arrives, so a held direction must not keep firing.
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_repeat_action = &""
+		if game_host != null:
+			game_host.release_controls()
 
 func _process(delta: float) -> void:
 	if _view_held >= 0.0:
@@ -404,7 +431,9 @@ func _process(delta: float) -> void:
 		# At most one repeat per frame, so a long frame cannot turn into a burst of moves.
 		if _repeat_wait <= 0.0:
 			_repeat_wait = In.REPEAT_INTERVAL
+			_source = _repeat_source
 			dispatch(_repeat_action)
+			_source = LauncherPlayers.SOURCE_KEYBOARD
 
 ## The single entry point for input: every key, gamepad press and footer-hint click arrives here as a LauncherInput action. Order: PC-mode toggle, PC mode's own handler, toast undo, the current screen, then the shell defaults (tab switching and back).
 func dispatch(action: StringName) -> void:
@@ -470,6 +499,7 @@ func _build_layers() -> void:
 
 	game_host = LauncherGameHost.new()
 	game_host.store = store
+	game_host.locale = locale
 	game_host.now_provider = func() -> int: return now()
 	game_host.visible = false
 	add_child(game_host)
@@ -615,6 +645,7 @@ func refresh_clock() -> void:
 
 func _on_joy_connection_changed(_device: int, _connected: bool) -> void:
 	_repeat_action = &""
+	game_host.pads_changed()
 	var count := Input.get_connected_joypads().size()
 	_gamepad_icon.visible = count > 0
 	_gamepad_icon.tooltip_text = tf("launcher.nav.gamepads_fmt", [count])

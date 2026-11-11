@@ -1,0 +1,46 @@
+{
+	"schema": 1,
+	"id": "shooter",
+	"kind": "dsl",
+	"runtime": "shooter@1.0.0",
+	"name": {"zh": "星环巡航", "en": "ORBIT PATROL"},
+	"initials": "xhxh",
+	"genre": {"zh": "飞行射击", "en": "ARENA SHOOTER"},
+	"tagline": {"zh": "清空这片星域，再击落守在尽头的机甲。", "en": "Clear the sector, then bring down the mech that guards it."},
+	"players": {"min": 1, "max": 1},
+	"colors": {"title": "EAF4FF", "shadow": "2456C8", "glow": "5AA0FF"},
+	"art": {"motif": "orbit", "top": "020413", "bottom": "0C1F4A", "primary": "5AA0FF", "secondary": "FFC857", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_sortie", "icon": "bolt", "name": {"zh": "首次出击", "en": "First Sortie"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "sector_clear", "icon": "cup", "name": {"zh": "星域肃清", "en": "Sector Clear"}, "desc": {"zh": "击落全部敌机与首领。", "en": "Destroy every enemy and the boss."}, "when": {"cleared": true}},
+		{"id": "high_score", "icon": "star", "name": {"zh": "两千分", "en": "Two Thousand"}, "desc": {"zh": "单局得分达到 2,000。", "en": "Score 2,000 in a single run."}, "when": {"min": {"score": 2000}}}
+	],
+	"how": {
+		"zh": "武器自动开火，你只管走位。击落全部敌机和首领即通关；生命归零或倒计时结束，本局结束。按住加速时移动更快，击落得分翻倍。护盾抵消下一次伤害，用过后需要冷却。",
+		"en": "The weapon fires by itself; you fly. Destroy every enemy and the boss to clear. The run ends when your HP reaches zero or the countdown runs out. Holding boost makes you faster and doubles the score of each kill. The shield absorbs the next hit and then needs to recharge."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "移动", "en": "Move"}, "actions": ["ui_up", "ui_down", "ui_left", "ui_right"], "glyphs": [], "pad": {"zh": "左摇杆 / 十字键", "en": "Left stick / D-pad"}, "performs": ["move"]},
+		{"id": "boost", "name": {"zh": "加速（按住）", "en": "Boost (hold)"}, "actions": ["launcher_accept"], "glyphs": ["launcher_accept"], "performs": ["boost"]},
+		{"id": "shield", "name": {"zh": "护盾", "en": "Shield"}, "actions": ["launcher_x"], "glyphs": ["launcher_x"], "performs": ["shield"]},
+		{"id": "hud", "name": {"zh": "显示 / 隐藏界面", "en": "Show / hide HUD"}, "actions": ["launcher_y"], "glyphs": ["launcher_y"]},
+		{"id": "pause", "name": {"zh": "暂停", "en": "Pause"}, "actions": ["launcher_menu", "launcher_back"], "glyphs": ["launcher_menu", "launcher_back"]}
+	],
+	"hud": {
+		"clock": {"mode": "countdown", "field": "time_left"},
+		"vital": {"field": "hp", "max": "max_hp", "label": {"zh": "生命", "en": "HP"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp"},
+		"stats": [{"label": {"zh": "剩余敌机", "en": "Enemies left"}, "fields": ["enemy_left", "enemy_total"]}]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "每高一级，敌机的速度和耐久各提高四分之一个基准值。首领不受影响。", "en": "Each level adds a quarter of the base value to enemy speed and durability. The boss is not affected."},
+			"path": "/stage/difficulty",
+			"values": [1, 2, 3, 4, 5],
+			"default": 2
+		}
+	],
+	"tuning": {"shield_cooldown": 10}
+}

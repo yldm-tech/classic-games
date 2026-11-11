@@ -2,9 +2,8 @@ class_name LauncherKeyArt
 extends Control
 
 ## Key art of one game, cover-fitted into this control. It is the only place that knows where a game's picture comes from.
-## Real art replaces the placeholder per game id by adding `res://launcher/art/<game id>.jpg` (16:9): texture_for() finds it and nothing else changes. Until then a procedural placeholder is drawn from the catalog entry's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
+## A game ships its picture in its own directory and names it in its manifest (`art.image`, 16:9): texture_for() finds it through the catalog and nothing else changes. A game without one gets a procedural placeholder drawn from its manifest's `art` palette. The placeholders are abstract shapes authored here, not a rendition of any existing artwork.
 
-const ART_PATH := "res://launcher/art/%s.jpg"
 ## Reference frame the placeholders are authored in; it is scaled to cover the control like a background image.
 const FRAME := Vector2(1600, 900)
 
@@ -29,8 +28,8 @@ func _notification(what: int) -> void:
 
 ## The finished key art of a game, or null while it only has the procedural placeholder.
 static func texture_for(id: String) -> Texture2D:
-	var path := ART_PATH % id
-	if id == "" or not ResourceLoader.exists(path):
+	var path := str((LauncherCatalog.by_id(id).get("art", {}) as Dictionary).get("image_path", ""))
+	if path == "" or not ResourceLoader.exists(path):
 		return null
 	return load(path) as Texture2D
 

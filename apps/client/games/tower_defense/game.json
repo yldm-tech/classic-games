@@ -1,0 +1,47 @@
+{
+	"schema": 1,
+	"id": "tower_defense",
+	"kind": "dsl",
+	"runtime": "tower_defense@1.0.0",
+	"name": {"zh": "隘口守卫", "en": "GATEWATCH"},
+	"initials": "aksw",
+	"genre": {"zh": "塔防", "en": "TOWER DEFENSE"},
+	"tagline": {"zh": "沿路布下箭塔与炮台，别让一个敌人走到终点。", "en": "Line the road with towers and let nothing reach the end."},
+	"players": {"min": 1, "max": 1},
+	"colors": {"title": "FFE9C2", "shadow": "B4561E", "glow": "FFAA50"},
+	"art": {"motif": "road", "top": "140B1E", "bottom": "5A2B1C", "primary": "FFAA50", "secondary": "67E8F9", "image": "key_art.jpg"},
+	"achievements": [
+		{"id": "first_defense", "icon": "bolt", "name": {"zh": "初次布防", "en": "First Defense"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "gate_held", "icon": "cup", "name": {"zh": "守住隘口", "en": "Gate Held"}, "desc": {"zh": "挡下全部波次。", "en": "Stop every wave."}, "when": {"cleared": true}},
+		{"id": "untouched", "icon": "shield", "name": {"zh": "滴水不漏", "en": "Watertight"}, "desc": {"zh": "通关时基地未失一点生命。", "en": "Clear with the base at full health."}, "when": {"cleared": true, "min": {"base_hp": 20}}},
+		{"id": "full_sweep", "icon": "star", "name": {"zh": "一个不留", "en": "Full Sweep"}, "desc": {"zh": "单局击倒 27 个敌人。", "en": "Defeat 27 enemies in a single run."}, "when": {"min": {"kills": 27}}}
+	],
+	"how": {
+		"zh": "敌人沿道路走向终点，每漏过一个，基地就掉血。用金币在任意位置放塔，击倒敌人可以拿回金币。挡下全部波次即通关；基地生命归零则失败。",
+		"en": "Enemies walk the road to its end, and each one that gets through damages the base. Spend gold to place towers anywhere; defeating enemies earns gold back. Stop every wave to clear; you lose when the base's HP reaches zero."
+	},
+	"controls": [
+		{"id": "cursor", "name": {"zh": "移动准星", "en": "Move cursor"}, "actions": ["launcher_up", "launcher_down", "launcher_left", "launcher_right"], "glyphs": [], "pad": {"zh": "左摇杆 / 十字键", "en": "Left stick / D-pad"}, "mouse": {"zh": "移动鼠标", "en": "Mouse"}},
+		{"id": "place", "name": {"zh": "放置防御塔", "en": "Place tower"}, "actions": ["launcher_accept"], "glyphs": ["launcher_accept"], "mouse": {"zh": "左键", "en": "Click"}, "performs": ["place_tower"]},
+		{"id": "tower", "name": {"zh": "切换防御塔", "en": "Change tower"}, "actions": ["launcher_lb", "launcher_rb", "launcher_x"], "glyphs": ["launcher_lb", "launcher_rb", "launcher_x"]},
+		{"id": "hud", "name": {"zh": "显示 / 隐藏界面", "en": "Show / hide HUD"}, "actions": ["launcher_y"], "glyphs": ["launcher_y"]},
+		{"id": "pause", "name": {"zh": "暂停", "en": "Pause"}, "actions": ["launcher_menu", "launcher_back"], "glyphs": ["launcher_menu", "launcher_back"]}
+	],
+	"hud": {
+		"clock": {"mode": "elapsed", "field": "play_seconds"},
+		"vital": {"field": "base_hp", "max": "base_hp_max", "label": {"zh": "基地", "en": "Base"}},
+		"stats": [
+			{"label": {"zh": "波次", "en": "Wave"}, "fields": ["current_wave", "wave_count"]},
+			{"label": {"zh": "金币", "en": "Gold"}, "fields": ["gold"]},
+			{"label": {"zh": "击倒", "en": "Defeated"}, "fields": ["kills"]}
+		]
+	},
+	"options": [],
+	"towers": {
+		"arrow": {"name": {"zh": "箭塔", "en": "Arrow"}, "note": {"zh": "单体攻击，便宜", "en": "Single target, cheap"}},
+		"cannon": {"name": {"zh": "炮塔", "en": "Cannon"}, "note": {"zh": "爆炸波及周围敌人", "en": "Splash damage"}},
+		"frost": {"name": {"zh": "冰霜塔", "en": "Frost"}, "note": {"zh": "命中后减速", "en": "Slows on hit"}},
+		"laser": {"name": {"zh": "激光塔", "en": "Laser"}, "note": {"zh": "射程远，出手快", "en": "Long range, fast"}},
+		"tesla": {"name": {"zh": "电塔", "en": "Tesla"}, "note": {"zh": "电弧连锁两个敌人", "en": "Chains to two more"}}
+	}
+}
