@@ -134,7 +134,7 @@ func step(game: Node2D, pad: GameInput, delta: float, control: bool) -> void:
 		throw_wait = THROW_DELAY
 		throw_pose = 0.16
 		var lob := pad.is_down(GameInput.UP)
-		var velocity := Vector2(float(facing) * 130.0, -265.0) if lob else Vector2(float(facing) * 240.0, -60.0)
+		var velocity := Vector2(float(facing) * 130.0, -320.0) if lob else Vector2(float(facing) * 240.0, -60.0)
 		velocity.x += vel.x * 0.35
 		game.spawn_shot(hand(), velocity, 520.0 if lob else 380.0)
 

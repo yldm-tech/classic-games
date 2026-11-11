@@ -8,8 +8,8 @@ const World := preload("res://games/ember_trail/world.gd")
 const ARENA_LEFT := 28.0
 const ARENA_RIGHT := 516.0
 const FLOOR := 224.0
-const TOAD_HP := 14
-const OWL_HP := 16
+const TOAD_HP := 36
+const OWL_HP := 30
 
 static func make(kind: String, hp_scale: float) -> RefCounted:
 	var boss := Creature.new()

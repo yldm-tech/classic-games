@@ -22,9 +22,9 @@ const GEYSER_ERUPT := 2.3
 const GEYSER_HEIGHT := 54.0
 ## Per difficulty: lives, continues, flame lost per second, flame lost per hit, boss health factor.
 const DIFFICULTY := {
-	1: {"lives": 5, "continues": 3, "drain": 1.3, "hurt": 15.0, "boss": 0.75},
-	2: {"lives": 3, "continues": 2, "drain": 1.8, "hurt": 22.0, "boss": 1.0},
-	3: {"lives": 2, "continues": 1, "drain": 2.3, "hurt": 30.0, "boss": 1.3},
+	1: {"lives": 5, "continues": 3, "drain": 1.2, "hurt": 15.0, "boss": 0.75},
+	2: {"lives": 3, "continues": 2, "drain": 1.6, "hurt": 22.0, "boss": 1.0},
+	3: {"lives": 2, "continues": 1, "drain": 2.1, "hurt": 30.0, "boss": 1.3},
 }
 
 var difficulty := 2
