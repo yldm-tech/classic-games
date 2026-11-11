@@ -1,6 +1,6 @@
 extends Node2D
 
-## Draws the world of Crate Crew and owns everything that is only for the eye: which painted frame a squirrel shows, where the thing it carries rests on its paws, squash and stretch, shadows, particles, screen shake, flashes, floating points and the banners. It reads the simulation and never changes it; its own randomness comes from a private generator so the game's seeded sequence is untouched. All art is loaded from art/ once; positions are stage pixels and every sprite stands on the unchanged collision boxes of world.gd. The squirrels are painted larger than their 10 x 14 box: feet on its bottom edge, body on its middle, head, ears and tail above and behind it.
+## Draws Crate Crew and owns everything that is only for the eye: the map between levels, the painted places in two layers of depth, which frame a squirrel shows and where the thing it carries rests on its paws, squash and stretch, shadows, particles, screen shake, flashes, floating points, the tells of the bosses and the banners. It reads the simulation and never changes it; its own randomness comes from a private generator so the game's seeded sequence is untouched. All art is loaded from art/ once; positions are stage pixels and every sprite stands on the unchanged collision boxes of world.gd. The squirrels are painted larger than their 10 x 14 box: feet on its bottom edge, body on its middle, head, ears and tail above and behind it.
 
 const World := preload("res://games/crate_crew/world.gd")
 const Foes := preload("res://games/crate_crew/foes.gd")
@@ -12,7 +12,7 @@ const Rng := preload("res://games/shared/game_rng.gd")
 const ART := "res://games/crate_crew/art/"
 const VIEW := Vector2(384, 216)
 const TILE := 16.0
-const MAX_PARTICLES := 220
+const MAX_PARTICLES := 240
 const MAX_PENDING := 96
 const HERO_COLORS := [Color("5fd4c4"), Color("f5a340")]
 ## The actions a squirrel atlas holds as numbered frames ("run_0", "run_1" ...), cut from short clips of the squirrel moving, and the single pictures beside them.
@@ -23,38 +23,44 @@ const HERO_CARRIES := ["lift", "carry", "carry_run", "duck", "hide"]
 ## Stage pixels one cycle of a run covers when an atlas does not say: the legs turn with the distance run, so the feet do not slide.
 const STRIDE_DEFAULT := 28.0
 ## How long the pick-up plays, which first part of it brings the load from where it stood into the paws, and how long something let go takes to settle from the paws onto the path the simulation gives it.
-const LIFT_SPAN := 0.3
-const GRIP := 0.3
-const DRIFT_SPAN := 0.12
+const LIFT_SPAN := 0.22
+const GRIP := 0.35
+const DRIFT_SPAN := 0.1
 ## How long the throw, the landing, the crouch under a crate and the recoil play. The recoil is as long as the simulation stuns.
-const THROW_SPAN := 0.34
-const LAND_SPAN := 0.26
-const DUCK_SPAN := 0.16
-const HURT_SPAN := 0.32
+const THROW_SPAN := 0.26
+const LAND_SPAN := 0.18
+const DUCK_SPAN := 0.12
+const HURT_SPAN := 0.3
 ## The turn on the heel, the lean into a start and the lean back out of a stop.
-const TURN_SPAN := 0.11
-const START_SPAN := 0.16
-const STOP_SPAN := 0.14
+const TURN_SPAN := 0.08
+const START_SPAN := 0.12
+const STOP_SPAN := 0.1
 ## A carried thing sinks this far into the paws, so the fingers lie over its bottom edge.
 const HOLD_SINK := 0.4
 ## Where a carried thing rests when a frame names no spot of its own, from the feet.
 const HOLD_DEFAULT := Vector2(0.0, -22.0)
-## The pictures of the two pick-ups the simulation still calls by their old names.
-const PICKUP_FRAMES := {"battery": "acorn", "core": "golden_acorn"}
 ## The white silhouette laid over a sprite that was just hit.
 const FLASH_SHADER := "shader_type canvas_item;\nvoid fragment() {\n\tCOLOR = vec4(1.0, 1.0, 1.0, texture(TEXTURE, UV).a * 0.85);\n}\n"
 ## The painted ground texture covers this many cells each way, so no single cell repeats beside itself.
 const FILL_CELLS := 4
-const BACK_SIZE := Vector2(480, 270)
+const FAR_SIZE := Vector2(480, 270)
 const MOTES := 30
+## The file names of the places' pictures.
+const ART_NAMES := {"kitchen": "kitchen", "toyshop": "toys", "sewer": "sewer", "treehouse": "tree"}
+## Every frame the enemy, boss and prop atlases must hold.
+const FOE_FRAMES := ["ant", "fly", "shaker", "mouse", "jack", "plane", "rat", "frog", "slime", "worm", "hornet", "spider"]
+const BOSS_FRAMES := ["toaster_idle", "toaster_pop", "toaster_crouch", "toaster_hurt", "robot_idle", "robot_throw", "robot_charge", "robot_hurt", "crayfish_idle", "crayfish_snap", "crayfish_dive", "crayfish_hurt", "crow_fly_0", "crow_fly_1", "crow_dive", "crow_perch", "crow_hurt"]
+const PROP_FRAMES := ["wood", "steel", "apple", "can", "block", "nut", "walnut", "pinecone", "toast", "cog", "acorn", "acorn_bag", "heart", "golden_acorn", "flag_off", "flag_on", "exit_closed", "exit_open", "hole", "burrow", "crack", "fx_puff", "fx_star", "fx_splinter", "fx_bolt", "shelf_kitchen", "shelf_toys", "shelf_sewer", "shelf_tree", "hazard_kitchen", "hazard_toys", "hazard_sewer", "hazard_tree"]
+## Pick-up kinds of the simulation and the props that show them.
+const PICKUP_FRAMES := {"acorn": "acorn", "bag": "acorn_bag", "heart": "heart", "golden": "golden_acorn"}
 
-## Per stage: the lit top of the ground, its highlight, the dark outline, the colour laid over the far wall so play stands out, and the colour of the drifting specks.
-const LOOKS := [
-	{"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.07, 0.06, 0.12, 0.16), "mote": Color("ffe2a8"), "rise": -3.0},
-	{"cap": Color("7cc7bf"), "lip": Color("c9f0ea"), "edge": Color("10242c"), "veil": Color(0.03, 0.08, 0.1, 0.16), "mote": Color("d8f4f0"), "rise": -9.0},
-	{"cap": Color("d98250"), "lip": Color("ffc08a"), "edge": Color("2a1216"), "veil": Color(0.1, 0.03, 0.04, 0.16), "mote": Color("ffa24a"), "rise": -16.0},
-	{"cap": Color("9c98e0"), "lip": Color("d6d4ff"), "edge": Color("161432"), "veil": Color(0.05, 0.04, 0.13, 0.16), "mote": Color("9fe8dc"), "rise": -4.0},
-]
+## Per place: the lit top of the ground, its highlight, the dark outline, the colour laid over the far wall so play stands out, the colour and drift of the specks in the air, and the colour of the map's nodes.
+const LOOKS := {
+	"kitchen": {"cap": Color("d9a565"), "lip": Color("f7dcab"), "edge": Color("3a2418"), "veil": Color(0.08, 0.05, 0.04, 0.14), "mote": Color("ffe2a8"), "rise": -3.0, "node": Color("f5a340")},
+	"toyshop": {"cap": Color("e8705a"), "lip": Color("ffd1a0"), "edge": Color("3a1a24"), "veil": Color(0.07, 0.04, 0.08, 0.14), "mote": Color("ffe9c0"), "rise": -2.0, "node": Color("e8705a")},
+	"sewer": {"cap": Color("6f9a6a"), "lip": Color("c3e0a8"), "edge": Color("12201b"), "veil": Color(0.02, 0.07, 0.06, 0.2), "mote": Color("c8f0d0"), "rise": 6.0, "node": Color("6fc8a0")},
+	"treehouse": {"cap": Color("b98a52"), "lip": Color("f4d39a"), "edge": Color("2e1c10"), "veil": Color(0.08, 0.04, 0.02, 0.12), "mote": Color("ffd27a"), "rise": -1.5, "node": Color("9bd06a")},
+}
 
 var world: World
 var locale := "zh"
@@ -64,8 +70,10 @@ var heroes: Array[GameSprites] = []
 var foes: GameSprites
 var bosses: GameSprites
 var props: GameSprites
-var fills: Array[GameSprites] = []
-var backs: Array[GameSprites] = []
+var fills: Dictionary = {}
+var fars: Dictionary = {}
+var mids: Dictionary = {}
+var map_art: GameSprites
 var text: GameText
 
 var _random: GameRng = Rng.new(20261)
@@ -95,6 +103,9 @@ var _offset := Vector2.ZERO
 var _camera := Vector2.ZERO
 var _band_key := ""
 var _band_age := 0.0
+## A short banner over the play that is not tied to a phase: a secret found, a boss's new phase.
+var _call := ""
+var _call_age := 9.0
 
 func setup(simulation: World, language: String) -> void:
 	world = simulation
@@ -112,10 +123,11 @@ func setup(simulation: World, language: String) -> void:
 	_shake = 0.0
 	_flash = 0.0
 	_band_key = ""
+	_call = ""
 
 ## Whether every picture the renderer draws from was found.
 func art_ready() -> bool:
-	if heroes.size() != 2 or fills.size() != Levels.COUNT or backs.size() != Levels.COUNT:
+	if heroes.size() != 2 or map_art == null or not map_art.has_frame("main"):
 		return false
 	for slot in 2:
 		for move: String in HERO_MOVES:
@@ -131,21 +143,30 @@ func art_ready() -> bool:
 			for index in int(_counts[slot][move]):
 				if not _holds[slot].has("%s_%d" % [move, index]):
 					return false
-		if not _holds[slot].has("carry_jump") or not _holds[slot].has("carry_fall"):
+	for theme: String in Levels.THEMES:
+		for sheet: Variant in [fills.get(theme), fars.get(theme), mids.get(theme)]:
+			if not sheet is GameSprites or not (sheet as GameSprites).has_frame("main"):
+				return false
+	for kind: String in FOE_FRAMES:
+		if not _has(foes, kind + "_0") or not _has(foes, kind + "_1"):
 			return false
-	for stage in Levels.COUNT:
-		if not fills[stage].has_frame("main") or not backs[stage].has_frame("main"):
+	for frame: String in BOSS_FRAMES:
+		if not _has(bosses, frame):
 			return false
-	for frame: String in ["bug_0", "bug_1", "hopper_0", "hopper_1", "drone_0", "turret_0", "turret_1", "roller_0", "bare_0", "magnet_0", "magnet_1"]:
-		if not foes.has_frame(frame):
-			return false
-	for frame: String in ["vac_closed", "vac_open", "vac_hurt", "crane_open", "crane_shut", "crane_hurt", "claw_open", "claw_shut"]:
-		if not bosses.has_frame(frame):
-			return false
-	for frame: String in ["wood", "steel", "scrap", "hexnut", "nut", "spark", "gear", "acorn", "golden_acorn", "cog", "door_closed", "door_open", "chute", "flag_off", "flag_on", "lift", "shelf_wood", "shelf_metal", "spikes", "fx_puff", "fx_star", "fx_splinter", "fx_bolt"]:
-		if not props.has_frame(frame):
+	for frame: String in PROP_FRAMES:
+		if not _has(props, frame):
 			return false
 	return true
+
+static func _has(sheet: GameSprites, frame: String) -> bool:
+	return sheet != null and sheet.has_frame(frame)
+
+## An atlas, or null when its frame table is not there (the art of a place still to come draws as plain shapes).
+static func _atlas(name: String) -> GameSprites:
+	return GameSprites.load_atlas(ART + name + ".json") if FileAccess.file_exists(ART + name + ".json") else null
+
+static func _image(path: String, options: Dictionary) -> GameSprites:
+	return GameSprites.load_image(ART + path, options) if ResourceLoader.exists(ART + path) else null
 
 func _load_art() -> void:
 	text = GameText.new()
@@ -155,12 +176,15 @@ func _load_art() -> void:
 		_holds.append(table["holds"])
 		_counts.append(table["counts"])
 		_gaits.append(table["gaits"])
-	foes = GameSprites.load_atlas(ART + "foes.json")
-	bosses = GameSprites.load_atlas(ART + "bosses.json")
-	props = GameSprites.load_atlas(ART + "props.json")
-	for stage in Levels.COUNT:
-		fills.append(GameSprites.load_image(ART + "ground%d.jpg" % stage, {"width": TILE * FILL_CELLS, "pivot": Vector2.ZERO}))
-		backs.append(GameSprites.load_image(ART + "back%d.jpg" % stage, {"width": BACK_SIZE.x, "pivot": Vector2.ZERO}))
+	foes = _atlas("foes")
+	bosses = _atlas("bosses")
+	props = _atlas("props")
+	for theme: String in Levels.THEMES:
+		var name: String = ART_NAMES[theme]
+		fills[theme] = _image("ground_%s.jpg" % name, {"width": TILE * FILL_CELLS, "pivot": Vector2.ZERO})
+		fars[theme] = _image("far_%s.jpg" % name, {"width": FAR_SIZE.x, "pivot": Vector2.ZERO})
+		mids[theme] = _image("mid_%s.webp" % name, {"height": VIEW.y, "pivot": Vector2.ZERO})
+	map_art = _image("map.jpg", {"width": VIEW.x, "pivot": Vector2.ZERO})
 	_flash_layer = Node2D.new()
 	_flash_layer.name = "Flash"
 	var shader := Shader.new()
@@ -214,6 +238,7 @@ func advance(delta: float) -> void:
 	_pending.clear()
 	_shake = maxf(0.0, _shake - delta * 14.0)
 	_flash = maxf(0.0, _flash - delta)
+	_call_age += delta
 	_offset = Vector2(_random.float_range(-_shake, _shake), _random.float_range(-_shake, _shake)) * 0.6 if _shake > 0.3 else Vector2.ZERO
 	for look in _looks:
 		for timer: String in ["squash", "stretch", "pose_time", "land_time", "lift_time", "turn", "start", "stop", "rise"]:
@@ -221,7 +246,7 @@ func advance(delta: float) -> void:
 	for drift in _drifts:
 		drift["life"] = float(drift["life"]) - delta
 	_drifts = _drifts.filter(func(drift: Dictionary) -> bool: return float(drift["life"]) > 0.0)
-	if world != null:
+	if world != null and world.phase != World.P_MAP:
 		_track_motion(delta)
 		_track_holds()
 		_ambient()
@@ -243,7 +268,6 @@ func advance(delta: float) -> void:
 	_band_age += delta
 	queue_redraw()
 	_flash_layer.queue_redraw()
-
 ## Which run a squirrel is in: its legs turn at the pace of that one.
 func _gait_of(hero: Dictionary) -> String:
 	return "carry_run" if hero["carry"] != null or int(hero["lifting"]) >= 0 else "run"
@@ -335,27 +359,29 @@ func _drift_of(thing: Dictionary) -> Vector2:
 			return (drift["offset"] as Vector2) * left * left
 	return Vector2.ZERO
 
-## Effects that come from what is going on rather than from one event: the Dustmaw's breath, exhaust, the trail behind anything thrown. The dust of running feet comes from _track_motion.
+## Effects that come from what is going on rather than from one event: the trail behind anything thrown, steam from a boss winding up, bubbles where the crayfish will come up, the glow round a boss's lump. The dust of running feet comes from _track_motion.
 func _ambient() -> void:
 	if not world.boss.is_empty():
 		var boss := world.boss
 		var mode := str(boss["mode"])
-		var facing := float(int(boss["face"]))
 		var x := float(boss["x"])
 		var y := float(boss["y"])
-		if mode == "inhale" and _random.chance(0.7):
-			var mouth := Vector2(x + facing * 24.0, y - 16.0)
-			var from := mouth + Vector2(facing * _random.float_range(60.0, 200.0), _random.float_range(-50.0, 14.0))
-			_spark(from, (mouth - from) * 1.6, 0.0, 0.6, Color(0.85, 0.82, 0.9, 0.7), _random.float_range(0.5, 1.1), "puff" if _random.chance(0.3) else "dot")
-		if str(boss["kind"]) == "vacuum" and (mode == "rev" or mode == "charge") and _random.chance(0.6):
-			_spark(Vector2(x - facing * 20.0, y - 2.0), Vector2(-facing * _random.float_range(20.0, 60.0), _random.float_range(-30.0, -5.0)), -20.0, 0.45, Color(0.8, 0.76, 0.7, 0.8), _random.float_range(0.5, 0.9), "puff")
+		if mode.ends_with("_tell") and _random.chance(0.5):
+			_spark(Vector2(x + _random.float_range(-float(boss["half"]), float(boss["half"])), y - _random.float_range(4.0, float(boss["tall"]))), Vector2(0, -30), -20.0, 0.4, Color(1.0, 0.85, 0.5, 0.7), 0.6, "puff")
+		if mode == "rise_tell" or mode == "under":
+			if _random.chance(0.6):
+				_spark(Vector2(x + _random.float_range(-26.0, 26.0), y - 2.0), Vector2(_random.float_range(-6.0, 6.0), -_random.float_range(30.0, 60.0)), -10.0, 0.5, Color(0.8, 1.0, 0.9, 0.8), _random.float_range(0.5, 1.0), "bubble")
+		if mode == "charge" and _random.chance(0.7):
+			_spark(Vector2(x - float(int(boss["face"])) * 14.0, y - 2.0), Vector2(-float(int(boss["face"])) * 40.0, -20.0), -20.0, 0.45, Color(0.85, 0.82, 0.76, 0.8), 0.8, "puff")
 		if mode == "dying" and _random.chance(0.4):
-			_spark(Vector2(x + _random.float_range(-20.0, 20.0), y - _random.float_range(4.0, 30.0) + (30.0 if str(boss["kind"]) == "crane" else 0.0)), Vector2(_random.float_range(-10.0, 10.0), -30.0), -30.0, 0.7, Color(0.25, 0.24, 0.3, 0.8), _random.float_range(0.7, 1.2), "puff")
+			_spark(Vector2(x + _random.float_range(-20.0, 20.0), y - _random.float_range(4.0, 40.0)), Vector2(_random.float_range(-10.0, 10.0), -30.0), -30.0, 0.7, Color(0.25, 0.24, 0.3, 0.8), _random.float_range(0.7, 1.2), "puff")
 		if float(boss.get("shake", 0.0)) > 0.0:
 			_shake = maxf(_shake, 1.2)
 	for object in world.objects:
-		if int(object["state"]) == World.O_THROWN and _random.chance(0.5):
-			_spark(Vector2(float(object["x"]), float(object["y"]) - float(object["tall"]) * 0.5 + _random.float_range(-4.0, 4.0)), Vector2.ZERO, 0.0, 0.22, Color(1.0, 0.97, 0.9, 0.8), 0.8, "dot")
+		if int(object["state"]) == World.O_THROWN and _random.chance(0.6):
+			_spark(Vector2(float(object["x"]), float(object["y"]) - float(object["tall"]) * 0.5 + _random.float_range(-4.0, 4.0)), Vector2.ZERO, 0.0, 0.2, Color(1.0, 0.97, 0.9, 0.8), 0.8, "dot")
+	if world.theme == "sewer" and _random.chance(0.05):
+		_spark(Vector2(world.camera.x + _random.float_range(0.0, VIEW.x), world.camera.y), Vector2(0, 40), 300.0, 1.0, Color(0.7, 0.95, 0.85, 0.6), 0.5, "dot")
 
 # ---- effects ----
 
@@ -388,100 +414,120 @@ func _look_near(at: Vector2) -> Variant:
 
 func _react(event: Dictionary) -> void:
 	var at := Vector2(float(event["x"]), float(event["y"]))
-	var look: Variant = _look_near(at)
+	var look: Variant = _look_near(at) if world.phase != World.P_MAP else null
+	if event.has("slot") and int(event["slot"]) >= 0 and int(event["slot"]) < 2:
+		look = _looks[int(event["slot"])]
 	match str(event["name"]):
 		"jump":
 			_dust(at, 2, 22.0, 0.45)
 			if look != null:
-				look["stretch"] = 0.16
+				look["stretch"] = 0.12
 		"land":
 			_dust(at, 4, 34.0, 0.55)
 			if look != null:
-				look["squash"] = 0.14
+				look["squash"] = 0.1
 				look["land_time"] = LAND_SPAN
 		"thud", "put_down":
 			_dust(at, 4, 34.0, 0.6)
 		"lift":
 			if look != null:
-				look["squash"] = 0.1
+				look["squash"] = 0.08
 		"throw", "throw_up":
-			_burst(at, 3, 30.0, 0.0, 0.2, [Color("fff7e0")], 0.7)
+			_burst(at, 4, 40.0, 0.0, 0.2, [Color("fff7e0")], 0.7)
 			if look != null:
 				look["pose"] = str(event["name"])
 				look["pose_time"] = THROW_SPAN
 		"break":
-			_burst(at, 9, 100.0, 420.0, 0.7, [Color.WHITE, Color(0.85, 0.8, 0.75)], 0.9, "splinter")
+			var chips := [Color.WHITE, Color(0.85, 0.8, 0.75)]
+			if str(event.get("kind", "")) == "apple":
+				chips = [Color("f05a46"), Color("ffe6b0")]
+			elif str(event.get("kind", "")) == "toast":
+				chips = [Color("e0a050"), Color("fff0c0")]
+			_burst(at, 10, 110.0, 420.0, 0.7, chips, 0.9, "splinter")
 			_dust(at, 4, 40.0, 0.9, Color(0.94, 0.86, 0.7, 0.8))
 			_star(at, 1.3)
-			_shake = maxf(_shake, 1.5)
+			_shake = maxf(_shake, 1.6)
+		"crumble":
+			_burst(at, 5, 70.0, 380.0, 0.6, [Color(0.85, 0.8, 0.72), Color(0.6, 0.55, 0.5)], 0.9, "splinter")
+			_dust(at, 3, 30.0, 1.0)
+			_shake = maxf(_shake, 1.2)
 		"poof":
 			_burst(at, 4, 30.0, -20.0, 0.4, [Color(0.75, 0.78, 0.84, 0.8)], 0.7, "puff")
-		"clang":
-			_star(at, 0.8, Color("fff3b0"))
+		"clang", "bonk":
+			_star(at, 0.9, Color("fff3b0"))
 			_burst(at, 5, 80.0, 200.0, 0.25, [Color("ffd75e"), Color("fff7e0")], 0.6)
-		"foe_hit":
-			_star(at, 1.0)
-			_burst(at, 5, 70.0, 200.0, 0.3, [Color("fff7e0"), Color("ffd75e")], 0.7)
-			_shake = maxf(_shake, 1.5)
+		"stomp", "dizzy":
+			_star(at, 0.9, Color("fff3b0"))
+			_burst(at, 4, 50.0, 100.0, 0.3, [Color("ffe27a")], 0.6)
 		"foe_out":
-			_star(at, 1.6)
+			_star(at, 1.7)
 			_burst(at, 6, 110.0, 300.0, 0.6, [Color.WHITE], 0.9, "bolt")
 			_burst(at, 4, 40.0, -20.0, 0.45, [Color(0.3, 0.3, 0.36, 0.7)], 0.8, "puff")
-			_burst(at, 6, 100.0, 260.0, 0.45, [Color("fff7e0"), Color("ffd75e"), Color("ff8a3c")], 0.9)
-			_shake = maxf(_shake, 2.2)
+			_burst(at, 7, 110.0, 260.0, 0.45, [Color("fff7e0"), Color("ffd75e"), Color("ff8a3c")], 0.9)
+			_shake = maxf(_shake, 2.4)
 		"hurt":
 			_star(at, 1.3, Color("ff8a8a"))
 			_burst(at, 8, 90.0, 240.0, 0.4, [Color("e5484d"), Color("fff7e0")], 0.7)
 			_shake = maxf(_shake, 3.0)
 			_flash = maxf(_flash, 0.06)
+		"bump":
+			_star(at, 1.0, Color("fff3b0"))
 		"die":
 			_star(at, 1.8)
-			_burst(at, 8, 120.0, 320.0, 0.8, [Color.WHITE], 0.9, "bolt")
 			_burst(at, 10, 120.0, 300.0, 0.8, [HERO_COLORS[int(event.get("slot", 0))], Color("fff7e0")], 1.0)
 			_burst(at, 4, 40.0, -20.0, 0.6, [Color(0.3, 0.3, 0.36, 0.7)], 0.9, "puff")
 			_shake = maxf(_shake, 4.0)
-		"respawn":
-			_burst(at, 12, 60.0, -60.0, 0.6, [Color("bff3ff"), Color("fff7e0")], 0.7)
-		"gear":
+		"respawn", "spawn", "foe_pop":
+			_burst(at, 10, 60.0, -60.0, 0.5, [Color("bff3ff"), Color("fff7e0")], 0.7)
+		"acorn":
 			_star(at, 0.6, Color("fff3b0"), 0.12)
 			_burst(at, 4, 40.0, 0.0, 0.25, [Color("ffd75e")], 0.6)
-		"battery", "core", "flag":
+		"bag", "heart", "flag":
 			_star(at, 0.9, Color("d8ffc8"))
 			_burst(at, 10, 60.0, -50.0, 0.55, [Color("b8ff9a"), Color("fff7e0"), Color("5fd4c4")], 0.7)
-		"cog":
+		"extra_life":
 			_star(at, 2.2, Color("fff3b0"), 0.3)
 			_burst(at, 18, 90.0, 60.0, 0.9, [Color("ffd75e"), Color("fff7e0"), Color("c9952c")], 0.9)
 			_flash = maxf(_flash, 0.08)
-		"chute":
-			_dust(at, 3, 24.0, 0.6, Color(0.75, 0.78, 0.84, 0.8))
-		"shot", "drop", "boss_spit":
+			if _popups.size() < 12:
+				_popups.append({"x": at.x, "y": at.y - 8.0, "text": "1UP", "life": 1.2})
+		"burrow":
+			_burst(at, 12, 70.0, 0.0, 0.5, [Color("fff3b0"), Color("d8ffc8")], 0.8)
+		"secret":
+			_call = Texts.of("secret", locale)
+			_call_age = 0.0
+			_flash = maxf(_flash, 0.1)
+		"boss_rage":
+			_call = Texts.of("phase", locale) % int(event.get("phase", 2))
+			_call_age = 0.0
+			_shake = maxf(_shake, 5.0)
+			_flash = maxf(_flash, 0.12)
+		"puff", "boss_spit", "boss_pop", "boss_throw", "boss_drop":
 			_star(at, 0.7, Color("fff3b0"), 0.1)
-			_burst(at, 4, 50.0, 0.0, 0.2, [Color("ffd75e"), Color("fff7e0")], 0.6)
+			_burst(at, 5, 50.0, 0.0, 0.25, [Color("ffd75e"), Color("fff7e0")], 0.6, "puff")
 		"boss_hit":
 			_star(at, 2.2)
 			_burst(at, 5, 130.0, 300.0, 0.6, [Color.WHITE], 1.0, "bolt")
 			_burst(at, 12, 130.0, 260.0, 0.5, [Color("fff7e0"), Color("ffd75e"), Color("e5484d")], 1.0)
 			_shake = maxf(_shake, 3.5)
 			_flash = maxf(_flash, 0.07)
-		"boss_slam":
+		"boss_slam", "boss_land":
 			_dust(at, 10, 90.0, 1.2)
 			_star(at, 1.4)
-			_shake = maxf(_shake, 6.0)
+			_shake = maxf(_shake, 5.0)
+		"boss_dive", "splat":
+			_burst(at, 10, 70.0, 300.0, 0.5, [Color(0.6, 0.9, 0.8, 0.8)], 0.8)
 		"boss_burst":
 			_star(at, 1.8, Color("ffc27a"))
-			_burst(at, 3, 30.0, -30.0, 0.6, [Color(0.25, 0.24, 0.3, 0.8)], 1.1, "puff")
 			_burst(at, 8, 110.0, 120.0, 0.55, [Color("ff8a3c"), Color("ffd75e"), Color("fff7e0")], 1.1)
 			_shake = maxf(_shake, 3.0)
 		"boss_down":
 			_star(at, 4.5, Color.WHITE, 0.4)
 			_burst(at, 18, 200.0, 320.0, 1.2, [Color.WHITE], 1.2, "bolt")
-			_burst(at, 10, 70.0, -20.0, 1.0, [Color(0.25, 0.24, 0.3, 0.8), Color(0.8, 0.76, 0.7, 0.8)], 1.6, "puff")
 			_burst(at, 24, 190.0, 200.0, 1.1, [Color("ff8a3c"), Color("ffd75e"), Color("fff7e0")], 1.3)
 			_shake = maxf(_shake, 9.0)
 			_flash = maxf(_flash, 0.35)
-		"boss_start", "boss_angry":
-			_shake = maxf(_shake, 5.0)
-		"stage_clear":
+		"level_clear":
 			for index in 44:
 				_spark(Vector2(world.camera.x + _random.float_range(0.0, VIEW.x), world.camera.y - 4.0 - _random.float_range(0.0, 30.0)), Vector2(_random.float_range(-20.0, 20.0), _random.float_range(30.0, 110.0)), 30.0, 2.6, [Color("5fd4c4"), Color("f5a340"), Color("ffd75e"), Color("fff7e0")][index % 4], _random.float_range(1.6, 2.6), "bit")
 		"points":
@@ -494,10 +540,15 @@ func _draw() -> void:
 	if world == null or text == null:
 		draw_rect(Rect2(Vector2.ZERO, VIEW), Color("1a1423"))
 		return
+	if world.phase == World.P_MAP or world.level.is_empty():
+		_camera = Vector2.ZERO
+		_draw_map()
+		return
 	_camera = world.camera + _offset
 	_flashes.clear()
 	_draw_backdrop()
 	_home()
+	_draw_decor(false)
 	_draw_tiles()
 	_draw_fixtures()
 	for lift in world.lifts:
@@ -513,12 +564,13 @@ func _draw() -> void:
 		_draw_boss(world.boss)
 	for hero in world.heroes:
 		_draw_hero(hero)
-	# A held crate is drawn with the squirrel that holds it.
+	# A held thing is drawn with the squirrel that holds it.
 	for object in world.objects:
 		if int(object["state"]) == World.O_THROWN:
 			_draw_object(object)
 	for shot in world.shots:
 		_draw_shot(shot)
+	_draw_decor(true)
 	_draw_particles()
 	for popup in _popups:
 		var fade := clampf(float(popup["life"]) / 0.3, 0.0, 1.0)
@@ -536,6 +588,8 @@ func _home() -> void:
 
 ## Draw a frame with its pivot (the bottom middle of the picture) at a world point, scaled, turned and tinted. `hit` repeats it as a white silhouette on the flash layer.
 func _put(sheet: GameSprites, frame: String, at: Vector2, flipped: bool = false, scale: Vector2 = Vector2.ONE, angle: float = 0.0, tint: Color = Color.WHITE, hit: bool = false) -> void:
+	if not _has(sheet, frame):
+		return
 	draw_set_transform(at - _camera, angle, scale)
 	sheet.draw(self, frame, Vector2.ZERO, flipped, 1.0, 0.0, tint)
 	_home()
@@ -544,6 +598,8 @@ func _put(sheet: GameSprites, frame: String, at: Vector2, flipped: bool = false,
 
 ## Draw a frame turned round its own middle, which is put at a world point.
 func _spin(sheet: GameSprites, frame: String, middle: Vector2, angle: float, zoom: float = 1.0, tint: Color = Color.WHITE, flipped: bool = false, hit: bool = false) -> void:
+	if not _has(sheet, frame):
+		return
 	var down := Vector2(0.0, sheet.size(frame).y * 0.5)
 	draw_set_transform(middle - _camera, angle, Vector2(zoom, zoom))
 	sheet.draw(self, frame, down, flipped, 1.0, 0.0, tint)
@@ -570,19 +626,38 @@ func _fade(rect: Rect2, from: Color, to: Color, vertical: bool = true) -> void:
 	var colors := PackedColorArray([from, from, to, to]) if vertical else PackedColorArray([from, to, to, from])
 	draw_polygon(points, colors)
 
+## The place behind the play: its far wall sliding slowly, the big things standing nearer sliding faster, then the dust in the air between.
 func _draw_backdrop() -> void:
-	var stage := world.stage
-	var look: Dictionary = LOOKS[stage]
-	var room := Vector2(maxf(1.0, float(world.width) * TILE - VIEW.x), maxf(1.0, float(world.height) * TILE - VIEW.y - 24.0))
-	if room.y > room.x:
-		# A shaft is climbed, not crossed: its wall is one picture larger than the view that slides slowly past, and never repeats.
-		var big := VIEW * 1.6
-		var spare := big - VIEW
-		backs[stage].draw_fit(self, "main", Rect2(-Vector2(spare.x * clampf(_camera.x / room.x, 0.0, 1.0), spare.y * clampf(_camera.y / room.y, 0.0, 1.0)), big))
+	var theme := world.theme
+	var look: Dictionary = LOOKS[theme]
+	var columns := float(world.level.get("main_w", world.width))
+	var room := Vector2(maxf(1.0, columns * TILE - VIEW.x), maxf(1.0, float(world.height) * TILE - VIEW.y - 8.0))
+	var tall := room.y > room.x
+	var far: GameSprites = fars.get(theme)
+	if far != null:
+		if tall:
+			# A climb: the far wall is one picture larger than the view that slides slowly past and never repeats.
+			var big := VIEW * 1.5
+			var spare := big - VIEW
+			far.draw_fit(self, "main", Rect2(-Vector2(spare.x * clampf(_camera.x / room.x, 0.0, 1.0), spare.y * clampf(_camera.y / room.y, 0.0, 1.0)), big))
+		else:
+			var slack := FAR_SIZE - VIEW
+			far.draw_tiled(self, "main", Rect2(Vector2.ZERO, VIEW), FAR_SIZE, Vector2(_camera.x * 0.2, slack.y * clampf(_camera.y / room.y, 0.0, 1.0)))
 	else:
-		var slack := BACK_SIZE - VIEW
-		backs[stage].draw_tiled(self, "main", Rect2(Vector2.ZERO, VIEW), BACK_SIZE, Vector2(_camera.x * 0.22, slack.y * clampf(_camera.y / room.y, 0.0, 1.0)))
+		_fade(Rect2(Vector2.ZERO, VIEW), (look["node"] as Color).darkened(0.7), (look["edge"] as Color))
 	draw_rect(Rect2(Vector2.ZERO, VIEW), look["veil"])
+	var mid: GameSprites = mids.get(theme)
+	if mid != null:
+		var size := mid.size("main")
+		# The nearer row of big things: along the bottom of a crossing, repeated up the height of a climb.
+		var y := VIEW.y - size.y + 26.0 - (_camera.y - room.y) * 0.5
+		if tall:
+			y = fposmod(-_camera.y * 0.5, size.y) - size.y
+			while y < VIEW.y:
+				mid.draw_tiled(self, "main", Rect2(0.0, y, VIEW.x, size.y), size, Vector2(_camera.x * 0.5, 0.0), Color(0.86, 0.86, 0.92))
+				y += size.y
+		else:
+			mid.draw_tiled(self, "main", Rect2(0.0, y, VIEW.x, size.y), size, Vector2(_camera.x * 0.5, 0.0), Color(0.86, 0.86, 0.92))
 	# Specks in the air between the wall and the stage, each at its own depth.
 	var tint: Color = look["mote"]
 	for mote in _motes:
@@ -594,11 +669,12 @@ func _draw_backdrop() -> void:
 		draw_circle(at, float(mote["size"]) * (0.6 + depth), Color(tint.r, tint.g, tint.b, glow * (0.5 + depth)), true, -1.0, true)
 
 func _draw_tiles() -> void:
-	var stage := world.stage
-	var look: Dictionary = LOOKS[stage]
-	var fill := fills[stage]
-	var cell := fill.texture.get_size() / float(FILL_CELLS) if fill.texture != null else Vector2.ONE
-	var shelf := "shelf_wood" if stage == 0 else "shelf_metal"
+	var theme := world.theme
+	var look: Dictionary = LOOKS[theme]
+	var fill: GameSprites = fills.get(theme)
+	var cell := fill.texture.get_size() / float(FILL_CELLS) if fill != null and fill.texture != null else Vector2.ONE
+	var shelf := "shelf_" + str(ART_NAMES[theme])
+	var hazard := "hazard_" + str(ART_NAMES[theme])
 	var first_column := maxi(0, floori(_camera.x / TILE))
 	var last_column := mini(world.width - 1, floori((_camera.x + VIEW.x) / TILE))
 	var first_row := maxi(0, floori(_camera.y / TILE))
@@ -614,18 +690,28 @@ func _draw_tiles() -> void:
 			var x := float(column) * TILE
 			var y := float(row) * TILE
 			if tile == Levels.SHELF:
-				props.draw_fit(self, shelf, Rect2(x, y, TILE, 7.0))
+				if _has(props, shelf):
+					props.draw_fit(self, shelf, Rect2(x - 0.2, y - 0.5, TILE + 0.4, 7.5))
+				else:
+					draw_rect(Rect2(x, y, TILE, 5.0), look["cap"])
 				continue
-			if tile == Levels.SPIKES:
-				props.draw_fit(self, "spikes", Rect2(x, y + 5.0, TILE, 11.0))
+			if tile == Levels.HAZARD:
+				var glow := 0.85 + 0.15 * sin(_clock * 6.0 + float(column))
+				if _has(props, hazard):
+					var size := props.size(hazard)
+					props.draw_fit(self, hazard, Rect2(x - 0.3, y + TILE - size.y * TILE / maxf(1.0, size.x), TILE + 0.6, size.y * TILE / maxf(1.0, size.x)), Color(glow, glow, glow))
+				else:
+					draw_rect(Rect2(x, y + 9.0, TILE, 7.0), Color(1.0, 0.3, 0.2, glow))
 				continue
 			var open_above := row == 0 or not World.is_solid(world.tile_at(column, row - 1))
 			# Ground gets darker the deeper it lies under its surface.
 			var shade := Color.WHITE
 			if not open_above and row > 1 and World.is_solid(world.tile_at(column, row - 2)):
 				shade = Color(0.8, 0.8, 0.84) if row < 3 or not World.is_solid(world.tile_at(column, row - 3)) else Color(0.62, 0.62, 0.7)
-			if fill.texture != null:
+			if fill != null and fill.texture != null:
 				draw_texture_rect_region(fill.texture, Rect2(x, y, TILE, TILE), Rect2(Vector2(float(posmod(column, FILL_CELLS)), float(posmod(row, FILL_CELLS))) * cell, cell), shade)
+			else:
+				draw_rect(Rect2(x, y, TILE, TILE), (look["cap"] as Color).darkened(0.45) * shade)
 			var open_left := column > 0 and not World.is_solid(world.tile_at(column - 1, row))
 			var open_right := column < world.width - 1 and not World.is_solid(world.tile_at(column + 1, row))
 			var open_below := row < world.height - 1 and not World.is_solid(world.tile_at(column, row + 1))
@@ -638,246 +724,366 @@ func _draw_tiles() -> void:
 			if open_below:
 				_fade(Rect2(x, y + TILE - 4.0, TILE, 4.0), clear, dark)
 				draw_rect(Rect2(x, y + TILE - 0.7, TILE, 0.7), edge)
-			if tile == Levels.BELT_LEFT or tile == Levels.BELT_RIGHT:
-				_draw_belt(x, y, -1.0 if tile == Levels.BELT_LEFT else 1.0, edge)
-			elif open_above:
+			if open_above:
 				draw_rect(Rect2(x, y, TILE, 3.0), look["cap"])
 				draw_rect(Rect2(x, y, TILE, 0.9), look["lip"])
 				draw_rect(Rect2(x, y + 3.0, TILE, 0.6), edge)
 				_fade(Rect2(x, y + 3.6, TILE, 3.4), dark, clear)
-				# A rivet or a plank joint somewhere on the cap, placed by the cell so that neighbours differ.
-				var pick := posmod(column * 73 + row * 151, 11)
-				if pick < 6:
-					draw_circle(Vector2(x + 2.5 + float(pick) * 2.2, y + 1.9), 0.55, Color(edge.r, edge.g, edge.b, 0.55), true, -1.0, true)
-				elif pick < 8:
-					draw_rect(Rect2(x + 4.0 + float(pick - 6) * 6.0, y + 0.9, 0.5, 2.1), Color(edge.r, edge.g, edge.b, 0.4))
+			if tile == Levels.CRACK:
+				# Cracked plaster: the crack is painted on, and the cell is a little paler, so it can be noticed by anyone who looks.
+				draw_rect(Rect2(x, y, TILE, TILE), Color(1.0, 0.95, 0.85, 0.12 + 0.05 * sin(_clock * 2.0)))
+				if _has(props, "crack"):
+					props.draw_fit(self, "crack", Rect2(x, y, TILE, TILE))
+				else:
+					draw_polyline(PackedVector2Array([Vector2(x + 3, y + 2), Vector2(x + 8, y + 7), Vector2(x + 6, y + 11), Vector2(x + 12, y + 14)]), edge, 0.8, true)
 
-## The running surface of a conveyor cell: a dark band with chevrons that travel the way the belt pushes.
-func _draw_belt(x: float, y: float, direction: float, edge: Color) -> void:
-	draw_rect(Rect2(x, y, TILE, 5.0), Color("262a35"))
-	draw_rect(Rect2(x, y, TILE, 0.8), Color("8a93a5"))
-	draw_rect(Rect2(x, y + 5.0, TILE, 0.6), edge)
-	var shift := fposmod(direction * _clock * World.BELT_SPEED, 8.0)
-	for index in range(-1, 3):
-		var at := x + shift + float(index) * 8.0
-		if at < x + 1.6 or at > x + TILE - 1.6:
+## The painted big things of the place that nothing collides with: behind the play, or (`front`) over it.
+func _draw_decor(front: bool) -> void:
+	for item: Dictionary in world.level.get("decor", []):
+		if bool(item["front"]) != front:
 			continue
-		var tip := at + direction * 1.5
-		var tail := at - direction * 1.5
-		draw_polyline(PackedVector2Array([Vector2(tail, y + 1.6), Vector2(tip, y + 2.9), Vector2(tail, y + 4.2)]), Color("ffd75e"), 0.8, true)
+		var at: Vector2 = item["at"]
+		var kind := str(item["kind"])
+		if not world.is_seen(at.x, at.y, 120.0) or not _has(props, kind):
+			continue
+		_put(props, kind, at + Vector2(0.0, 1.0), false, Vector2.ONE, 0.0, Color(0.92, 0.9, 0.9, 0.85) if front else Color(0.88, 0.86, 0.9))
 
 func _draw_fixtures() -> void:
-	var door: Variant = world.level.get("door")
-	if door is Vector2:
-		var at: Vector2 = door
-		if world.door_open:
-			draw_circle(at + Vector2(0.0, -12.0), 20.0 + sin(_clock * 3.0) * 1.5, Color(0.37, 0.83, 0.77, 0.12), true, -1.0, true)
-		_put(props, "door_open" if world.door_open else "door_closed", at)
-	for chute in world.chutes:
-		# The hatch hangs from the ceiling at its own height.
-		_put(props, "chute", Vector2(float(chute["x"]), float(chute["y"]) + props.size("chute").y))
+	var exit: Variant = world.level.get("exit")
+	if exit is Vector2:
+		var at: Vector2 = exit
+		var near := false
+		for hero in world.heroes:
+			if int(hero["state"]) == World.H_NORMAL and absf(float(hero["x"]) - at.x) < 48.0 and absf(float(hero["y"]) - at.y) < 40.0:
+				near = true
+		if near or world.phase == World.P_CLEAR:
+			draw_circle(at + Vector2(0.0, -14.0), 20.0 + sin(_clock * 3.0) * 1.5, Color(1.0, 0.85, 0.5, 0.16), true, -1.0, true)
+		if _has(props, "exit_open"):
+			_put(props, "exit_open" if near or world.phase == World.P_CLEAR else "exit_closed", at + Vector2(0.0, 1.0))
+		else:
+			draw_rect(Rect2(at.x - 9.0, at.y - 28.0, 18.0, 28.0), Color("5a3a22"))
+	for spawner in world.spawners:
+		var at := Vector2(float(spawner["x"]), float(spawner["y"]))
+		if _has(props, "hole"):
+			_put(props, "hole", at + Vector2(0.0, 1.0), int(spawner["face"]) > 0)
+		else:
+			draw_circle(at + Vector2(0, -8), 8.0, Color(0.05, 0.03, 0.03))
+	var warps: Array = world.level.get("warps", [])
+	for warp: Dictionary in warps:
+		var at: Vector2 = warp["at"]
+		if not world.is_seen(at.x, at.y, 30.0):
+			continue
+		if _has(props, "burrow"):
+			_put(props, "burrow", at + Vector2(0.0, 1.0))
+		else:
+			draw_circle(at + Vector2(0, -7), 7.0, Color(0.05, 0.03, 0.03))
+		# The sparkle that gives a secret away to those who look.
+		var twinkle := absf(sin(_clock * 3.0 + at.x * 0.1))
+		_spin(props, "fx_star", at + Vector2(sin(_clock * 1.7) * 6.0, -14.0 + cos(_clock * 2.3) * 3.0), _clock * 2.0, 0.18 + 0.2 * twinkle, Color(1.0, 0.95, 0.7, 0.4 + 0.5 * twinkle))
 	for index in world.flags.size():
 		var flag: Vector2 = world.flags[index]
 		var lit := index <= world.checkpoint
 		_put(props, "flag_on" if lit else "flag_off", Vector2(flag.x + 3.0, flag.y), false, Vector2(1.0, 1.0 + (sin(_clock * 5.0 + flag.x) * 0.02 if lit else 0.0)))
 
+## A moving platform: the place's shelf plank, hung or propped by what fits the place.
 func _draw_lift(lift: Dictionary) -> void:
 	var x := float(lift["x"])
 	var y := float(lift["y"])
 	var wide := float(lift["w"])
-	var slab := props.size("lift")
-	var thick := wide * slab.y / maxf(1.0, slab.x)
-	# Two small jets hold it up.
-	for side: float in [0.22, 0.78]:
-		var jet := Vector2(x + wide * side, y + thick - 2.0)
-		var long := 3.0 + sin(_clock * 30.0 + side * 9.0) * 1.0
-		draw_polygon(PackedVector2Array([jet + Vector2(-1.6, 0.0), jet + Vector2(1.6, 0.0), jet + Vector2(0.0, long)]), PackedColorArray([Color(0.6, 1.0, 0.95, 0.9), Color(0.6, 1.0, 0.95, 0.9), Color(0.37, 0.83, 0.77, 0.0)]))
-	props.draw_fit(self, "lift", Rect2(x, y - 0.5, wide, thick))
+	var shelf := "shelf_" + str(ART_NAMES[world.theme])
+	var edge: Color = LOOKS[world.theme]["edge"]
+	# Two ropes up out of the picture.
+	for side: float in [0.12, 0.88]:
+		draw_line(Vector2(x + wide * side, y), Vector2(x + wide * side, _camera.y - 4.0), Color(edge.r, edge.g, edge.b, 0.7), 0.8, true)
+	if _has(props, shelf):
+		var cells := maxi(1, roundi(wide / TILE))
+		for index in cells:
+			props.draw_fit(self, shelf, Rect2(x + float(index) * TILE - 0.2, y - 0.5, TILE + 0.4, 7.5))
+	else:
+		draw_rect(Rect2(x, y, wide, 5.0), LOOKS[world.theme]["cap"])
 
 func _draw_pickup(pickup: Dictionary) -> void:
 	var x := float(pickup["x"])
 	var y := float(pickup["y"])
 	var kind := str(pickup["kind"])
 	if bool(pickup["float"]):
-		y += sin(_clock * 4.0 + x * 0.1) * 1.5
+		y += sin(_clock * 4.0 + x * 0.1) * 1.2
+	var frame := str(PICKUP_FRAMES.get(kind, kind))
 	match kind:
-		"gear":
-			# A gear turns on its edge like a coin.
+		"acorn":
+			# An acorn turns on its edge like a coin.
 			var turn := cos(_clock * 5.0 + x * 0.05)
-			_put(props, "gear", Vector2(x, y), false, Vector2(maxf(0.18, absf(turn)), 1.0))
-		"cog":
-			draw_circle(Vector2(x, y - 6.0), 9.0 + sin(_clock * 4.0) * 1.0, Color(1.0, 0.84, 0.37, 0.16), true, -1.0, true)
-			_spin(props, "cog", Vector2(x, y - 6.0), _clock * 1.5)
+			_put(props, frame, Vector2(x, y), false, Vector2(maxf(0.25, absf(turn)), 1.0) * 0.8)
+		"golden":
+			draw_circle(Vector2(x, y - 6.0), 9.0 + sin(_clock * 4.0) * 1.0, Color(1.0, 0.84, 0.37, 0.2), true, -1.0, true)
+			_put(props, frame, Vector2(x, y), false, Vector2.ONE * (1.0 + sin(_clock * 6.0) * 0.05))
 			_spin(props, "fx_star", Vector2(x + 4.0, y - 10.0), _clock * 2.0, 0.25 + 0.2 * absf(sin(_clock * 5.0)))
 		_:
-			draw_circle(Vector2(x, y - 5.0), 6.5, Color(0.72, 1.0, 0.6, 0.12), true, -1.0, true)
-			_put(props, str(PICKUP_FRAMES.get(kind, kind)), Vector2(x, y), false, Vector2.ONE * (1.0 + sin(_clock * 6.0 + x) * 0.04))
+			draw_circle(Vector2(x, y - 5.0), 6.5, Color(1.0, 0.7, 0.7, 0.14) if kind == "heart" else Color(0.72, 1.0, 0.6, 0.12), true, -1.0, true)
+			_put(props, frame, Vector2(x, y), false, Vector2.ONE * (1.0 + sin(_clock * 6.0 + x) * 0.05))
 
-## A crate or a lump of scrap that nobody holds: at rest or in flight. One that just left a squirrel's paws is drawn on its way from them to where the simulation has it.
-func _draw_object(object: Dictionary) -> void:
+## A thing to lift, drawn with its bottom middle at a point: a prop, or a dizzy enemy upside down.
+func _draw_thing(object: Dictionary, at: Vector2, angle: float, tint: Color) -> void:
+	if str(object["kind"]) == "foe":
+		var frame := str(object["foe"]) + "_0"
+		if _has(foes, frame):
+			var size := foes.size(frame)
+			_spin(foes, frame, at - Vector2(0.0, size.y * 0.5), angle + PI, 1.0, tint, int(object.get("face", 1)) < 0)
+		return
 	var kind := str(object["kind"])
+	if not _has(props, kind):
+		draw_rect(Rect2(at.x - float(object["half"]), at.y - float(object["tall"]), float(object["half"]) * 2.0, float(object["tall"])), Color("a0703c") * tint)
+		return
+	if angle == 0.0:
+		_put(props, kind, at, false, Vector2.ONE, 0.0, tint)
+	else:
+		_spin(props, kind, at - Vector2(0.0, float(object["tall"]) * 0.5), angle, 1.0, tint)
+
+## Something nobody holds: at rest or in flight. One that just left a squirrel's paws is drawn on its way from them to where the simulation has it. A boss's lump glows so it is clear what to throw.
+func _draw_object(object: Dictionary) -> void:
 	var shift := _drift_of(object)
 	var x := float(object["x"]) + shift.x
 	var y := float(object["y"]) + shift.y
 	var tall := float(object["tall"])
 	var tint := _fading(object)
+	if bool(object["special"]):
+		var pulse := 0.5 + 0.5 * sin(_clock * 7.0)
+		draw_circle(Vector2(x, y - tall * 0.5), tall * 0.75 + pulse * 2.0, Color(1.0, 0.92, 0.5, 0.18 + 0.14 * pulse), true, -1.0, true)
 	if int(object["state"]) == World.O_THROWN:
-		# No trail while it is still leaving the paws.
-		var back := Vector2(float(object["vx"]), float(object["vy"])) * (0.022 if shift == Vector2.ZERO else 0.0)
-		var angle := float(object["spin"]) * 14.0 if kind == "scrap" or kind == "hexnut" else sin(_clock * 22.0) * 0.07
+		var back := Vector2(float(object["vx"]), float(object["vy"])) * (0.02 if shift == Vector2.ZERO else 0.0)
+		var angle := sin(_clock * 22.0) * 0.06
 		for ghost in [2, 1]:
-			_spin(props, kind, Vector2(x, y - tall * 0.5) - back * float(ghost), angle, 1.0, Color(1.0, 1.0, 1.0, 0.22 / float(ghost)))
-		_spin(props, kind, Vector2(x, y - tall * 0.5), angle, 1.0, tint)
+			_draw_thing(object, Vector2(x, y) - back * float(ghost), angle, Color(1.0, 1.0, 1.0, 0.22 / float(ghost)))
+		_draw_thing(object, Vector2(x, y), angle, tint)
 		return
 	if shift == Vector2.ZERO:
 		_shadow(x, y, float(object["half"]) + 1.0, 0.22)
-	_put(props, kind, Vector2(x, y), false, Vector2.ONE, 0.0, tint)
+	_draw_thing(object, Vector2(x, y), 0.0, tint)
 
-## Scrap that is about to vanish blinks.
+## A boss's lump that is about to vanish blinks.
 func _fading(object: Dictionary) -> Color:
 	var life := float(object["life"])
 	if life > 0.0 and life < 2.0:
 		return Color(1.0, 1.0, 1.0, 0.35 + 0.5 * absf(sin(_clock * 18.0)))
 	return Color.WHITE
 
+## Where a falling shot will hit the floor below it, or a point far below when there is none.
+func _landing(shot: Dictionary) -> Vector2:
+	var x := float(shot["x"])
+	var y := float(shot["y"])
+	var vx := float(shot["vx"])
+	var vy := float(shot["vy"])
+	var g := float(shot["g"])
+	for index in 90:
+		var t := float(index) * 0.02
+		var px := x + vx * t
+		var py := y + vy * t + 0.5 * g * t * t
+		if world.is_floor(px, py + 3.0):
+			return Vector2(px, floorf((py + 3.0) / TILE) * TILE)
+	return Vector2(x, 1e6)
+
 func _draw_shot(shot: Dictionary) -> void:
 	var at := Vector2(float(shot["x"]), float(shot["y"]))
 	var time := float(shot["time"])
-	match str(shot["kind"]):
-		"spark":
-			draw_circle(at, 5.0, Color(1.0, 0.9, 0.4, 0.18), true, -1.0, true)
-			_spin(props, "spark", at, _clock * 11.0, 0.85 + 0.2 * sin(_clock * 40.0))
-		"nut":
-			_spin(props, "nut", at, time * 9.0)
-		"junk":
-			_spin(props, "scrap", at, time * 9.0)
+	var kind := str(shot["kind"])
+	if World.THINGS.has(kind):
+		# Where it will land is marked on the floor, growing as it comes.
+		var land := _landing(shot)
+		if land.y < 1e5:
+			var near := clampf(1.0 - (land.y - at.y) / 200.0, 0.2, 1.0)
+			draw_set_transform(land - _camera, 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, 5.0 + 5.0 * near, Color(0.9, 0.2, 0.1, 0.25 + 0.35 * near), true, -1.0, true)
+			_home()
+		if _has(props, kind):
+			_spin(props, kind, at, time * 8.0)
+		else:
+			draw_circle(at, 6.0, Color("d0a060"))
+		return
+	match kind:
+		"pepper":
+			var grow := clampf(time / 0.3, 0.4, 1.0)
+			_spin(props, "fx_puff", at, time * 3.0, 0.6 * grow, Color(0.55, 0.45, 0.35, 0.9))
+			draw_circle(at + Vector2(sin(time * 20.0) * 2.0, 0.0), 1.2, Color(0.2, 0.15, 0.1, 0.9))
+		"crumb":
+			draw_circle(at, 4.0, Color(1.0, 0.5, 0.1, 0.25), true, -1.0, true)
+			draw_circle(at, 2.2, Color("ff9a3c"), true, -1.0, true)
+			draw_circle(at + Vector2(-0.6, -0.6), 0.9, Color("fff0a0"), true, -1.0, true)
+		"bubble":
+			draw_arc(at, 4.0 + sin(time * 6.0) * 0.4, 0.0, TAU, 20, Color(0.75, 1.0, 0.9, 0.9), 0.8, true)
+			draw_circle(at + Vector2(-1.4, -1.4), 0.9, Color(1, 1, 1, 0.9), true, -1.0, true)
+		"feather":
+			var way := Vector2(float(shot["vx"]), float(shot["vy"])).normalized()
+			var side := way.orthogonal()
+			draw_colored_polygon(PackedVector2Array([at + way * 6.0, at + side * 1.8, at - way * 6.0, at - side * 1.8]), Color("2a2a3a"))
+			draw_line(at - way * 6.0, at + way * 6.0, Color("8a8aa0"), 0.5, true)
 		_:
-			_spin(props, "hexnut", at, time * 7.0)
+			draw_circle(at, 3.0, Color("fff0a0"))
 
+## Which frame of an enemy shows, and how it moves on its spot.
 func _draw_foe(foe: Dictionary) -> void:
 	var kind := str(foe["kind"])
 	var x := float(foe["x"])
 	var y := float(foe["y"])
-	var time := float(foe["time"])
+	var time := float(foe["time"]) + float(int(x)) * 0.01
 	var mode := str(foe["mode"])
 	var tall := float(foe["tall"])
-	var frame := kind + "_0"
+	var state := int(foe["state"])
+	var frame := kind + "_%d" % (int(time * 7.0) % 2)
 	var scale := Vector2.ONE
 	var angle := 0.0
-	var grounded := true
+	var grounded := not bool(foe["flies"])
+	var flip_v := false
 	match kind:
-		"bug":
-			frame = "bug_%d" % (int(time * 8.0) % 2)
-			y -= absf(sin(time * 12.5)) * 0.6
-		"hopper":
-			grounded = bool(foe["ground"])
-			frame = "hopper_0" if grounded else "hopper_1"
-			if grounded:
-				var breath := sin(time * 9.0) * 0.05
-				scale = Vector2(1.0 - breath, 1.0 + breath)
-		"drone":
-			grounded = false
-			y += 2.0
-			angle = float(int(foe["face"])) * 0.1 + sin(time * 5.0) * 0.05
-			scale = Vector2(1.0, 1.0 + sin(time * 44.0) * 0.03)
-		"turret":
-			frame = "turret_1" if mode == "aim" else "turret_0"
+		"ant", "rat", "worm", "mouse":
+			var pace := 8.0 if kind != "worm" else 4.0
+			if kind == "mouse" and mode == "dash":
+				pace = 18.0
+			frame = kind + "_%d" % (int(time * pace) % 2)
+			if kind == "mouse" and mode == "wind":
+				x += sin(time * 70.0) * 0.8
+		"shaker":
+			frame = "shaker_1" if mode == "aim" else "shaker_0"
 			if mode == "aim":
-				scale = Vector2(1.0 + sin(time * 50.0) * 0.02, 1.0)
-		"roller":
-			frame = "roller_0" if int(foe["hp"]) > 1 else "bare_0"
-			if mode == "rev":
-				x += sin(time * 90.0) * 0.9
-			elif mode == "dash":
-				angle = x / 7.5
-			elif mode == "walk":
-				angle = sin(x / 7.5) * 0.3
-			else:
-				angle = sin(time * 9.0) * 0.2
-		"magnet":
-			grounded = false
-			y += 2.0 + sin(time * 4.0) * 0.6
-			frame = "magnet_%d" % (int(time * 7.0) % 2)
+				angle = float(int(foe["face"])) * 0.12 * sin(time * 40.0)
+		"jack":
+			frame = "jack_0" if mode == "box" else "jack_1"
+			if mode != "box" and bool(foe["ground"]):
+				var squash := sin(time * 12.0) * 0.06
+				scale = Vector2(1.0 + squash, 1.0 - squash)
+		"frog":
+			frame = "frog_0" if bool(foe["ground"]) else "frog_1"
+		"slime":
+			frame = "slime_1" if mode == "drop" else "slime_%d" % (int(time * 3.0) % 2)
+			if mode == "cling":
+				frame = "slime_0"
+				flip_v = true
+		"fly", "hornet":
+			frame = kind + "_%d" % (int(time * 24.0) % 2)
+			if mode == "aim":
+				x += sin(time * 80.0) * 0.8
+		"plane":
+			frame = "plane_%d" % (int(time * 16.0) % 2)
+			angle = cos(time * 2.0) * 0.08
+		"spider":
+			var home: Vector2 = foe["home"]
+			var anchor := Vector2(home.x, home.y - tall - 70.0)
+			draw_line(anchor, Vector2(x, y - tall + 2.0), Color(0.92, 0.92, 0.96, 0.75), 0.5, true)
+			frame = "spider_%d" % (int(time * 3.0) % 2)
 	var flipped := int(foe["face"]) < 0
-	if int(foe["state"]) == Foes.KNOCKED_OUT:
-		_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), 1.0, Color.WHITE, flipped, time < 0.1)
+	if state == Foes.KNOCKED_OUT:
+		if _has(foes, frame):
+			_spin(foes, frame, Vector2(x, y - tall * 0.5), time * 12.0 * signf(float(foe["vx"])), 1.0, Color.WHITE, flipped, float(foe["time"]) < 0.1)
 		return
-	if grounded:
+	if state == Foes.STUNNED:
+		frame = kind + "_0"
+		if kind == "jack":
+			frame = "jack_1"
+		angle = PI if bool(foe["flies"]) else sin(_clock * 9.0) * 0.15
+	if grounded or state == Foes.STUNNED:
 		_shadow(float(foe["x"]), float(foe["y"]), float(foe["half"]) + 1.0)
 	var hit := float(foe["flash"]) > 0.0
-	if kind == "roller":
-		_spin(foes, frame, Vector2(x, y - foes.size(frame).y * 0.5), angle * (-1.0 if flipped else 1.0), 1.0, Color.WHITE, flipped, hit)
+	if not _has(foes, frame):
+		draw_rect(Rect2(x - float(foe["half"]), y - tall, float(foe["half"]) * 2.0, tall), Color("c04060"))
+	elif flip_v:
+		_spin(foes, frame, Vector2(x, y - tall * 0.5), PI, 1.0, Color.WHITE, not flipped, hit)
+	elif angle != 0.0 and state == Foes.STUNNED and bool(foe["flies"]):
+		_spin(foes, frame, Vector2(x, y - tall * 0.5), angle, 1.0, Color.WHITE, flipped, hit)
 	else:
 		_put(foes, frame, Vector2(x, y), flipped, scale, angle, Color.WHITE, hit)
-	if mode == "dizzy":
-		for star in 2:
-			var around := _clock * 7.0 + float(star) * PI
-			_spin(props, "fx_star", Vector2(x + cos(around) * 7.0, float(foe["y"]) - tall - 4.0 + sin(around) * 2.0), _clock * 4.0, 0.35, Color("ffe27a"))
+	if state == Foes.STUNNED or mode == "dizzy":
+		for star in 3:
+			var around := _clock * 7.0 + float(star) * TAU / 3.0
+			_spin(props, "fx_star", Vector2(x + cos(around) * 7.0, float(foe["y"]) - tall - 4.0 + sin(around) * 2.0), _clock * 4.0, 0.3, Color("ffe27a"))
 
+## The boss: its frame for what it is doing, the glow of a tell, and the marks that say where an attack will land.
 func _draw_boss(boss: Dictionary) -> void:
 	var mode := str(boss["mode"])
 	if mode == "gone":
 		return
+	var kind := str(boss["kind"])
 	var x := float(boss["x"])
 	var y := float(boss["y"])
-	var hurt := float(boss["flash"]) > 0.0 or mode == "dying"
-	var white := float(boss["flash"]) > 0.2 or (mode == "dying" and int(_clock * 16.0) % 2 == 0)
-	if float(boss.get("shake", 0.0)) > 0.0:
-		x += sin(_clock * 120.0) * 1.0
-	if str(boss["kind"]) == "vacuum":
-		var facing := float(int(boss["face"]))
-		var open := mode == "spit" or mode == "inhale"
-		var frame := "vac_hurt" if hurt else ("vac_open" if open else "vac_closed")
-		# The motor never stops shaking the shell; the breath and the charge pull it out of shape.
-		var scale := Vector2(1.0, 1.0 + sin(_clock * 38.0) * 0.008)
-		var angle := 0.0
-		match mode:
-			"inhale":
-				scale = Vector2(1.0 + sin(_clock * 16.0) * 0.025, 1.0 - sin(_clock * 16.0) * 0.02)
-			"rev":
-				x += sin(_clock * 95.0) * 1.1
-				angle = -facing * 0.05
-			"charge":
-				angle = facing * 0.07
-				scale = Vector2(1.05, 0.96)
-			"spit":
-				scale = Vector2(0.97, 1.03)
-		_shadow(x, y + 1.0, 24.0, 0.36)
-		# The picture faces left; the wheels sit on the floor.
-		_put(bosses, frame, Vector2(x + (2.0 if facing < 0.0 else -2.0), y + 1.0), facing > 0.0, scale, angle, Color.WHITE, white)
-		return
-	# The rail across the room, the trolley, the chain and the claw.
-	var left := float(boss["left"])
-	var right := float(boss["right"])
-	draw_rect(Rect2(left, y - 3.5, right - left, 5.0), Color("2b3140"))
-	draw_rect(Rect2(left, y - 3.5, right - left, 1.0), Color("9aa5b8"))
-	draw_rect(Rect2(left, y - 1.2, right - left, 1.4), Color("48526a"))
-	draw_rect(Rect2(left, y + 1.0, right - left, 0.6), Color("161a24"))
-	var post := left + 8.0
-	while post < right:
-		draw_rect(Rect2(post - 0.8, y - 3.5, 1.6, 5.0), Color("1c202b"))
-		post += 32.0
-	var chain := float(boss["claw"])
-	var link := 0.0
-	while link < chain + 2.0:
-		var at := Vector2(x, y + 28.5 + link)
-		if int(link / 3.0) % 2 == 0:
-			draw_arc(at, 1.5, 0.0, TAU, 16, Color("8d98ad"), 0.8, true)
-		else:
-			draw_line(at - Vector2(0.0, 1.8), at + Vector2(0.0, 1.8), Color("5b657a"), 1.0, true)
-		link += 3.0
-	if mode == "aim":
-		# The eye marks where the claw will come down.
-		var floor_y := float(boss["floor"])
-		var pulse := 0.35 + 0.35 * absf(sin(_clock * 18.0))
-		draw_line(Vector2(x, y + 28.0), Vector2(x, floor_y), Color(1.0, 0.25, 0.25, pulse), 1.0, true)
-		draw_set_transform(Vector2(x, floor_y) - _camera, 0.0, Vector2(1.0, 0.3))
-		draw_arc(Vector2.ZERO, 13.0, 0.0, TAU, 32, Color(1.0, 0.3, 0.3, pulse + 0.2), 1.6, true)
-		_home()
-	var body := "crane_hurt" if hurt else ("crane_open" if Bosses.is_open(boss) else "crane_shut")
-	_put(bosses, body, Vector2(x, y + 28.0), false, Vector2(1.0, 1.0 + sin(_clock * 30.0) * 0.006), 0.0, Color.WHITE, white)
-	var shut := mode == "stuck" or mode == "retract"
-	_put(bosses, "claw_shut" if shut else "claw_open", Vector2(x, y + 28.0 + chain + 22.0), false, Vector2.ONE, sin(_clock * 3.0) * 0.03 if mode != "stuck" else 0.0, Color.WHITE, white)
+	var hurt := float(boss["flash"]) > 0.0 or mode == "dying" or mode == "rage"
+	var white := float(boss["flash"]) > 0.15 or (mode == "dying" and int(_clock * 16.0) % 2 == 0)
+	var face := float(int(boss["face"]))
+	var scale := Vector2.ONE
+	var angle := 0.0
+	if float(boss.get("shake", 0.0)) > 0.0 or mode.ends_with("_tell"):
+		x += sin(_clock * 110.0) * (1.4 if mode.ends_with("_tell") else 1.0)
+	var frame := kind + "_idle"
+	match kind:
+		"toaster":
+			match mode:
+				"pop_tell", "crumb_tell":
+					frame = "toaster_pop"
+					scale = Vector2(1.0 - 0.05 * sin(_clock * 30.0), 1.0 + 0.05 * sin(_clock * 30.0))
+				"hop_tell":
+					frame = "toaster_crouch"
+				"hop":
+					frame = "toaster_idle"
+					scale = Vector2(0.92, 1.1) if float(boss["vy"]) < 0.0 else Vector2(1.05, 0.96)
+				"pause":
+					frame = "toaster_pop"
+				"walk":
+					scale = Vector2(1.0, 1.0 + absf(sin(_clock * 9.0)) * 0.04)
+		"robot":
+			match mode:
+				"throw_tell":
+					frame = "robot_throw"
+				"charge_tell", "charge":
+					frame = "robot_charge"
+				"dazed":
+					frame = "robot_hurt"
+					angle = sin(_clock * 8.0) * 0.06
+				"walk":
+					angle = sin(_clock * 6.0) * 0.04
+		"crayfish":
+			match mode:
+				"snap_tell", "snap":
+					frame = "crayfish_snap"
+				"under":
+					return
+				"rise_tell":
+					var pulse := 0.4 + 0.4 * absf(sin(_clock * 14.0))
+					draw_set_transform(Vector2(x, Bosses.FLOOR) - _camera, 0.0, Vector2(1.0, 0.3))
+					draw_arc(Vector2.ZERO, 30.0, 0.0, TAU, 40, Color(1.0, 0.3, 0.3, pulse), 1.6, true)
+					_home()
+					return
+				"dive_tell":
+					frame = "crayfish_dive"
+				"rise":
+					scale = Vector2(0.95, 1.08)
+		"crow":
+			frame = "crow_fly_%d" % (int(_clock * 9.0) % 2)
+			match mode:
+				"dive", "low":
+					frame = "crow_dive"
+				"perch":
+					if (boss["goal"] as Vector2).distance_to(Vector2(x, y)) < 2.0:
+						frame = "crow_perch"
+				"dive_tell":
+					var goal: Vector2 = boss["goal"]
+					var pulse := 0.35 + 0.35 * absf(sin(_clock * 16.0))
+					var from := Vector2(x, y - 14.0)
+					var dash := 0.0
+					var length := from.distance_to(goal)
+					while dash < length:
+						draw_line(from.lerp(goal, dash / length), from.lerp(goal, minf(1.0, (dash + 4.0) / length)), Color(1.0, 0.25, 0.25, pulse), 1.0, true)
+						dash += 8.0
+	if hurt:
+		frame = kind + "_hurt"
+	if mode.ends_with("_tell"):
+		var pulse := 0.5 + 0.5 * sin(_clock * 18.0)
+		draw_circle(Vector2(x, y - float(boss["tall"]) * 0.5), float(boss["half"]) + 8.0, Color(1.0, 0.45, 0.2, 0.12 + 0.12 * pulse), true, -1.0, true)
+	if kind != "crow" or y > Bosses.FLOOR - 4.0:
+		_shadow(x, Bosses.FLOOR, float(boss["half"]), 0.36)
+	else:
+		_shadow(x, Bosses.FLOOR, float(boss["half"]) * 0.6, 0.18)
+	# Pictures face left; a boss facing right is drawn flipped.
+	if _has(bosses, frame):
+		_put(bosses, frame, Vector2(x, y + 1.0), face > 0.0, scale, angle, Color.WHITE, white)
+	else:
+		draw_rect(Bosses.body(boss), Color("c04040"))
 
 ## The name of frame `index` of an action of a squirrel, wrapped round the action's length. An action without numbered frames is one picture of that name.
 func _frame(slot: int, move: String, index: int) -> String:
@@ -1001,7 +1207,7 @@ func _held_spot(hero: Dictionary, pose: Dictionary) -> Vector2:
 func _draw_held(hero: Dictionary, spot: Vector2) -> void:
 	var carried: Variant = hero["carry"]
 	if carried is Dictionary:
-		_put(props, str(carried["kind"]), spot + Vector2(0.0, HOLD_SINK), false, Vector2.ONE, 0.0, _fading(carried))
+		_draw_thing(carried, spot + Vector2(0.0, HOLD_SINK), 0.0, _fading(carried))
 	elif int(hero["lifting"]) >= 0:
 		var partner := world.heroes[int(hero["lifting"])]
 		_put(heroes[int(partner["slot"])], "carried", spot + Vector2(0.0, HOLD_SINK), int(hero["face"]) < 0, Vector2.ONE, 0.0, _blinking(partner))
@@ -1045,10 +1251,10 @@ func _draw_hero(hero: Dictionary) -> void:
 		_put(sheet, str(pose["next"]), at, bool(pose["flip"]), pose["scale"], float(pose["angle"]), Color(tint.r, tint.g, tint.b, tint.a * float(pose["mix"])))
 	if hiding:
 		_draw_held(hero, spot)
-	if world.stage_time < 4.0 and world.phase == World.P_PLAY:
+	if world.level_time < 4.0 and world.phase == World.P_PLAY:
 		# Its name, and with two players a marker in its scarf colour, while the stage is new.
 		var top := Vector2(x, y - (50.0 if hero["carry"] != null or int(hero["lifting"]) >= 0 else 31.0) + sin(_clock * 8.0) * 1.0)
-		var fade := clampf(4.0 - world.stage_time, 0.0, 1.0)
+		var fade := clampf(4.0 - world.level_time, 0.0, 1.0)
 		# Side by side, the second name steps above the first.
 		if slot == 1 and int(world.heroes[0]["state"]) == World.H_NORMAL and absf(float(world.heroes[0]["x"]) - x) < 26.0:
 			top.y -= 9.0
@@ -1074,6 +1280,8 @@ func _draw_particles() -> void:
 				_spin(props, "fx_splinter", at, float(particle["turn"]), size, Color(color.r, color.g, color.b, minf(1.0, left * 3.0)))
 			"bolt":
 				_spin(props, "fx_bolt", at, float(particle["turn"]), size, Color(color.r, color.g, color.b, minf(1.0, left * 3.0)))
+			"bubble":
+				draw_arc(at, size * 2.4, 0.0, TAU, 16, Color(color.r, color.g, color.b, color.a * left), 0.6, true)
 			"bit":
 				draw_set_transform(at - _camera, float(particle["turn"]), Vector2(1.0, absf(cos(float(particle["turn"]) * 0.7)) * 0.8 + 0.2))
 				draw_rect(Rect2(-size * 0.5, -size * 0.3, size, size * 0.6), Color(color.r, color.g, color.b, minf(1.0, left * 4.0)))
@@ -1081,17 +1289,17 @@ func _draw_particles() -> void:
 			_:
 				draw_circle(at, size * (0.4 + 0.6 * left), Color(color.r, color.g, color.b, color.a * minf(1.0, left * 2.5)), true, -1.0, true)
 
-## One hint at a time: the one nearest to a squirrel, and only while that squirrel stands by it.
+## One sign at a time: the one nearest to a squirrel, and only while that squirrel stands by it.
 func _draw_hint() -> void:
 	if world.phase != World.P_PLAY:
 		return
 	var key := ""
 	var hint_x := 0.0
-	var distance := 44.0
+	var distance := 48.0
 	for hint: Dictionary in world.level.get("hints", []):
 		var at: Vector2 = hint["at"]
 		for hero in world.heroes:
-			if int(hero["state"]) != World.H_OUT and absf(float(hero["x"]) - at.x) < distance:
+			if int(hero["state"]) != World.H_OUT and absf(float(hero["x"]) - at.x) < distance and absf(float(hero["y"]) - at.y) < 48.0:
 				distance = absf(float(hero["x"]) - at.x)
 				key = str(hint["key"])
 				hint_x = at.x
@@ -1100,18 +1308,18 @@ func _draw_hint() -> void:
 	var words := Texts.of(key, locale)
 	var size := 8.0 if locale == "en" else 9.0
 	var wide := text.measure(words, size, 700).x
-	var middle := Vector2(clampf(hint_x, _camera.x + wide * 0.5 + 10.0, _camera.x + VIEW.x - wide * 0.5 - 10.0), _camera.y + 78.0 + sin(_clock * 2.5) * 1.0)
+	var middle := Vector2(clampf(hint_x, _camera.x + wide * 0.5 + 10.0, _camera.x + VIEW.x - wide * 0.5 - 10.0), _camera.y + 64.0 + sin(_clock * 2.5) * 1.0)
 	draw_style_box(_plate, Rect2(middle.x - wide * 0.5 - 6.0, middle.y - size - 3.0, wide + 12.0, size + 8.0))
 	text.draw(self, middle, words, size, Color("fff7e0"), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 700)
 
 ## Darker corners pull the eye to the middle of the stage.
 func _draw_vignette() -> void:
-	var dark := Color(0.03, 0.02, 0.07, 0.42)
+	var dark := Color(0.03, 0.02, 0.07, 0.4)
 	var clear := Color(0.03, 0.02, 0.07, 0.0)
 	_fade(Rect2(0.0, 0.0, VIEW.x, 34.0), dark, clear)
-	_fade(Rect2(0.0, VIEW.y - 26.0, VIEW.x, 26.0), clear, dark)
-	_fade(Rect2(0.0, 0.0, 40.0, VIEW.y), Color(dark.r, dark.g, dark.b, 0.3), clear, false)
-	_fade(Rect2(VIEW.x - 40.0, 0.0, 40.0, VIEW.y), clear, Color(dark.r, dark.g, dark.b, 0.3), false)
+	_fade(Rect2(0.0, VIEW.y - 22.0, VIEW.x, 22.0), clear, dark)
+	_fade(Rect2(0.0, 0.0, 36.0, VIEW.y), Color(dark.r, dark.g, dark.b, 0.26), clear, false)
+	_fade(Rect2(VIEW.x - 36.0, 0.0, 36.0, VIEW.y), clear, Color(dark.r, dark.g, dark.b, 0.26), false)
 
 ## Which banner is up, as one word; an empty string when none is.
 func _banner_key() -> String:
@@ -1119,7 +1327,7 @@ func _banner_key() -> String:
 		return ""
 	match world.phase:
 		World.P_INTRO:
-			return "intro"
+			return "boss" if not world.boss.is_empty() else "intro"
 		World.P_CLEAR, World.P_WON:
 			return "clear"
 		World.P_RETRY:
@@ -1130,11 +1338,31 @@ func _banner_key() -> String:
 		return "boss"
 	return ""
 
+func _draw_banners() -> void:
+	match _band_key:
+		"intro":
+			_band(Texts.of(world.level_id, locale), Texts.of(world.theme, locale) + "  ·  " + Texts.of("level", locale) % clampi(world.route.size() + 1, 1, Levels.ROUTE_LENGTH), LOOKS[world.theme]["node"])
+		"clear":
+			_band(Texts.of("won" if world.level_id == Levels.FINAL else "clear", locale), "", Color("ffd75e"))
+		"retry":
+			_band(Texts.of("continue", locale) % maxi(0, world.continues_left - 1), "", Color("f5a340"))
+		"lost":
+			_band(Texts.of("lost", locale), "", Color("e5484d"))
+		"boss":
+			_band(Texts.of(world.level_id, locale), Texts.of("tip_" + world.level_id, locale), Color("e5484d"))
+	if _call != "" and _call_age < 1.6:
+		var show := clampf(minf(_call_age / 0.15, (1.6 - _call_age) / 0.3), 0.0, 1.0)
+		var size := 14.0
+		var wide := text.measure(_call, size, 800).x
+		var middle := Vector2(VIEW.x * 0.5, 72.0 - (1.0 - show) * 8.0)
+		draw_style_box(_plate, Rect2(middle.x - wide * 0.5 - 10.0, middle.y - size - 4.0, wide + 20.0, size + 11.0))
+		text.draw(self, middle, _call, size, Color(1.0, 0.86, 0.4, show), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800, 1.0, Color(0.1, 0.07, 0.14, show))
+
 func _band(title: String, subtitle: String, accent: Color) -> void:
 	# The band opens from its middle line and the title settles after it.
-	var open := 1.0 - pow(1.0 - clampf(_band_age / 0.28, 0.0, 1.0), 3.0)
+	var open := 1.0 - pow(1.0 - clampf(_band_age / 0.24, 0.0, 1.0), 3.0)
 	var half := 27.0 * open
-	var middle := 108.0
+	var middle := 112.0
 	var ink := Color(0.08, 0.06, 0.13, 0.9)
 	var thin := Color(0.08, 0.06, 0.13, 0.0)
 	draw_rect(Rect2(0.0, middle - half, VIEW.x, half * 2.0), Color(0.08, 0.06, 0.13, 0.78))
@@ -1146,32 +1374,97 @@ func _band(title: String, subtitle: String, accent: Color) -> void:
 		_fade(Rect2(VIEW.x * 0.5, line - 0.6, VIEW.x * 0.5, 1.2), accent, Color(accent.r, accent.g, accent.b, 0.0), false)
 	if open < 0.6:
 		return
-	var show := clampf((_band_age - 0.16) / 0.25, 0.0, 1.0)
+	var show := clampf((_band_age - 0.12) / 0.2, 0.0, 1.0)
 	var slide := (1.0 - show) * 14.0
 	var white := Color(1.0, 0.97, 0.88, show)
 	var size := 20.0
 	var wide := text.measure(title, size, 800).x
 	var baseline := middle + (2.0 if subtitle != "" else 7.0)
 	text.draw(self, Vector2(VIEW.x * 0.5 - slide, baseline), title, size, white, HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800, 1.2, Color(0.1, 0.07, 0.14, show))
-	# A gear turns at each end of the title.
+	# An acorn turns at each end of the title.
 	for side: float in [-1.0, 1.0]:
-		draw_set_transform(Vector2(VIEW.x * 0.5 + side * (wide * 0.5 + 14.0) - slide, baseline - 7.0), _clock * 1.6 * side, Vector2.ONE * 1.3)
-		props.draw(self, "gear", Vector2(0.0, props.size("gear").y * 0.5), false, 1.0, 0.0, Color(1.0, 1.0, 1.0, show))
+		draw_set_transform(Vector2(VIEW.x * 0.5 + side * (wide * 0.5 + 14.0) - slide, baseline - 7.0), sin(_clock * 3.0) * 0.3 * side, Vector2.ONE * 1.3)
+		if _has(props, "acorn"):
+			props.draw(self, "acorn", Vector2(0.0, props.size("acorn").y * 0.5), false, 1.0, 0.0, Color(1.0, 1.0, 1.0, show))
 		draw_set_transform(Vector2.ZERO)
 	if subtitle != "":
 		text.draw(self, Vector2(VIEW.x * 0.5 + slide, middle + 18.0), subtitle, 9.0 if locale == "en" else 10.0, Color(accent.r, accent.g, accent.b, show), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 700, 0.8, Color(0.1, 0.07, 0.14, show))
 
-func _draw_banners() -> void:
-	match _band_key:
-		"intro":
-			_band(Texts.of("stage", locale) % (world.stage + 1), str(Levels.NAMES[world.stage]["en" if locale == "en" else "zh"]).to_upper(), Color("5fd4c4"))
-		"clear":
-			var last := world.stage + 1 >= Levels.COUNT
-			_band(Texts.of("won" if last else "clear", locale), "", Color("ffd75e"))
-		"retry":
-			_band(Texts.of("continue", locale) % maxi(0, world.continues_left - 1), "", Color("f5a340"))
-		"lost":
-			_band(Texts.of("lost", locale), "", Color("e5484d"))
-		"boss":
-			var kind := str(world.boss["kind"])
-			_band(Texts.of("boss_" + kind, locale), Texts.of("boss_tip_" + kind, locale), Color("e5484d"))
+# ---- the map ----
+
+## The map between levels: the painted paper, the paths, a badge for every level (cleared, open or still closed), the squirrels on the marker and, at the bottom, the name of the level under it.
+func _draw_map() -> void:
+	if map_art != null:
+		map_art.draw_fit(self, "main", Rect2(Vector2.ZERO, VIEW))
+	else:
+		_fade(Rect2(Vector2.ZERO, VIEW), Color("c9a878"), Color("8a6a48"))
+	draw_rect(Rect2(Vector2.ZERO, VIEW), Color(0.05, 0.03, 0.02, 0.12))
+	var open := world.map_choices()
+	for id: String in Levels.NODES:
+		var from: Vector2 = Levels.NODES[id]["at"]
+		for next: String in Levels.NODES[id]["next"]:
+			var to: Vector2 = Levels.NODES[next]["at"]
+			var walked := world.cleared.has(next) and (world.cleared.has(id) or id == "home")
+			var offered := id == world.node and next in open
+			var color := Color(0.98, 0.84, 0.4, 0.95) if walked else (Color(1.0, 1.0, 0.95, 0.7 + 0.3 * sin(_clock * 5.0)) if offered else Color(0.3, 0.2, 0.12, 0.55))
+			var length := from.distance_to(to)
+			var dot := 0.0
+			while dot < length:
+				draw_circle(from.lerp(to, dot / length), 1.5 if walked or offered else 1.0, color, true, -1.0, true)
+				dot += 5.0
+	for id: String in Levels.NODES:
+		var node: Dictionary = Levels.NODES[id]
+		var at: Vector2 = node["at"]
+		var theme := str(node["theme"])
+		var tint: Color = LOOKS[theme]["node"] if theme != "" else Color("9b6a3c")
+		var done := world.cleared.has(id) or id == "home"
+		var offered := id in open
+		var boss := str(node["kind"]) == "boss"
+		var radius := 9.0 if boss else 6.5
+		if offered:
+			draw_circle(at, radius + 3.0 + sin(_clock * 6.0) * 1.0, Color(1.0, 0.95, 0.7, 0.35), true, -1.0, true)
+		draw_circle(at + Vector2(0.0, 1.5), radius + 1.2, Color(0.1, 0.06, 0.04, 0.5), true, -1.0, true)
+		draw_circle(at, radius + 1.0, Color("3a2416"), true, -1.0, true)
+		draw_circle(at, radius, tint if done or offered else tint.darkened(0.55), true, -1.0, true)
+		if boss and _has(bosses, theme_boss_frame(theme)):
+			var frame := theme_boss_frame(theme)
+			var size := bosses.size(frame)
+			var zoom := (radius * 1.7) / maxf(size.x, size.y)
+			bosses.draw(self, frame, at + Vector2(0.0, size.y * zoom * 0.5), false, zoom, 0.0, Color.WHITE if done or offered else Color(0.4, 0.4, 0.45))
+		elif id == "home":
+			_put(props, "acorn", at + Vector2(0.0, 4.0), false, Vector2.ONE * 0.9)
+		if done and id != "home":
+			draw_polyline(PackedVector2Array([at + Vector2(-3.0, 0.0), at + Vector2(-0.8, 2.6), at + Vector2(3.6, -3.0)]), Color.WHITE, 1.4, true)
+	# The two squirrels stand on the marker.
+	var marker := world.marker
+	var shown := 0
+	for hero in world.heroes:
+		if bool(hero["active"]):
+			shown += 1
+	var place := 0
+	for hero in world.heroes:
+		if not bool(hero["active"]):
+			continue
+		var slot := int(hero["slot"])
+		var side := 0.0 if shown == 1 else (-5.0 if place == 0 else 5.0)
+		place += 1
+		var moving := marker.distance_to(Levels.NODES[world.cursor]["at"]) > 0.5
+		var hop := absf(sin(_clock * 12.0)) * 3.0 if moving else 0.0
+		var frame: String = _frame(slot, "run", int(_clock * 12.0)) if moving else _cycle(slot, "idle", _clock + float(slot) * 0.7)[0]
+		var facing := (Levels.NODES[world.cursor]["at"] as Vector2).x < marker.x
+		_put(heroes[slot], frame, marker + Vector2(side, 2.0 - hop), facing, Vector2.ONE * 0.85)
+	# The name of the level the marker points at.
+	var shown_id := world.cursor
+	var title := Texts.of(shown_id, locale)
+	var theme_name := str(Levels.NODES[shown_id]["theme"])
+	var sub := Texts.of(theme_name, locale) if theme_name != "" else ""
+	var size := 13.0
+	var wide := maxf(text.measure(title, size, 800).x, 120.0)
+	var box := Rect2(VIEW.x * 0.5 - wide * 0.5 - 14.0, VIEW.y - 40.0, wide + 28.0, 34.0)
+	draw_style_box(_plate, box)
+	text.draw(self, Vector2(VIEW.x * 0.5, box.position.y + 16.0), title, size, Color("fff7e0"), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 800)
+	var line := (sub + "  ·  " if sub != "" else "") + Texts.of("map_pick" if open.size() > 1 else "map_go", locale)
+	text.draw(self, Vector2(VIEW.x * 0.5, box.position.y + 28.0), line, 7.0, Color(0.9, 0.85, 0.75), HORIZONTAL_ALIGNMENT_CENTER, -1.0, 600)
+
+static func theme_boss_frame(theme: String) -> String:
+	return {"kitchen": "toaster_idle", "toyshop": "robot_idle", "sewer": "crayfish_idle", "treehouse": "crow_perch"}.get(theme, "")
