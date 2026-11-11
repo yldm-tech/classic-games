@@ -27,6 +27,7 @@ const BURN_TIME := 0.45
 const IMPACT_TIME := 0.3
 const DEAD_TIME := 1.4
 const RESPAWN_INVULN := 2.5
+const START_INVULN := 1.0
 const SHIELD_INVULN := 1.5
 const INTRO_TIME := 2.0
 const CLEAR_TIME := 2.8
@@ -156,14 +157,14 @@ func _load_stage(index: int) -> void:
 		if hero.out:
 			hero.out = false
 			hero.lives = 1
-		_place(slot)
+		_place(slot, START_INVULN)
 	clear_slot = -1
 	phase = Levels.Phase.INTRO
 	phase_time = INTRO_TIME
 	audio.play_music(Sounds.music(index))
 	emit_fx("stage", Vector2i.ZERO)
 
-func _place(slot: int) -> void:
+func _place(slot: int, invuln: float = RESPAWN_INVULN) -> void:
 	var hero: Actors.Hero = heroes[slot]
 	hero.cell = starts[slot]
 	hero.dir = Vector2i.ZERO
@@ -171,7 +172,7 @@ func _place(slot: int) -> void:
 	hero.face = Vector2i(0, 1)
 	hero.pref = Vector2i.ZERO
 	hero.dead = 0.0
-	hero.invuln = RESPAWN_INVULN
+	hero.invuln = invuln
 	hero.act = 0.0
 
 # ---- step ----
@@ -270,6 +271,14 @@ func _step_hero(slot: int, delta: float) -> void:
 			if can_walk(hero.cell + want):
 				hero.dir = want
 				hero.t = 0.0
+			else:
+				# The direction pressed last is blocked: any other one that is held may go instead.
+				for dir in held:
+					if dir != want and can_walk(hero.cell + dir):
+						hero.dir = dir
+						hero.face = dir
+						hero.t = 0.0
+						break
 	elif want == -hero.dir:
 		hero.cell += hero.dir
 		hero.dir = want
@@ -393,7 +402,7 @@ func fire_line(from: Vector2i, d: int, reach: int, owner: int, chain: int) -> vo
 			if other.chain == 0:
 				other.chain = chain
 			break
-		last = _add_flame(cell, owner, chain, 1 + d % 2, -1)
+		last = _add_flame(cell, owner, chain, 2 - d % 2, -1)
 	if last != null and last.axis != 0:
 		last.tip = d
 
@@ -404,6 +413,8 @@ func _add_flame(cell: Vector2i, owner: int, chain: int, axis: int, tip: int) -> 
 		flame = Actors.Flame.new()
 		flame.axis = axis
 		flame.tip = tip
+		flame.owner = owner
+		flame.chain = chain
 		flames[at] = flame
 	elif flame.axis != axis:
 		# Two arms crossing look like the heart of a blast.

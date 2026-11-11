@@ -33,7 +33,6 @@ const TEXT := {
 	"exit_hint": {"zh": "升降机还埋在方块下面", "en": "THE LIFT IS STILL BURIED"},
 	"timeup": {"zh": "空气耗尽！", "en": "OUT OF AIR!"},
 	"rage": {"zh": "它发怒了！", "en": "IT IS ENRAGED!"},
-	"join": {"zh": "暂停菜单\n可加入", "en": "JOIN FROM\nPAUSE MENU"},
 	"out": {"zh": "下一层归队", "en": "BACK NEXT\nLEVEL"},
 }
 
@@ -492,8 +491,8 @@ func _draw_panels(world: int) -> void:
 	# Creatures still about, and continues in hand.
 	draw_texture(tex["grub_%d" % (int(clock * 3.0) % 2)], left + Vector2(6, 88))
 	_number(left + Vector2(26, 94), "x%d" % game.foes_left(), Color.WHITE)
-	draw_texture(tex["hero0_helmet"], left + Vector2(40, 86))
-	_number(left + Vector2(60, 94), "x%d" % game.continues_left, Color.WHITE)
+	draw_texture(tex["hero0_helmet"], left + Vector2(44, 86))
+	_number(left + Vector2(63, 94), "x%d" % game.continues_left, Color.WHITE)
 	draw_rect(Rect2(left + Vector2(6, 108), Vector2(68, 1)), Color(FRAME_LIGHT, 0.5))
 	_shaft(left + Vector2(40, 116), world)
 	_panel(RIGHT_PANEL)
@@ -514,8 +513,10 @@ func _gear(corner: Vector2, slot: int) -> void:
 	elif active and hero.dead > 0.0:
 		portrait = "hero%d_hurt" % slot
 	draw_texture_rect(tex[portrait], Rect2(frame.position + Vector2(4, 2), Vector2(32, 32)), false, Color.WHITE if active and not hero.out else Color(0.25, 0.25, 0.3, 0.9))
-	if not active or hero.out:
-		draw_multiline_string(font, corner + Vector2(4, 58), _t("out" if active else "join"), HORIZONTAL_ALIGNMENT_CENTER, 72.0, 9, 3, Color(0.85, 0.8, 0.7, 0.9))
+	if not active:
+		return
+	if hero.out:
+		draw_multiline_string(font, corner + Vector2(4, 58), _t("out"), HORIZONTAL_ALIGNMENT_CENTER, 72.0, 9, 3, Color(0.85, 0.8, 0.7, 0.9))
 		return
 	var rows := [["keg", hero.cap, 6, 48], ["blast", hero.blast, 44, 48], ["boots", hero.boots, 6, 64]]
 	for row: Array in rows:
