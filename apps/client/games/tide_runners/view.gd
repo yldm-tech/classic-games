@@ -293,8 +293,6 @@ func _shots(g: Variant) -> void:
 		var key: String = SHOT_SPRITES[shot["k"]]
 		if shot["k"] == "lance":
 			_turned(g, key, float(shot["x"]), float(shot["y"]), Vector2(float(shot["vx"]), float(shot["vy"])).angle())
-		elif shot["k"] == "disc":
-			_turned(g, key, float(shot["x"]), float(shot["y"]), float(shot["t"]) * 14.0)
 		else:
 			_centre(g, key, float(shot["x"]), float(shot["y"]))
 	for shot: Dictionary in g.foe_shots:

@@ -214,6 +214,7 @@ static func layers(gfx: Variant, theme: int) -> Array:
 	match theme:
 		0:
 			return [
+				{"image": _dawn_clouds(gfx), "factor": 0.03, "y": 56, "vertical": false},
 				{"image": _skyline(gfx, 140, "2", "3", 26, 100, 11), "factor": 0.08, "y": 66, "vertical": false},
 				{"image": _skyline(gfx, 150, "1", "e", 30, 104, 29), "factor": 0.2, "y": 98, "vertical": false},
 			]
@@ -228,6 +229,22 @@ static func layers(gfx: Variant, theme: int) -> Array:
 				{"image": _cranes(gfx), "factor": 0.12, "y": 70, "vertical": false},
 				{"image": _stacks(gfx), "factor": 0.3, "y": 150, "vertical": false},
 			]
+
+## Long streaks of cloud catching the first light.
+static func _dawn_clouds(gfx: Variant) -> Image:
+	var image := Image.create(480, 100, false, Image.FORMAT_RGBA8)
+	for index in 9:
+		var roll := noise(index, 17)
+		var x := roll % 480
+		var y := 6 + (roll / 512) % 80
+		var w := 50 + (roll / 4096) % 70
+		for copy: int in [-480, 0, 480]:
+			gfx._rect(image, x + copy, y, w, 3, "4")
+			gfx._rect(image, x + copy + 8, y - 2, w - 24, 2, "4")
+			gfx._rect(image, x + copy + 14, y + 3, w - 30, 1, "4")
+			gfx._rect(image, x + copy + 10, y - 2, w - 30, 1, "5")
+			gfx._rect(image, x + copy + 4, y + 2, w - 12, 1, "3")
+	return image
 
 static func _skyline(gfx: Variant, height: int, body: String, light: String, low: int, high: int, salt: int) -> Image:
 	var image := Image.create(480, height, false, Image.FORMAT_RGBA8)
