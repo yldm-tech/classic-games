@@ -52,6 +52,12 @@ if ! curl -s --retry-connrefused --retry 40 --retry-delay 1 -o /dev/null "http:/
 	cat "$WORK/server.log" >&2
 	exit 1
 fi
+# Something else may already listen on the port and answer /healthz in the backend's place; the backend started here then fails to bind and exits.
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+	echo "spike-integration: the backend exited during startup (is port $PORT in use?)" >&2
+	cat "$WORK/server.log" >&2
+	exit 1
+fi
 
 check() {
 	local label="$1"
