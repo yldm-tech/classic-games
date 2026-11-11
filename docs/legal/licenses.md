@@ -62,13 +62,13 @@ Classic Games 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与�
 | `golang.org/x/oauth2` | `apps/mcp` | BSD-3-Clause |
 | `golang.org/x/sync`、`golang.org/x/sys`、`golang.org/x/text`、`golang.org/x/time` | `apps/mcp` | BSD-3-Clause，另附 PATENTS 专利授权 |
 
-`apps/server/go.mod` 列出的全部 65 个第三方模块（含间接依赖）按许可证归类如下：
+`apps/server/go.mod` 列出的全部 71 个第三方模块（含间接依赖）按许可证归类如下：
 
 | 许可 | 数量 | 模块 |
 |---|---|---|
 | MIT | 36 | `github.com/anthropics/anthropic-sdk-go`、`github.com/buger/jsonparser`、`github.com/gabriel-vasile/mimetype`、`github.com/gin-contrib/sse`、`github.com/gin-gonic/gin`、`github.com/go-playground/locales`、`github.com/go-playground/universal-translator`、`github.com/go-playground/validator/v10`、`github.com/goccy/go-json`、`github.com/goccy/go-yaml`、`github.com/invopop/jsonschema`、`github.com/jinzhu/inflection`、`github.com/jinzhu/now`、`github.com/josharian/intern`、`github.com/json-iterator/go`、`github.com/klauspost/cpuid/v2`、`github.com/KyleBanks/depth`、`github.com/leodido/go-urn`、`github.com/mailru/easyjson`、`github.com/mattn/go-isatty`、`github.com/ncruces/go-sqlite3`、`github.com/ncruces/go-sqlite3/gormlite`、`github.com/ncruces/julianday`、`github.com/pelletier/go-toml/v2`、`github.com/quic-go/qpack`、`github.com/quic-go/quic-go`、`github.com/standard-webhooks/standard-webhooks/libraries`、`github.com/swaggo/files`、`github.com/swaggo/gin-swagger`、`github.com/swaggo/swag`、`github.com/tidwall/gjson`、`github.com/tidwall/match`、`github.com/tidwall/pretty`、`github.com/tidwall/sjson`、`github.com/ugorji/go/codec`、`gorm.io/gorm` |
 | MIT-0 | 1 | `github.com/ncruces/go-sqlite3-wasm/v2` |
-| Apache-2.0 | 13 | `github.com/bytedance/gopkg`、`github.com/bytedance/sonic`、`github.com/bytedance/sonic/loader`、`github.com/cloudwego/base64x`、`github.com/go-openapi/jsonpointer`、`github.com/go-openapi/jsonreference`、`github.com/go-openapi/spec`、`github.com/go-openapi/swag`、`github.com/modern-go/concurrent`、`github.com/modern-go/reflect2`、`github.com/pb33f/ordered-map/v2`、`github.com/santhosh-tekuri/jsonschema/v6`、`go.mongodb.org/mongo-driver/v2` |
+| Apache-2.0 | 19 | `github.com/bytedance/gopkg`、`github.com/bytedance/sonic/loader`、`github.com/bytedance/sonic`、`github.com/cloudwego/base64x`、`github.com/go-logr/logr`、`github.com/go-logr/stdr`、`github.com/go-openapi/jsonpointer`、`github.com/go-openapi/jsonreference`、`github.com/go-openapi/spec`、`github.com/go-openapi/swag`、`github.com/modern-go/concurrent`、`github.com/modern-go/reflect2`、`github.com/pb33f/ordered-map/v2`、`github.com/santhosh-tekuri/jsonschema/v6`、`go.mongodb.org/mongo-driver/v2`、`go.opentelemetry.io/auto/sdk`、`go.opentelemetry.io/otel/metric`、`go.opentelemetry.io/otel/trace`、`go.opentelemetry.io/otel` |
 | Apache-2.0，部分文件为 MIT | 2 | `go.yaml.in/yaml/v4`、`gopkg.in/yaml.v2` |
 | BSD-3-Clause | 4 | `github.com/bahlo/generic-list-go`、`github.com/PuerkitoBio/purell`、`github.com/PuerkitoBio/urlesc`、`github.com/twitchyliquid64/golang-asm` |
 | BSD-3-Clause，另附 PATENTS 专利授权 | 9 | `golang.org/x/arch`、`golang.org/x/crypto`、`golang.org/x/mod`、`golang.org/x/net`、`golang.org/x/sync`、`golang.org/x/sys`、`golang.org/x/text`、`golang.org/x/tools`、`google.golang.org/protobuf` |
