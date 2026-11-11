@@ -1,0 +1,55 @@
+{
+	"schema": 1,
+	"id": "brick_bastion",
+	"kind": "module",
+	"entry": "main.gd",
+	"stage": {"size": [480, 270], "pixel_art": true},
+	"name": {"zh": "砖垒信标", "en": "BRICK BASTION"},
+	"initials": "zlxb",
+	"genre": {"zh": "坦克防御", "en": "TANK DEFENSE"},
+	"tagline": {"zh": "驾驶哨车守住信标，把一波波掠夺车队挡在砖墙之外。", "en": "Drive a sentinel rover, hold the beacon, and keep the raider columns outside the bricks."},
+	"players": {"min": 1, "max": 2, "join_in_progress": true},
+	"colors": {"title": "F4FBF7", "shadow": "145A66", "glow": "5EF2FF"},
+	"art": {"top": "0E1420", "bottom": "3A2230", "primary": "2FB3A6", "secondary": "F0802A"},
+	"achievements": [
+		{"id": "first_watch", "icon": "bolt", "name": {"zh": "第一班岗", "en": "First Watch"}, "desc": {"zh": "完成一局，无论胜负。", "en": "Finish a run, win or lose."}, "when": {}},
+		{"id": "crusher_down", "icon": "star", "name": {"zh": "拆掉碾城者", "en": "Crusher Scrapped"}, "desc": {"zh": "击毁第三防区的首领「碾城者」。", "en": "Destroy the Rampart Crusher, the boss of sector three."}, "when": {"min": {"bosses_down": 1}}},
+		{"id": "beacon_stands", "icon": "cup", "name": {"zh": "信标长明", "en": "The Beacon Stands"}, "desc": {"zh": "守住全部六个防区。", "en": "Hold all six sectors."}, "when": {"cleared": true}},
+		{"id": "unscratched", "icon": "shield", "name": {"zh": "滴水不漏", "en": "Not a Scratch"}, "desc": {"zh": "通关，且信标一次都没有被击中。", "en": "Clear the game without the beacon taking a single hit."}, "when": {"cleared": true, "max": {"core_hits": 0}}},
+		{"id": "bricklayer", "icon": "star", "name": {"zh": "泥瓦匠", "en": "Bricklayer"}, "desc": {"zh": "一局里亲手砌下 12 块砖。", "en": "Lay 12 bricks yourself in one run."}, "when": {"min": {"bricks_laid": 12}}},
+		{"id": "side_by_side", "icon": "bolt", "name": {"zh": "并肩守望", "en": "Side by Side"}, "desc": {"zh": "两位玩家一起通关。", "en": "Clear the game with two players."}, "when": {"cleared": true, "players": 2}},
+		{"id": "iron_watch", "icon": "shield", "name": {"zh": "铁壁值守", "en": "Iron Watch"}, "desc": {"zh": "在「困难」难度下通关。", "en": "Clear the game on Hard."}, "when": {"cleared": true, "min": {"difficulty": 2}}}
+	],
+	"how": {
+		"zh": "掠夺车队从战场上方的三个闸口一波波开进来，目标是场地底部的信标。击毁本防区的全部敌车即可过关，第三和第六防区最后还有首领。砖墙能被炮弹打碎，钢板要升到三级火力才打得穿，水面车辆过不去，树丛只遮挡视线。你也可以在车头前砌一块砖。闪金光的敌车被击毁后会留下补给。守住六个防区即通关；信标完整度归零，或所有玩家的哨车耗尽，则失败。",
+		"en": "Raider columns roll in through three gates at the top of the field and head for the beacon at the bottom. Destroy every raider of a sector to clear it; sectors three and six end with a boss. Shells break brick, plate only gives way to level-three firepower, vehicles cannot cross water, and thickets only hide what is under them. You can also lay a brick in front of your rover. A raider that glints gold leaves a supply chip when destroyed. Hold all six sectors to clear the game; it is lost when the beacon's integrity reaches zero or every player is out of rovers."
+	},
+	"controls": [
+		{"id": "move", "name": {"zh": "行驶", "en": "Drive"}, "inputs": ["move"]},
+		{"id": "fire", "name": {"zh": "开炮（可按住）", "en": "Fire (can be held)"}, "inputs": ["a"]},
+		{"id": "brick", "name": {"zh": "在车头前砌砖", "en": "Lay a brick ahead"}, "inputs": ["b"]}
+	],
+	"hud": {
+		"clock": {"mode": "elapsed"},
+		"vital": {"field": "lives", "max": "max_lives", "label": {"zh": "哨车", "en": "LIFE"}},
+		"boss": {"field": "boss_hp", "max": "boss_max_hp", "label": {"zh": "首领", "en": "BOSS"}},
+		"stats": [
+			{"label": {"zh": "防区", "en": "Sector"}, "fields": ["stage", "stages"]},
+			{"label": {"zh": "信标", "en": "Beacon"}, "fields": ["core", "core_max"]},
+			{"label": {"zh": "剩余敌车", "en": "Raiders left"}, "fields": ["foes_left"]}
+		],
+		"player_stats": [
+			{"label": {"zh": "火力 / 砖", "en": "Power / Bricks"}, "fields": ["power", "bricks"]}
+		]
+	},
+	"options": [
+		{
+			"id": "difficulty",
+			"name": {"zh": "难度", "en": "Difficulty"},
+			"note": {"zh": "决定哨车数量、信标完整度，以及敌车开炮的频率。", "en": "Sets how many rovers you have, the beacon's integrity, and how often raiders fire."},
+			"values": [0, 1, 2],
+			"default": 1,
+			"labels": [{"zh": "轻松", "en": "Easy"}, {"zh": "标准", "en": "Normal"}, {"zh": "困难", "en": "Hard"}]
+		}
+	]
+}
