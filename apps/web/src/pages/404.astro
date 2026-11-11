@@ -9,7 +9,7 @@ const description = LOCALES.map((locale) => landing[locale].notFound.body).join(
 ---
 
 <LandingLayout locale="zh-CN" title={title} description={description} noindex>
-	<section class="fp-container not-found" aria-labelledby="not-found-title">
+	<section class="cg-container not-found" aria-labelledby="not-found-title">
 		<p class="code" aria-hidden="true">404</p>
 		{
 			LOCALES.map((locale, index) => {
@@ -19,10 +19,10 @@ const description = LOCALES.map((locale) => landing[locale].notFound.body).join(
 						{index === 0 ? <h1 id="not-found-title">{t.title}</h1> : <p class="title">{t.title}</p>}
 						<p class="body">{t.body}</p>
 						<p class="actions">
-							<a class="fp-button fp-button-primary" href={localizePath(locale, '/')}>
+							<a class="cg-button cg-button-primary" href={localizePath(locale, '/')}>
 								{t.home}
 							</a>
-							<a class="fp-button fp-button-secondary" href={localizePath(locale, '/docs/')}>
+							<a class="cg-button cg-button-secondary" href={localizePath(locale, '/docs/')}>
 								{t.docs}
 							</a>
 						</p>
@@ -41,10 +41,10 @@ const description = LOCALES.map((locale) => landing[locale].notFound.body).join(
 	}
 
 	.code {
-		font-family: var(--fp-font-mono);
+		font-family: var(--cg-font-mono);
 		font-size: 0.875rem;
 		letter-spacing: 0.08em;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	h1,
@@ -57,7 +57,7 @@ const description = LOCALES.map((locale) => landing[locale].notFound.body).join(
 
 	.body {
 		margin-block-start: 0.6rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.actions {
@@ -69,6 +69,6 @@ const description = LOCALES.map((locale) => landing[locale].notFound.body).join(
 
 	.block + .block {
 		padding-block-start: 2.5rem;
-		border-block-start: 1px solid var(--fp-border-subtle);
+		border-block-start: 1px solid var(--cg-border-subtle);
 	}
 </style>

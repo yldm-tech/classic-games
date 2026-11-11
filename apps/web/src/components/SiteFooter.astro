@@ -43,7 +43,7 @@ const columns = [
 ---
 
 <footer class="site-footer">
-	<div class="fp-container grid">
+	<div class="cg-container grid">
 		<div class="brand">
 			<Wordmark href={to('/')} label={t.nav.home} />
 			<p class="tagline">{t.footer.tagline}</p>
@@ -63,7 +63,7 @@ const columns = [
 			))
 		}
 	</div>
-	<div class="fp-container">
+	<div class="cg-container">
 		<div class="legal">
 			<p><a href={repoFile('LICENSE')}>{t.footer.license}</a></p>
 			<p><a href={to('/legal/licenses/')}>{t.footer.artNote}</a></p>
@@ -74,8 +74,8 @@ const columns = [
 
 <style>
 	.site-footer {
-		border-block-start: 1px solid var(--fp-border-subtle);
-		background: var(--fp-bg-sunken);
+		border-block-start: 1px solid var(--cg-border-subtle);
+		background: var(--cg-bg-sunken);
 		padding-block: clamp(2.5rem, 6vw, 4rem) 2rem;
 		font-size: 0.9375rem;
 	}
@@ -93,28 +93,28 @@ const columns = [
 	.tagline {
 		margin-block-start: 0.9rem;
 		max-width: 22rem;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.heading {
 		margin-block-end: 0.6rem;
-		font-family: var(--fp-font-mono);
+		font-family: var(--cg-font-mono);
 		font-size: 0.8125rem;
 		font-weight: 500;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.column a {
 		display: inline-block;
 		padding-block: 0.3rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 		text-decoration: none;
 	}
 
 	.column a:hover {
-		color: var(--fp-text);
+		color: var(--cg-text);
 		text-decoration: underline;
 		text-underline-offset: 0.25em;
 	}
@@ -125,8 +125,8 @@ const columns = [
 		gap: 0.25rem 2rem;
 		margin-block-start: 2.5rem;
 		padding-block-start: 1.5rem;
-		border-block-start: 1px solid var(--fp-border-subtle);
-		color: var(--fp-text-muted);
+		border-block-start: 1px solid var(--cg-border-subtle);
+		color: var(--cg-text-muted);
 		font-size: 0.875rem;
 	}
 
@@ -135,7 +135,7 @@ const columns = [
 	}
 
 	.legal a:hover {
-		color: var(--fp-text);
+		color: var(--cg-text);
 	}
 
 	@media (min-width: 48rem) {

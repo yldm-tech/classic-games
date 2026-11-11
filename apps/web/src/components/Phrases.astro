@@ -7,4 +7,4 @@ interface Props {
 const parts = Astro.props.text.split('|').filter((part) => part.length > 0);
 ---
 
-{parts.map((part) => <><span class="fp-phrase">{part.trimEnd()}</span>{part.endsWith(' ') ? ' ' : ''}</>)}
+{parts.map((part) => <><span class="cg-phrase">{part.trimEnd()}</span>{part.endsWith(' ') ? ' ' : ''}</>)}

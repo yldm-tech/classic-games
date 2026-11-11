@@ -11,18 +11,18 @@ const local = landing[locale].local;
 const planned = landing[locale].planned;
 ---
 
-<section class="fp-section" id="local" aria-labelledby="local-title">
-	<div class="fp-container">
-		<div class="fp-section-head">
-			<p class="fp-eyebrow">{local.eyebrow}</p>
-			<h2 class="fp-h2" id="local-title"><Phrases text={local.title} /></h2>
-			<p class="fp-lead">{local.lead}</p>
+<section class="cg-section" id="local" aria-labelledby="local-title">
+	<div class="cg-container">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{local.eyebrow}</p>
+			<h2 class="cg-h2" id="local-title"><Phrases text={local.title} /></h2>
+			<p class="cg-lead">{local.lead}</p>
 		</div>
 		<ul class="facts">
 			{
 				local.facts.map((fact) => (
 					<li class="fact">
-						<h3 class="fp-h3">{fact.title}</h3>
+						<h3 class="cg-h3">{fact.title}</h3>
 						<p>{fact.body}</p>
 					</li>
 				))
@@ -31,12 +31,12 @@ const planned = landing[locale].planned;
 	</div>
 </section>
 
-<section class="fp-section" id="planned" aria-labelledby="planned-title">
-	<div class="fp-container">
-		<div class="fp-section-head">
-			<p class="fp-eyebrow">{planned.eyebrow}</p>
-			<h2 class="fp-h2" id="planned-title"><Phrases text={planned.title} /></h2>
-			<p class="fp-lead">{planned.lead}</p>
+<section class="cg-section" id="planned" aria-labelledby="planned-title">
+	<div class="cg-container">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{planned.eyebrow}</p>
+			<h2 class="cg-h2" id="planned-title"><Phrases text={planned.title} /></h2>
+			<p class="cg-lead">{planned.lead}</p>
 		</div>
 		<ul class="genres">
 			{planned.genres.map((genre) => <li>{genre}</li>)}
@@ -54,12 +54,12 @@ const planned = landing[locale].planned;
 	/* The launcher marks the focused row with a 4px bar on its left edge; the same bar marks each fact. */
 	.fact {
 		padding-inline-start: 1.25rem;
-		border-inline-start: 4px solid var(--fp-text);
+		border-inline-start: 4px solid var(--cg-text);
 	}
 
 	.fact p {
 		margin-block-start: 0.5rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.genres {
@@ -73,9 +73,9 @@ const planned = landing[locale].planned;
 		align-items: center;
 		min-height: 3.75rem;
 		padding: 0.75rem 1.25rem;
-		border: 1px solid var(--fp-border);
-		border-radius: var(--fp-radius);
-		color: var(--fp-text-secondary);
+		border: 1px solid var(--cg-border);
+		border-radius: var(--cg-radius);
+		color: var(--cg-text-secondary);
 		font-size: 1.0625rem;
 		letter-spacing: 0.04em;
 	}
@@ -83,7 +83,7 @@ const planned = landing[locale].planned;
 	.note {
 		margin-block-start: 1.5rem;
 		max-width: 46rem;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	@media (min-width: 48rem) {

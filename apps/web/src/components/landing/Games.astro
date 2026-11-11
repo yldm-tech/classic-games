@@ -14,12 +14,12 @@ const lang = locale === 'en' ? 'en' : 'zh';
 const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 ---
 
-<section class="fp-section" id="games" aria-labelledby="games-title">
-	<div class="fp-container">
-		<div class="fp-section-head">
-			<p class="fp-eyebrow">{t.eyebrow}</p>
-			<h2 class="fp-h2" id="games-title"><Phrases text={t.title} /></h2>
-			<p class="fp-lead">{t.lead}</p>
+<section class="cg-section" id="games" aria-labelledby="games-title">
+	<div class="cg-container">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{t.eyebrow}</p>
+			<h2 class="cg-h2" id="games-title"><Phrases text={t.title} /></h2>
+			<p class="cg-lead">{t.lead}</p>
 		</div>
 
 		<ul class="games">
@@ -78,7 +78,7 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 		font-weight: 600;
 		letter-spacing: 0.24em;
 		text-transform: uppercase;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.name {
@@ -97,13 +97,13 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 		font-size: 0.8125rem;
 		font-weight: 700;
 		letter-spacing: 0.5em;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.tagline {
 		margin-block-start: 0.6rem;
 		font-size: 1.125rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.pair {
@@ -113,21 +113,21 @@ const pairSizes = '(min-width: 76rem) 35rem, (min-width: 48rem) 46vw, 92vw';
 
 	.how {
 		max-width: 52rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 		text-wrap: pretty;
 	}
 
 	.credit {
 		margin-block-start: clamp(2.5rem, 5vw, 3.5rem);
 		padding-block-start: 1.25rem;
-		border-block-start: 1px solid var(--fp-border-subtle);
+		border-block-start: 1px solid var(--cg-border-subtle);
 		max-width: 56rem;
 		font-size: 0.875rem;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.credit a {
-		color: var(--fp-text);
+		color: var(--cg-text);
 		text-underline-offset: 0.25em;
 	}
 

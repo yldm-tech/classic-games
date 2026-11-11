@@ -1,8 +1,8 @@
 /* Maps the Classic Games tokens onto Starlight's custom properties so the docs share the landing page's palette and type. Loaded through `customCss`, after tokens.css. The grey ramp is the launcher's foreground at its alpha steps, flattened onto the launcher's background, because Starlight needs opaque colours. */
 
 :root {
-	--sl-font: var(--fp-font-sans);
-	--sl-font-mono: var(--fp-font-mono);
+	--sl-font: var(--cg-font-sans);
+	--sl-font-mono: var(--cg-font-mono);
 
 	--sl-color-white: #f4f5f8;
 	--sl-color-gray-1: #dcdde2;
@@ -53,7 +53,7 @@
 }
 
 :focus-visible {
-	outline: 2px solid var(--fp-focus);
+	outline: 2px solid var(--cg-focus);
 	outline-offset: 2px;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .sl-markdown-content blockquote {
-	border-inline-start-color: var(--fp-border-strong);
+	border-inline-start-color: var(--cg-border-strong);
 }
 
 /* Long ASCII diagrams and wide tables scroll inside their own box instead of widening the page. */

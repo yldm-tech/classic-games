@@ -1,7 +1,7 @@
 ---
 import Phrases from '../Phrases.astro';
 import { repoFile } from '../../config/site.ts';
-import { enemyTotals, patchLines } from '../../data/dsl-example.ts';
+import { EXAMPLE_SOURCES, enemyTotals, patchLines } from '../../data/dsl-example.ts';
 import { games } from '../../data/games.ts';
 import { runtimes } from '../../data/runtimes.ts';
 import { type Locale, landing, localizePath } from '../../i18n/landing.ts';
@@ -23,24 +23,24 @@ const services = [
 ];
 ---
 
-<section class="fp-section" id="developers" aria-labelledby="developers-title">
-	<div class="fp-container">
-		<div class="fp-section-head">
-			<p class="fp-eyebrow">{t.eyebrow}</p>
-			<h2 class="fp-h2" id="developers-title"><Phrases text={t.title} /></h2>
-			<p class="fp-lead">{t.lead}</p>
+<section class="cg-section" id="developers" aria-labelledby="developers-title">
+	<div class="cg-container">
+		<div class="cg-section-head">
+			<p class="cg-eyebrow">{t.eyebrow}</p>
+			<h2 class="cg-h2" id="developers-title"><Phrases text={t.title} /></h2>
+			<p class="cg-lead">{t.lead}</p>
 		</div>
 
 		<div class="block">
-			<h3 class="fp-h3">{t.runtimesTitle}</h3>
+			<h3 class="cg-h3">{t.runtimesTitle}</h3>
 			<p class="block-lead">{t.runtimesLead}</p>
 			<ul class="runtimes">
 				{
 					runtimes.map((runtime) => (
-						<li class="runtime fp-card">
+						<li class="runtime cg-card">
 							<p class="runtime-name">{gameName(runtime.key)}</p>
 							<p>
-								<code class="fp-chip">{runtime.id}</code>
+								<code class="cg-chip">{runtime.id}</code>
 							</p>
 							<p class="label">{t.sectionsLabel}</p>
 							<ul class="sections">
@@ -51,10 +51,10 @@ const services = [
 								))}
 							</ul>
 							<p class="links">
-								<a class="fp-link" data-external href={repoFile(runtime.schemaPath)}>
+								<a class="cg-link" data-external href={repoFile(runtime.schemaPath)}>
 									{t.schemaLink}
 								</a>
-								<a class="fp-link" data-external href={repoFile(runtime.baselinePath)}>
+								<a class="cg-link" data-external href={repoFile(runtime.baselinePath)}>
 									{t.baselineLink}
 								</a>
 							</p>
@@ -65,11 +65,11 @@ const services = [
 		</div>
 
 		<div class="block">
-			<h3 class="fp-h3">{t.patchTitle}</h3>
+			<h3 class="cg-h3">{t.patchTitle}</h3>
 			<p class="block-lead">{t.patchLead}</p>
 			<div class="table-wrap">
 				<table>
-					<caption class="fp-sr-only">{t.tableCaption}</caption>
+					<caption class="cg-sr-only">{t.tableCaption}</caption>
 					<thead>
 						<tr>
 							<th scope="col">{t.columns.op}</th>
@@ -83,7 +83,7 @@ const services = [
 							patchLines.map((line) => (
 								<tr>
 									<td>
-										<code class="fp-chip">{line.op}</code>
+										<code class="cg-chip">{line.op}</code>
 									</td>
 									<th scope="row">
 										<code>{line.path}</code>
@@ -97,21 +97,26 @@ const services = [
 				</table>
 			</div>
 			<p class="total">{t.total(enemyTotals.before, enemyTotals.after)}</p>
+			<p class="links sources">
+				<a class="cg-link" data-external href={repoFile(EXAMPLE_SOURCES.baseline)}>{t.baselineLink}</a>
+				<a class="cg-link" data-external href={repoFile(EXAMPLE_SOURCES.golden)}>{t.goldenLink}</a>
+				<a class="cg-link" data-external href={repoFile(EXAMPLE_SOURCES.goTest)}>{t.goTestLink}</a>
+			</p>
 		</div>
 
 		<div class="block">
-			<h3 class="fp-h3">{t.serviceTitle}</h3>
+			<h3 class="cg-h3">{t.serviceTitle}</h3>
 			<p class="block-lead">{t.serviceLead}</p>
 			<ul class="services">
 				{
 					services.map((service) => (
-						<li class="service fp-card">
+						<li class="service cg-card">
 							<p class="tag">{t.optionalTag}</p>
 							<h4>
 								<code>{service.title}</code>
 							</h4>
 							<p>{service.body}</p>
-							<a class="fp-link" href={service.href}>
+							<a class="cg-link" href={service.href}>
 								{service.link}
 							</a>
 						</li>
@@ -120,8 +125,8 @@ const services = [
 			</ul>
 		</div>
 
-		<div class="fp-section-foot">
-			<a class="fp-link" href={localizePath(locale, '/docs/05-dsl-design/')}>{t.readMore}</a>
+		<div class="cg-section-foot">
+			<a class="cg-link" href={localizePath(locale, '/docs/05-dsl-design/')}>{t.readMore}</a>
 		</div>
 	</div>
 </section>
@@ -134,7 +139,7 @@ const services = [
 	.block-lead {
 		max-width: 52rem;
 		margin-block: 0.5rem 1.5rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.runtimes,
@@ -163,7 +168,7 @@ const services = [
 		font-weight: 600;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.sections {
@@ -171,7 +176,7 @@ const services = [
 		flex-wrap: wrap;
 		gap: 0.4rem 1rem;
 		font-size: 0.875rem;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	.links {
@@ -184,9 +189,9 @@ const services = [
 
 	.table-wrap {
 		overflow-x: auto;
-		border: 1px solid var(--fp-border-subtle);
-		border-radius: var(--fp-radius);
-		background: var(--fp-surface);
+		border: 1px solid var(--cg-border-subtle);
+		border-radius: var(--cg-radius);
+		background: var(--cg-surface);
 	}
 
 	table {
@@ -199,7 +204,7 @@ const services = [
 	th,
 	td {
 		padding: 0.8rem 1.25rem;
-		border-block-end: 1px solid var(--fp-border-subtle);
+		border-block-end: 1px solid var(--cg-border-subtle);
 		text-align: start;
 		vertical-align: top;
 		font-weight: 400;
@@ -214,27 +219,31 @@ const services = [
 		font-weight: 600;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	td code {
 		overflow-wrap: anywhere;
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 	}
 
 	tbody th code {
 		white-space: nowrap;
-		color: var(--fp-text);
+		color: var(--cg-text);
 	}
 
 	.none {
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
+	}
+
+	.sources {
+		margin-block-start: 0.9rem;
 	}
 
 	.total {
 		margin-block-start: 0.9rem;
 		font-size: 0.9375rem;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 
 	.service h4 {
@@ -244,11 +253,11 @@ const services = [
 	}
 
 	.service > p:not(.tag) {
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 		font-size: 0.9375rem;
 	}
 
-	.service .fp-link {
+	.service .cg-link {
 		font-size: 0.9375rem;
 		justify-self: start;
 	}

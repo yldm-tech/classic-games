@@ -61,7 +61,7 @@ const absolute = (target: Locale) => new URL(localizePath(target, '/'), Astro.si
 		</script>
 	</head>
 	<body>
-		<a class="fp-skip" href="#main">{t.nav.skip}</a>
+		<a class="cg-skip" href="#main">{t.nav.skip}</a>
 		<SiteHeader locale={locale} />
 		<main id="main">
 			<slot />

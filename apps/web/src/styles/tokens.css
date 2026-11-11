@@ -2,64 +2,64 @@
 
 :root {
 	/* System font stacks only: no font files are downloaded, and CJK text falls through to the platform's own Chinese face. The order follows the launcher's LATIN_FAMILIES and CJK_FAMILIES. */
-	--fp-font-sans: Inter, 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', 'Noto Sans SC', 'Noto Sans CJK SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', Roboto, Arial, sans-serif;
-	--fp-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+	--cg-font-sans: Inter, 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', 'Noto Sans SC', 'Noto Sans CJK SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', Roboto, Arial, sans-serif;
+	--cg-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
 	/* The launcher uses one radius everywhere (RADIUS). */
-	--fp-radius: 4px;
+	--cg-radius: 4px;
 
 	/* Motion from the launcher: FADE_ROW, RESIZE_CARD and FADE_SCREEN. Nothing on the site runs longer. */
-	--fp-dur-fast: 150ms;
-	--fp-dur-med: 250ms;
-	--fp-dur-slow: 300ms;
+	--cg-dur-fast: 150ms;
+	--cg-dur-med: 250ms;
+	--cg-dur-slow: 300ms;
 
 	/* Dark theme is the default, as in the launcher. BG, FG, DEEP, PANEL, CARD_BG and DIALOG_BG are the launcher's own constants; text and rules are FG at the launcher's alpha steps (A_BODY 0.75, A_MUTED 0.6, A_CHIP_BORDER 0.35, A_RULE 0.18, A_HAIRLINE 0.12). */
 	color-scheme: dark;
-	--fp-bg: #05070d;
-	--fp-bg-sunken: #030408;
-	--fp-surface: #0a0c14;
-	--fp-surface-raised: #0c0e16;
-	--fp-surface-input: #0b0e16;
-	--fp-text: #f4f5f8;
-	--fp-text-secondary: rgb(244 245 248 / 0.75);
-	--fp-text-muted: rgb(244 245 248 / 0.6);
+	--cg-bg: #05070d;
+	--cg-bg-sunken: #030408;
+	--cg-surface: #0a0c14;
+	--cg-surface-raised: #0c0e16;
+	--cg-surface-input: #0b0e16;
+	--cg-text: #f4f5f8;
+	--cg-text-secondary: rgb(244 245 248 / 0.75);
+	--cg-text-muted: rgb(244 245 248 / 0.6);
 	/* The launcher has no accent hue: focus and primary actions are the foreground colour itself. */
-	--fp-accent: #f4f5f8;
-	--fp-accent-hover: #ffffff;
-	--fp-on-accent: #05070d;
-	--fp-focus: #f4f5f8;
-	--fp-focus-fill: rgb(244 245 248 / 0.16);
+	--cg-accent: #f4f5f8;
+	--cg-accent-hover: #ffffff;
+	--cg-on-accent: #05070d;
+	--cg-focus: #f4f5f8;
+	--cg-focus-fill: rgb(244 245 248 / 0.16);
 	/* PLAYER_ONE, the blue of the in-game score label. The site uses it for links in running text only. */
-	--fp-link: #5ab4ff;
+	--cg-link: #5ab4ff;
 	/* FAVORITE / DANGER. */
-	--fp-danger-text: #ff6b7a;
-	--fp-border-subtle: rgb(244 245 248 / 0.12);
-	--fp-border: rgb(244 245 248 / 0.18);
-	--fp-border-strong: rgb(244 245 248 / 0.35);
-	--fp-header-bg: rgb(5 7 13 / 0.86);
+	--cg-danger-text: #ff6b7a;
+	--cg-border-subtle: rgb(244 245 248 / 0.12);
+	--cg-border: rgb(244 245 248 / 0.18);
+	--cg-border-strong: rgb(244 245 248 / 0.35);
+	--cg-header-bg: rgb(5 7 13 / 0.86);
 }
 
 :root[data-theme='light'] {
 	color-scheme: light;
-	--fp-bg: #f4f5f8;
-	--fp-bg-sunken: #e9ebf0;
-	--fp-surface: #ffffff;
-	--fp-surface-raised: #ffffff;
-	--fp-surface-input: #eceef2;
-	--fp-text: #05070d;
-	--fp-text-secondary: rgb(5 7 13 / 0.78);
-	/* 0.66 over the light background is 5.9:1, above AA for running text. */
-	--fp-text-muted: rgb(5 7 13 / 0.66);
-	--fp-accent: #05070d;
-	--fp-accent-hover: #1b1e27;
-	--fp-on-accent: #f4f5f8;
-	--fp-focus: #05070d;
-	--fp-focus-fill: rgb(5 7 13 / 0.08);
-	/* #5ab4ff is 2.1:1 on the light background; darkened to 6.1:1. */
-	--fp-link: #1d5fa6;
-	--fp-danger-text: #b3122f;
-	--fp-border-subtle: rgb(5 7 13 / 0.1);
-	--fp-border: rgb(5 7 13 / 0.16);
-	--fp-border-strong: rgb(5 7 13 / 0.32);
-	--fp-header-bg: rgb(244 245 248 / 0.88);
+	--cg-bg: #f4f5f8;
+	--cg-bg-sunken: #e9ebf0;
+	--cg-surface: #ffffff;
+	--cg-surface-raised: #ffffff;
+	--cg-surface-input: #eceef2;
+	--cg-text: #05070d;
+	--cg-text-secondary: rgb(5 7 13 / 0.78);
+	/* 0.66 over the light background is 6.5:1, above AA for running text. */
+	--cg-text-muted: rgb(5 7 13 / 0.66);
+	--cg-accent: #05070d;
+	--cg-accent-hover: #1b1e27;
+	--cg-on-accent: #f4f5f8;
+	--cg-focus: #05070d;
+	--cg-focus-fill: rgb(5 7 13 / 0.08);
+	/* #5ab4ff is 2.0:1 on the light background; darkened to 5.9:1. */
+	--cg-link: #1d5fa6;
+	--cg-danger-text: #b3122f;
+	--cg-border-subtle: rgb(5 7 13 / 0.1);
+	--cg-border: rgb(5 7 13 / 0.16);
+	--cg-border-strong: rgb(5 7 13 / 0.32);
+	--cg-header-bg: rgb(244 245 248 / 0.88);
 }

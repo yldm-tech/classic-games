@@ -18,7 +18,7 @@ interface Props {
 const { src, alt, name, caption, sizes, eager = false } = Astro.props;
 ---
 
-<figure class="fp-shot">
+<figure class="cg-shot">
 	<Image src={src} alt={alt} widths={[480, 800, 1200, 1920]} sizes={sizes} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} />
 	{
 		(name || caption) && (

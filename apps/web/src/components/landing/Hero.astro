@@ -14,14 +14,14 @@ const t = landing[locale].hero;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
-	<div class="fp-container">
+	<div class="cg-container">
 		<div class="copy">
-			<p class="fp-eyebrow">{t.status}</p>
+			<p class="cg-eyebrow">{t.status}</p>
 			<h1 id="hero-title"><Phrases text={t.title} /></h1>
 			<p class="lead">{t.lead}</p>
 			<div class="actions">
-				<a class="fp-button fp-button-primary" href="#get-started">{t.primaryCta}</a>
-				<a class="fp-button fp-button-secondary" href={REPO_URL}>{t.secondaryCta}</a>
+				<a class="cg-button cg-button-primary" href="#get-started">{t.primaryCta}</a>
+				<a class="cg-button cg-button-secondary" href={REPO_URL}>{t.secondaryCta}</a>
 			</div>
 			<p class="note">{t.note}</p>
 		</div>
@@ -51,7 +51,7 @@ const t = landing[locale].hero;
 		margin-block-start: 1.5rem;
 		max-width: 44rem;
 		font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
-		color: var(--fp-text-secondary);
+		color: var(--cg-text-secondary);
 		text-wrap: pretty;
 	}
 
@@ -65,6 +65,6 @@ const t = landing[locale].hero;
 	.note {
 		margin-block-start: 1.25rem;
 		font-size: 0.875rem;
-		color: var(--fp-text-muted);
+		color: var(--cg-text-muted);
 	}
 </style>

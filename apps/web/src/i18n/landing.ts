@@ -98,6 +98,8 @@ export interface LandingStrings {
 		sectionsLabel: string;
 		schemaLink: string;
 		baselineLink: string;
+		goldenLink: string;
+		goTestLink: string;
 		patchTitle: string;
 		patchLead: string;
 		tableCaption: string;
@@ -262,6 +264,8 @@ const zh: LandingStrings = {
 		sectionsLabel: 'DSL 顶层分区',
 		schemaLink: 'Schema',
 		baselineLink: '基线 DSL',
+		goldenLink: 'golden 文件',
+		goTestLink: 'Go 测试',
 		patchTitle: '对 DSL 的修改是 RFC 6902 补丁',
 		patchLead: '下面四个操作把《星环巡航》的基线 DSL 变成仓库里的 golden 文件。补丁有 Go 和 GDScript 两份实现，用同一份基线和 golden 文件做测试。「之前」和「之后」两列在构建本站时从这两个文件里读出。',
 		tableCaption: '补丁的四个操作，以及每个路径在基线和 golden 文件里的值',
@@ -436,6 +440,8 @@ const en: LandingStrings = {
 		sectionsLabel: 'Top-level DSL sections',
 		schemaLink: 'Schema',
 		baselineLink: 'Baseline DSL',
+		goldenLink: 'Golden file',
+		goTestLink: 'Go test',
 		patchTitle: 'A change to the DSL is an RFC 6902 patch',
 		patchLead: 'The four operations below turn the baseline DSL of Orbit Patrol into the golden file in the repository. The patch semantics are implemented twice, in Go and in GDScript, and both are tested against the same baseline and golden file. The "before" and "after" columns are read from those two files when this site is built.',
 		tableCaption: 'The four operations of the patch, with the value at each path in the baseline and in the golden file',
