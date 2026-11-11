@@ -13,8 +13,7 @@ Classic Games 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与�
 | 路径 | 内容 | 来源 | 许可 |
 |---|---|---|---|
 | `apps/client/icon.svg` | Godot 新建工程的默认图标，即 Godot 引擎 logo，未修改 | Godot Engine | CC BY 4.0，Copyright (c) 2017 Andrea Calabró |
-| `apps/web/src/assets/covers/{ashfall,ember,foundry,volt}.png` | 4 张游戏封面（640×400），官网首页的 Fork Tree 示意图使用 | 项目早期的设计原型包；客户端里的同一批封面已随手机端一并移除 | 仓库内没有单独的作者与许可记录；在维护者补充说明之前，不要假定可以在本项目之外复用 |
-| `apps/client/launcher/art/*.jpg` | 启动器的 3 张游戏主视觉（1920×1080），对应 shooter、survivor、tower_defense | 由本项目用图像生成模型 `doubao-seedream-5.0-pro` 按自行撰写的提示词生成，画面为原创构图，不取材于任何现有游戏的角色或美术 | 随本项目以 Apache-2.0 分发；AI 生成图像在部分法域可能不受著作权保护，复用时请自行判断 |
+| `apps/client/launcher/art/*.jpg`，以及官网使用的副本 `apps/web/src/assets/key-art/` | 启动器的 3 张游戏主视觉（1920×1080），对应 shooter、survivor、tower_defense | 由本项目用图像生成模型 `doubao-seedream-5.0-pro` 按自行撰写的提示词生成，画面为原创构图，不取材于任何现有游戏的角色或美术 | 随本项目以 Apache-2.0 分发；AI 生成图像在部分法域可能不受著作权保护，复用时请自行判断 |
 
 仓库不包含字体文件和音频文件：界面在运行时使用操作系统里已安装的字体（`apps/client/launcher/launcher_tokens.gd`），Shooter 的 BGM 由 `apps/client/runtime/shooter/procedural_bgm.gd` 在运行时合成。
 
