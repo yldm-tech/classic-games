@@ -2,6 +2,8 @@
 
 > **这是 Phase 1 真正的工作量。** [05-dsl-design](./05-dsl-design.md) 已论证:用户的创造边界 = Runtime 预埋的素材与机制枚举数量。DSL 的语法是死的,这份清单才决定「用户能不能改出有创造感的版本」。本文档列出 Shooter Runtime(`shooter@1.0.0`)预埋的内容,权威定义是 [`packages/schemas/shooter-1.0.0.schema.json`](../packages/schemas/shooter-1.0.0.schema.json),两者不一致时以 schema 为准。Survivor 与 Tower Defense 的内容目前只记录在各自的 schema 里([`survivor-1.0.0`](../packages/schemas/survivor-1.0.0.schema.json)、[`tower_defense-1.0.0`](../packages/schemas/tower_defense-1.0.0.schema.json)),本文档不覆盖。
 
+本文只适用于由 DSL 配置的内置运行时(`apps/client/runtime/`)。启动器里的每款游戏,包括运行在这三个运行时上的三款,都由 `apps/client/games/<id>/game.json` 描述(名称、成就、玩法说明、操作表、HUD、开局选项);不经 DSL、自带代码的游戏是游戏模块,它们的内容在各自的目录里,契约见 [20-adding-a-game](./20-adding-a-game.md),不在这份清单里。
+
 ## 设计目标
 
 - **少而精,且高度可组合**。不是堆数量,是让有限元素的组合产生足够多样的结果。

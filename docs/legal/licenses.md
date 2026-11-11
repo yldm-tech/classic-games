@@ -2,7 +2,7 @@
 
 本页归集 Classic Games 自身的许可证，以及仓库和构建产物中包含的第三方组件的许可证。本页只作索引，不改变各组件原许可条款；条款以各组件随附的许可文本为准。
 
-最近一次逐项核对 Go 依赖：2026-11-10，依据当时的 `go.mod` 与 Go 模块缓存中各模块随附的许可文件；「随仓库分发的第三方内容」一表于 2026-11-11 随手机端的移除更新。依赖升级后以对应模块的许可文件为准。
+最近一次逐项核对 Go 依赖：2026-11-10，依据当时的 `go.mod` 与 Go 模块缓存中各模块随附的许可文件；「随仓库分发的第三方内容」一表于 2026-11-11 随手机端的移除和游戏素材改为按目录记录而更新。依赖升级后以对应模块的许可文件为准。
 
 ## Classic Games 自身
 
@@ -13,9 +13,11 @@ Classic Games 以 [Apache License 2.0](../../LICENSE) 发布，版权声明与�
 | 路径 | 内容 | 来源 | 许可 |
 |---|---|---|---|
 | `apps/client/icon.svg` | Godot 新建工程的默认图标，即 Godot 引擎 logo，未修改 | Godot Engine | CC BY 4.0，Copyright (c) 2017 Andrea Calabró |
-| `apps/client/launcher/art/*.jpg`，以及官网使用的副本 `apps/web/src/assets/key-art/` | 启动器的 3 张游戏主视觉（1920×1080），对应 shooter、survivor、tower_defense | 由本项目用图像生成模型 `doubao-seedream-5.0-pro` 按自行撰写的提示词生成，画面为原创构图，不取材于任何现有游戏的角色或美术 | 随本项目以 Apache-2.0 分发；AI 生成图像在部分法域可能不受著作权保护，复用时请自行判断 |
+| `apps/client/games/<游戏 id>/` 里的素材（主视觉、官网用的局内截图，以及游戏自带的图片、音频等） | 每款游戏自己的素材；官网直接使用这些文件，不另存副本 | 逐个文件记在该游戏目录的 `ASSETS.md`：[shooter](../../apps/client/games/shooter/ASSETS.md)、[survivor](../../apps/client/games/survivor/ASSETS.md)、[tower_defense](../../apps/client/games/tower_defense/ASSETS.md)，以后加入的游戏各在 `apps/client/games/<游戏 id>/ASSETS.md` | 以各 `ASSETS.md` 所记为准。所有素材必须原创或许可明确，不取材于任何现有游戏（[decisions](../decisions.md) ADR-016）；`make games-check` 核对每个素材文件都有记录 |
 
-仓库不包含字体文件和音频文件：界面在运行时使用操作系统里已安装的字体（`apps/client/launcher/launcher_tokens.gd`），Shooter 的 BGM 由 `apps/client/runtime/shooter/procedural_bgm.gd` 在运行时合成。
+本表不为每款游戏单列一行：加一款游戏时在它自己的目录里写 `ASSETS.md`（格式见 [20-adding-a-game](../20-adding-a-game.md) 第 6 节），不需要改本页。
+
+仓库目前不包含字体文件和音频文件：界面在运行时使用操作系统里已安装的字体（`apps/client/launcher/launcher_tokens.gd`），Shooter 的 BGM 由 `apps/client/runtime/shooter/procedural_bgm.gd` 在运行时合成，游戏模块的音效与音乐由 `apps/client/games/shared/game_audio.gd` 在运行时合成。
 
 ## 构建产物中包含的组件
 

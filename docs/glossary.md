@@ -6,10 +6,10 @@
 |---|---|---|
 | **启动器 (launcher)** | 客户端的主场景:选游戏、看记录与成就、改设置,并承载一局游戏的 HUD、暂停与结算。 | `apps/client/launcher`,见 [16-client-architecture](./16-client-architecture.md) 第 8 节 |
 | **主机模式 / PC 模式** | 启动器的两种布局。主机模式面向手柄和键盘;PC 模式面向键盘和鼠标。数据相同。 | F11 或长按 View 切换;设置项 `default_mode` |
-| **游戏目录 (catalog)** | 启动器提供哪些游戏的数据表:名称、类型、人数、一句话介绍、成就定义。 | `launcher_catalog.gd` |
+| **游戏目录 (catalog)** | 启动器提供哪些游戏:启动时从每个游戏目录的清单读出名称、类型、人数、一句话介绍、成就定义。 | `apps/client/games/*/game.json`,经 `launcher_catalog.gd` 查询 |
 | **一局 (run)** | 从开局到通关、失败、超时或退出的一次游玩。每局结束时恰好写一次存档。 | `GameSession.start_run` / `end_run` |
 | **本地存档** | 保存游玩记录、收藏、最近游玩、成就、设置与改键的唯一文件。 | `user://launcher.json`,`launcher_store.gd` |
-| **主视觉 (key art)** | 启动器里代表一款游戏的插画,不是局内画面。 | `apps/client/launcher/art`,来源见 [legal/licenses](./legal/licenses.md) |
+| **主视觉 (key art)** | 启动器里代表一款游戏的插画,不是局内画面。 | 各游戏目录里清单 `art.image` 指向的图片,来源见该目录的 `ASSETS.md` |
 | **成就** | 游戏目录里定义的条件,由一局结束时的结果判定;中途退出的一局不计。 | |
 | **在线服务** | Go 后端、CLI、MCP 服务与 Go SDK 提供的账号、目录、Mod、社区、商业化等能力。可选,启动器没有接入。 | [04-architecture](./04-architecture.md)、[09-api-design](./09-api-design.md) |
 | **Runtime** | 一款游戏的运行时,提供完整的游戏逻辑;玩什么由 DSL 决定。 | 目前有 `shooter`、`survivor`、`tower_defense` |

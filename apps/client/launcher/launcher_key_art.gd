@@ -57,9 +57,21 @@ func _draw() -> void:
 		"orbit": _paint_orbit(primary, secondary, bottom)
 		"swarm": _paint_swarm(primary, secondary, top)
 		"road": _paint_road(primary, secondary, top)
+		_: _paint_plain(primary, secondary)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---- placeholders ----
+
+## The placeholder of a game that names no motif (or one this file does not know): two soft lights in the game's own colours over its gradient, and a horizon line. Enough to tell games apart on a shelf until the game ships a picture.
+func _paint_plain(primary: Color, secondary: Color) -> void:
+	_glow(Vector2(1120, 380), 560.0, Color(primary, 0.36))
+	_glow(Vector2(1360, 640), 320.0, Color(secondary, 0.26))
+	draw_circle(Vector2(1120, 380), 120.0, Color(primary, 0.55))
+	draw_circle(Vector2(1120, 380), 72.0, Color(secondary, 0.8))
+	draw_line(Vector2(0, 690), Vector2(FRAME.x, 690), Color(primary, 0.35), 2.0)
+	for index in 9:
+		var x := 200.0 + 160.0 * index
+		draw_rect(Rect2(x, 700.0, 80.0, 200.0), Color(primary, 0.08 + 0.02 * (index % 3)))
 
 func _paint_orbit(primary: Color, secondary: Color, base: Color) -> void:
 	_stars(11, 110, Color(1, 1, 1, 0.8))

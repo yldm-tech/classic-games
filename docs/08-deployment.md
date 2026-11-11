@@ -7,7 +7,7 @@
 本文描述的是目标部署形态,其中一部分还没有实现。当前代码的实际状态:
 
 - **数据库只支持 SQLite。** 后端只链接了 `github.com/ncruces/go-sqlite3/gormlite` 一个驱动,`CLASSIC_GAMES_DB` 的值是 SQLite 文件路径(不设时用工作目录下的 `classic-games.db`;`CLASSIC_GAMES_ENV=production` 时必须显式设置)。填 PostgreSQL DSN 会在启动时打开数据库失败。SQLite 是单文件数据库,所以下文的「无状态、可水平扩展」要等 PostgreSQL 驱动接入后才成立。
-- **没有对象存储。** 后端没有 S3/MinIO 相关代码,也没有对应的环境变量;启动器的游戏主视觉(`apps/client/launcher/art`)随客户端工程分发。
+- **没有对象存储。** 后端没有 S3/MinIO 相关代码,也没有对应的环境变量;各游戏的主视觉与素材(`apps/client/games/<id>/`)随客户端工程分发。
 - **模型 provider 只有一个。** `apps/server/internal/ai` 里只有 `ClaudeProvider` 和无 API key 时使用的 `StubProvider`([ADR-008](./decisions.md))。
 
 | 组件 | 目标部署形态 | 当前状态 |

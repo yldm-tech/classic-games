@@ -88,7 +88,7 @@ For a larger change, such as a new game, a new runtime, a schema version or a ch
 Classic Games ships original games in classic genres. A genre is free to use; another game's expression of it is not. Every game, and every change to one, must follow these rules:
 
 - Names, characters, stories, art, music, sound and level layouts are made for this project. Do not recreate, trace, port or lightly rename those of an existing commercial game, and do not use its trademarks in names, text or file names.
-- Do not add assets extracted from other games, or assets whose origin and licence you cannot state. Every image, sound and font needs a source and a licence recorded in [docs/legal/licenses.md](./docs/legal/licenses.md) in the same pull request, including images generated with a model.
+- Do not add assets extracted from other games, or assets whose origin and licence you cannot state. Every image, sound and font needs a source and a licence recorded in the same pull request, including images generated with a model: a game's assets in the `ASSETS.md` of its own directory (`make games-check` fails for a file that is not listed), anything else in [docs/legal/licenses.md](./docs/legal/licenses.md).
 - Describe a game by its genre and its rules, not by naming the game that inspired it.
 
 A pull request that does not meet these rules is not merged, whatever its quality. If you are unsure whether something is too close to an existing game, open an issue and ask first. The decision is recorded as ADR-016 in [docs/decisions.md](./docs/decisions.md).
@@ -101,9 +101,9 @@ These rules are part of the design, and several are enforced by `make boundary-t
 
 The launcher signs nobody in and makes no network requests; everything it shows about the player comes from one local save file. Do not add an HTTP client, a socket or a URL to `apps/client/launcher`; `make boundary-test` rejects them. Connecting the launcher to the online service would be a product decision, so open an issue before writing any code for it.
 
-### Launcher and runtime talk only through `runtime/game_session.gd`
+### Launcher and games talk only through `runtime/game_session.gd`
 
-In the client, the launcher and the game runtimes communicate through [`apps/client/runtime/game_session.gd`](./apps/client/runtime/game_session.gd) and nothing else. The launcher passes a runtime reference and a complete effective DSL document; the runtime reports back through the session's signals, such as `game_ended` and `game_error`. Neither side reads the other's nodes, state or files, and a runtime never depends on the launcher.
+In the client, the launcher and the game runtimes communicate through [`apps/client/runtime/game_session.gd`](./apps/client/runtime/game_session.gd) and nothing else. The launcher passes a runtime reference and a complete effective DSL document; the runtime reports back through the session's signals, such as `game_ended` and `game_error`. Neither side reads the other's nodes, state or files, and a runtime never depends on the launcher. A game module (`apps/client/games/<id>/`) is hosted by the same session: it imports only its own directory and `apps/client/games/shared/`, and reads its players through `GameModule.input()`, never through `Input`.
 
 Inside the launcher, screens do not read input events: the root translates each press into a named action and hands it to the current screen, and each screen owns its own focus state. Games are started only through `launcher_game_host.gd`. See [section 8 of docs/16-client-architecture.md](./docs/16-client-architecture.md).
 
@@ -147,12 +147,18 @@ Schema files are named `<runtime>-<version>.schema.json`, and the validator pick
 
 A new version also needs the built-in version in `apps/client/runtime/runtime_loader.gd`, the `meta.runtime_version` of the baseline DSL and the runtime references registered in `apps/server/internal/app` updated together.
 
-### Adding a game or a runtime
+### Adding a game
 
-1. Open an issue describing the game, its content list and its DSL shape. The game must be original; see "Game content must be original" above.
+A game is one self-contained directory, `apps/client/games/<id>/`: a manifest (`game.json`), an entry script that extends `GameModule`, its assets, an `ASSETS.md` that records the source and licence of every asset, and its own headless test. The launcher, the website, the tests and CI discover the directory; a game's pull request adds that directory and edits no shared file. The contract, the manifest reference, testing, screenshots and the asset rules are in [docs/20-adding-a-game.md](./docs/20-adding-a-game.md) (Chinese). The game must be original; see "Game content must be original" above. `make games-check`, `make games-test` and `make boundary-test` are the gates that concern a game directly.
+
+### Adding a DSL runtime
+
+A DSL runtime is a built-in game engine configured by a Mod DSL document, which the online service can also patch. Adding one is rarer than adding a game and touches several parts of the repository.
+
+1. Open an issue describing the runtime, its content list and its DSL shape.
 2. Add `packages/schemas/<runtime>-1.0.0.schema.json`.
 3. Add `apps/client/runtime/<runtime>/` with the implementation and a `baseline.dsl.json` that validates against the schema, and register the runtime in `apps/client/runtime/runtime_loader.gd`.
-4. Add the game to the launcher: one entry in `apps/client/launcher/launcher_catalog.gd` (name, genre, tagline, achievements) and one in `apps/client/launcher/launcher_game_guide.gd` (how it plays, controls, HUD fields). List only controls and start options the runtime really implements.
+4. Add the game to the launcher as a directory `apps/client/games/<id>/` whose `game.json` has `"kind": "dsl"` and names the runtime (see the three existing ones). List only controls and start options the runtime really implements.
 5. Register the baseline on the server, so that the online service knows the runtime: the configuration in `apps/server/internal/app/config.go` and the runtime list in `internal/app`.
 6. Add tests on both sides and a content document under `docs/`.
 

@@ -8,8 +8,8 @@
 |---|---|
 | `apps/client/launcher/launcher_tokens.gd` | `LauncherTokens`:颜色、前景透明度档位、间距与尺寸、动效时长、字号、系统字体的选择 |
 | `apps/client/launcher/pc_tokens.gd` | `LauncherPcTokens`:PC 模式在此之上独有的扁平配色与标题条、侧栏、网格、菜单的尺寸 |
-| `apps/client/launcher/launcher_catalog.gd` | 每款游戏自己的颜色:`colors`(标题字、投影、辉光)与 `art`(程序化主视觉的配色与图案) |
-| `apps/client/launcher/art/<游戏 id>.jpg` | 每款游戏的 16:9 主视觉,来源与许可见 [licenses](./legal/licenses.md) |
+| `apps/client/games/<游戏 id>/game.json` | 每款游戏自己的颜色:`colors`(标题字、投影、辉光)与 `art`(程序化主视觉的配色与图案) |
+| `apps/client/games/<游戏 id>/` 里由清单 `art.image` 指向的图片 | 每款游戏的 16:9 主视觉,来源与许可见该目录的 `ASSETS.md` |
 
 所有屏幕和控件只引用 token,不写散落的颜色、字号和透明度。要调整视觉,改 token;某处需要一个现有 token 表达不了的值,先加一个有名字的 token。
 
@@ -33,7 +33,7 @@
 | `launcher_game_widgets.gd` | 游戏菜单、局内与暂停三屏共用:`KeyCap`、`Tag`、`Meter`、`HudChip`、`SliderRow`、`ConfirmDialog`、`GameTitle`、`AchievementRow` 等 |
 | `settings_controls.gd` | 设置屏:`SettingRow`、`Switch`、`Segments`、`OutlineButton`、`RowList`、`KeyCapture` |
 | `pc_controls.gd` | PC 模式:`Clickable` 及其派生(`Pill`、`IconButton`、`SideRow`、`LibraryCard`、`ListRow` 等)、`Menu`、`SearchField`、`Flow` |
-| `launcher_key_art.gd` | `LauncherKeyArt`:一款游戏的主视觉。有 `art/<游戏 id>.jpg` 时用图片,否则按目录里的 `art` 配色画程序化占位 |
+| `launcher_key_art.gd` | `LauncherKeyArt`:一款游戏的主视觉。清单的 `art.image` 指向图片时用图片,否则按清单的 `art` 配色画程序化占位 |
 
 控件遵守同一套约定:
 
