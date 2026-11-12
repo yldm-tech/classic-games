@@ -140,7 +140,7 @@ apps/client/launcher/
 `settings_screen.gd`（屏幕）、`settings_controls.gd`（设置行、开关、滑块、对话框按钮、改键时读取原始按键的 `KeyCapture`）和 `launcher_settings.gd`（设置项的键、默认值、取值范围，以及把它们应用到引擎的代码）组成设置屏，测试在 `settings_test.gd`（`make settings-test`）。
 
 - 每个设置项都经 `LauncherStore.set_setting` 保存，修改时立即生效，并在下次启动时由 `LauncherRoot._ready` 调用 `LauncherSettings.apply_all` 再次应用。读取一律走 `LauncherSettings.value(store, key)`：存档文件可以被手改，不在取值范围内的值按默认值处理。
-- 设置项的键（存档 `settings` 段）：`lang`（`zh` / `en`）、`clock_24h`（布尔，外壳时钟 24 / 12 小时制）、`default_mode`（`console` / `pc`）、`window_mode`（`windowed` / `fullscreen` / `exclusive`）、`vsync`（布尔）、`max_fps`（`0` 为不限，或 30 / 60 / 120 / 144）、`volume_master`、`volume_music` 与 `volume_sfx`（0 至 10 的音量档位）、`audio_mute`（布尔）。
+- 设置项的键（存档 `settings` 段）：`lang`（`zh` / `en`）、`clock_24h`（布尔，外壳时钟 24 / 12 小时制）、`default_mode`（`console` / `pc`）、`window_mode`（`windowed` / `maximized` / `fullscreen` / `exclusive`，默认 `maximized`）、`vsync`（布尔）、`max_fps`（`0` 为不限，或 30 / 60 / 120 / 144）、`volume_master`、`volume_music` 与 `volume_sfx`（0 至 10 的音量档位）、`audio_mute`（布尔）。
 - `default_mode` 由设置屏写入，设置屏自己不读取：`LauncherRoot._ready` 在启动时读取它，决定是否直接进入 PC 模式（3.4）。
 - 窗口模式与垂直同步只在启动器就是真实窗口的内容时才会应用（`LauncherSettings.drives_window`）；headless 测试和把启动器挂在离屏视口里的截图脚本不会改动窗口。
 - 音频总线定义在 `apps/client/default_bus_layout.tres`：`Master` 之下有 `Music` 与 `SFX` 两条总线。运行时和游戏模块的背景音乐（合成的曲子、音乐文件和过场短曲）输出到 `Music`，游戏模块经 `GameAudio` 播放的音效（合成的和文件的）输出到 `SFX`，设置屏「声音」页的「音乐」「音效」两行分别控制它们。
