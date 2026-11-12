@@ -30,4 +30,4 @@ mkdir -p "$LAUNCHER_SHOT_DIR"
 "$GODOT" --headless --path "$ROOT/apps/client" --import >/dev/null 2>&1
 
 # A small window is enough: the launcher is rendered into its own 1920x1080 viewport. The script quits by itself after writing the file.
-"$GODOT" --path "$ROOT/apps/client" --resolution 640x360 --script res://launcher/launcher_shot.gd
+"$GODOT" --path "$ROOT/apps/client" --windowed --resolution 640x360 --script res://launcher/launcher_shot.gd
