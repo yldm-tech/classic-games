@@ -7,7 +7,7 @@ extends RefCounted
 ##   lang          "zh" | "en"                              interface language, applied through LauncherRoot.set_locale
 ##   clock_24h     bool                                     the shell clock shows 24-hour or 12-hour time
 ##   default_mode  "console" | "pc"                         the mode the launcher should open in; read by the PC mode at start
-##   window_mode   "windowed" | "fullscreen" | "exclusive"  windowed, borderless fullscreen, exclusive fullscreen
+##   window_mode   "windowed" | "maximized" | "fullscreen" | "exclusive"  windowed, maximized window (the default), borderless fullscreen, exclusive fullscreen
 ##   vsync         bool
 ##   max_fps       0 | 30 | 60 | 120 | 144                  0 means no cap
 ##   volume_master 0..10                                    step of the Master bus, 10 = full
@@ -35,12 +35,12 @@ const BUS_MASTER := &"Master"
 const BUS_MUSIC := &"Music"
 const BUS_SFX := &"SFX"
 
-## The defaults reproduce what the project does with no settings stored.
+## The defaults reproduce what the project does with no settings stored (project.godot starts the window maximized).
 const DEFAULTS := {
 	LANG: "zh",
 	CLOCK_24H: true,
 	DEFAULT_MODE: "console",
-	WINDOW_MODE: "windowed",
+	WINDOW_MODE: "maximized",
 	VSYNC: true,
 	MAX_FPS: 0,
 	VOLUME_MASTER: 10,
@@ -53,7 +53,7 @@ const DEFAULTS := {
 const CHOICES := {
 	LANG: ["zh", "en"],
 	DEFAULT_MODE: ["console", "pc"],
-	WINDOW_MODE: ["windowed", "fullscreen", "exclusive"],
+	WINDOW_MODE: ["windowed", "maximized", "fullscreen", "exclusive"],
 	MAX_FPS: [30, 60, 120, 144, 0],
 }
 
@@ -108,6 +108,8 @@ static func apply(store: LauncherStore, key: String, window: bool) -> void:
 
 static func display_mode(window_mode: String) -> DisplayServer.WindowMode:
 	match window_mode:
+		"maximized":
+			return DisplayServer.WINDOW_MODE_MAXIMIZED
 		"fullscreen":
 			return DisplayServer.WINDOW_MODE_FULLSCREEN
 		"exclusive":

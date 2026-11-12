@@ -182,7 +182,7 @@ func _rows_for(id: StringName) -> Array[Dictionary]:
 			out.append(_toggle(S.CLOCK_24H))
 			out.append(_choice(S.DEFAULT_MODE, [["console", t("launcher.settings.mode_console")], ["pc", t("launcher.settings.mode_pc")]]))
 		DISPLAY:
-			out.append(_choice(S.WINDOW_MODE, [["windowed", t("launcher.settings.window_windowed")], ["fullscreen", t("launcher.settings.window_fullscreen")], ["exclusive", t("launcher.settings.window_exclusive")]]))
+			out.append(_choice(S.WINDOW_MODE, [["windowed", t("launcher.settings.window_windowed")], ["maximized", t("launcher.settings.window_maximized")], ["fullscreen", t("launcher.settings.window_fullscreen")], ["exclusive", t("launcher.settings.window_exclusive")]]))
 			out.append(_toggle(S.VSYNC))
 			var rates: Array = []
 			for rate: int in S.CHOICES[S.MAX_FPS]:
